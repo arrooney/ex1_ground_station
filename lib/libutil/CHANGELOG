@@ -1,0 +1,9 @@
+libutil v1.0 08.05.2015
+-----------------------
+- First release after move to libutil from libgomspace
+- New: Allow time to be set on linux
+- New: Support for liblog
+- New: LZO re-added and tested on linux
+- New: VMEM system
+- Doc: Added documentation folder in sphinx format
+- New: High resolution tick timer system

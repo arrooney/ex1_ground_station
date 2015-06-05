@@ -1,0 +1,91 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'libutil'
+VERSION = '1.0'
+
+def options(ctx):
+    ctx.load('gcc')
+
+    ctx.add_option('--arch', default='avr32', help='Set architechture [x86, avr32, arm, avr]')
+
+    gr = ctx.add_option_group('libutil options')
+    gr.add_option('--install-libutil', action='store_true', help='Installs headers and lib')
+    gr.add_option('--with-log', action='store', default='color', help='Choose log backend [disable, printf, color, cdh]')
+    gr.add_option('--enable-vmem', action='store_true', help='Enable vmem')
+    gr.add_option('--enable-driver-debug', action='store_true', help='Enable driver debug')
+    gr.add_option('--clock', action='store', default='tick', help='Set clock driver')
+    gr.add_option('--enable-fm33256b', action='store_true', help='Turn on RTC in the tick clock driver')
+    gr.add_option('--enable-lzo', action='store_true', help='Enable LZO')
+
+def configure(ctx):
+    ctx.load('gcc')
+
+    ctx.env.append_unique('FILES_LIBUTIL', ['src/*.c'])
+
+    if ctx.options.with_log == 'disable':
+        ctx.define('LOG_DISABLE', '1')
+    elif ctx.options.with_log == 'printf':
+        ctx.define('LOG_PRINTF', '1')
+    elif ctx.options.with_log == 'color':
+        ctx.define('LOG_COLOR', '1')
+    elif ctx.options.with_log == 'cdh':
+        ctx.define('LOG_CDH', '1')
+        
+    else:
+        ctx.fatal('Invalid log backend')
+
+    if ctx.options.arch == 'avr8':
+        ctx.env.append_unique('EXCLUDES_LIBUTIL', ['src/strtime.c', 'src/error.c'])
+
+    if not ctx.options.enable_vmem:
+        ctx.env.append_unique('EXCLUDES_LIBUTIL', ['src/vmem.c'])
+
+    if ctx.options.clock != 'none':
+        ctx.env.append_unique('FILES_LIBUTIL', ['src/clock/clock_' + ctx.options.clock + '.c']);
+    if ctx.options.enable_fm33256b:
+        ctx.define('FM33256B_ENABLED', 1)
+
+    if ctx.options.enable_lzo:
+        ctx.env.append_unique('FILES_LIBUTIL', ['src/lzo/*.c']);
+
+    ctx.define_cond('CONFIG_DRIVER_DEBUG', ctx.options.enable_driver_debug)
+    
+    # Check compiler endianness
+    endianness = ctx.check_endianness()
+    ctx.define_cond('UTIL_LITTLE_ENDIAN', endianness == 'little')
+    ctx.define_cond('UTIL_BIG_ENDIAN', endianness == 'big')
+
+    ctx.define('LIBUTIL_VERSION', VERSION)
+
+    ctx.write_config_header('include/conf_util.h', top=True, remove=True)
+
+def build(ctx):
+
+    if ctx.env.FILES_LIBUTIL:
+
+        install_path = False
+        if ctx.options.install_libutil:
+            install_path = '${PREFIX}/lib'
+            ctx.install_files('${PREFIX}', ctx.path.ant_glob('include/**/*.h'), relative_trick=True)
+            ctx.install_files('${PREFIX}/include', cwd=ctx.bldnode)
+
+        ctx.objects(source=ctx.path.ant_glob(ctx.env.FILES_LIBUTIL, excl=ctx.env.EXCLUDES_LIBUTIL), 
+            target='util', 
+            includes='include',
+            export_includes='include',
+            defines = ctx.env.DEFINES_LIBUTIL,
+            use = ['include', 'freertos_h', 'a3200_h', 'log_h', 'csp_h'],
+            install_path = install_path,
+        )
+
+        if ctx.env.ENABLE_BINDINGS:
+            ctx.shlib(source=ctx.path.ant_glob(ctx.env.FILES_LIBUTIL, excl=ctx.env.EXCLUDES_LIBUTIL),
+                target = 'util',
+                includes= ['include'],
+                export_includes = 'include',
+                use = ['include'],
+                )
+

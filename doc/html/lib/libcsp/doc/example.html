@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Client and server example &mdash; csp-term 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/bootstrap-3.2.0/css/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/bootstrap-3.2.0/css/bootstrap-theme.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../../',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-3.2.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="csp-term 2.0 documentation" href="../../../doc/index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../../doc/index.html">
+          csp-term</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../../doc/index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../doc/csp-term.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../libutil/doc/libutil.html">GomSpace Util Library</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">Client and server example</a><ul>
+<li><a class="reference internal" href="#initialization-sequence">Initialization Sequence</a></li>
+<li><a class="reference internal" href="#server">Server</a><ul>
+<li><a class="reference internal" href="#id49">}</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#client">Client</a><ul>
+<li><a class="reference internal" href="#id76">}</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../../_sources/lib/libcsp/doc/example.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="client-and-server-example">
+<h1>Client and server example<a class="headerlink" href="#client-and-server-example" title="Permalink to this headline">¶</a></h1>
+<p>The following examples show the initialization of the protocol stack and examples of client/server code.</p>
+<div class="section" id="initialization-sequence">
+<h2>Initialization Sequence<a class="headerlink" href="#initialization-sequence" title="Permalink to this headline">¶</a></h2>
+<p>This code initializes the CSP buffer system, device drivers and router core. The example uses the CAN interface function csp_can_tx but the initialization is similar for other interfaces. The loopback interface does not require any explicit initialization.</p>
+<p><a href="#id1"><span class="problematic" id="id2">``</span></a>` c
+#include &lt;csp/csp.h&gt;
+#include &lt;csp/interfaces/csp_if_can.h&gt;</p>
+<p>/* CAN configuration struct for SocketCAN interface &#8220;can0&#8221; <a href="#id3"><span class="problematic" id="id4">*</span></a>/
+struct csp_can_config can_conf = {.ifc = &#8220;can0&#8221;};</p>
+<p>/* Init buffer system with 10 packets of maximum 320 bytes each <a href="#id5"><span class="problematic" id="id6">*</span></a>/
+csp_buffer_init(10, 320);</p>
+<p>/* Init CSP with address 1 <a href="#id7"><span class="problematic" id="id8">*</span></a>/
+csp_init(1);</p>
+<p>/* Init the CAN interface with hardware filtering <a href="#id9"><span class="problematic" id="id10">*</span></a>/
+csp_can_init(CSP_CAN_MASKED, &amp;can_conf)</p>
+<p>/* Setup default route to CAN interface <a href="#id11"><span class="problematic" id="id12">*</span></a>/
+csp_route_set(CSP_DEFAULT_ROUTE, &amp;csp_can_tx, CSP_HOST_MAC);</p>
+<p>/* Start router task with 500 word stack, OS task priority 1 <a href="#id13"><span class="problematic" id="id14">*</span></a>/
+csp_route_start_task(500, 1);
+<a href="#id15"><span class="problematic" id="id16">``</span></a><a href="#id17"><span class="problematic" id="id18">`</span></a></p>
+</div>
+<div class="section" id="server">
+<h2>Server<a class="headerlink" href="#server" title="Permalink to this headline">¶</a></h2>
+<p>This example shows how to create a server task that listens for incoming connections. CSP should be initialized before starting this task. Note the use of <cite>csp_service_handler()</cite> as the default branch in the port switch case. The service handler will automatically reply to ICMP-like requests, such as pings and buffer status requests.</p>
+<p><a href="#id19"><span class="problematic" id="id20">``</span></a>` c
+void csp_task(void <a href="#id21"><span class="problematic" id="id22">*</span></a>parameters) {</p>
+<blockquote>
+<div><p>/* Create socket without any socket options <a href="#id23"><span class="problematic" id="id24">*</span></a>/
+csp_socket_t <a href="#id25"><span class="problematic" id="id26">*</span></a>sock = csp_socket(CSP_SO_NONE);</p>
+<p>/* Bind all ports to socket <a href="#id27"><span class="problematic" id="id28">*</span></a>/
+csp_bind(sock, CSP_ANY);</p>
+<p>/* Create 10 connections backlog queue <a href="#id29"><span class="problematic" id="id30">*</span></a>/
+csp_listen(sock, 10);</p>
+<p>/* Pointer to current connection and packet <a href="#id31"><span class="problematic" id="id32">*</span></a>/
+csp_conn_t <a href="#id33"><span class="problematic" id="id34">*</span></a>conn;
+csp_packet_t <a href="#id35"><span class="problematic" id="id36">*</span></a>packet;</p>
+<p>/* Process incoming connections <a href="#id37"><span class="problematic" id="id38">*</span></a>/
+while (1) {</p>
+<blockquote>
+<div><p>/* Wait for connection, 10000 ms timeout <a href="#id39"><span class="problematic" id="id40">*</span></a>/
+if ((conn = csp_accept(sock, 10000)) == NULL)</p>
+<blockquote>
+<div>continue;</div></blockquote>
+<p>/* Read packets. Timout is 1000 ms <a href="#id41"><span class="problematic" id="id42">*</span></a>/
+while ((packet = csp_read(conn, 1000)) != NULL) {</p>
+<blockquote>
+<div><dl class="docutils">
+<dt>switch (csp_conn_dport(conn)) {</dt>
+<dd><dl class="first last docutils">
+<dt>case MY_PORT:</dt>
+<dd>/* Process packet here <a href="#id43"><span class="problematic" id="id44">*</span></a>/</dd>
+<dt>default:</dt>
+<dd>/* Let the service handler reply pings, buffer use, etc. <a href="#id45"><span class="problematic" id="id46">*</span></a>/
+csp_service_handler(conn, packet);
+break;</dd>
+</dl>
+</dd>
+</dl>
+<p>}</p>
+</div></blockquote>
+<p>}</p>
+<p>/* Close current connection, and handle next <a href="#id47"><span class="problematic" id="id48">*</span></a>/
+csp_close(conn);</p>
+</div></blockquote>
+<p>}</p>
+</div></blockquote>
+<div class="section" id="id49">
+<h3>}<a class="headerlink" href="#id49" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+<div class="section" id="client">
+<h2>Client<a class="headerlink" href="#client" title="Permalink to this headline">¶</a></h2>
+<p>This example shows how to allocate a packet buffer, connect to another host and send the packet. CSP should be initialized before calling this function. RDP, XTEA, HMAC and CRC checksums can be enabled per connection, by setting the connection option to a bitwise OR of any combination of <cite>CSP_O_RDP</cite>, <cite>CSP_O_XTEA</cite>, <cite>CSP_O_HMAC</cite> and <cite>CSP_O_CRC</cite>.</p>
+<p><a href="#id50"><span class="problematic" id="id51">``</span></a>` c
+int send_packet(void) {</p>
+<blockquote>
+<div><p>/* Get packet buffer for data <a href="#id52"><span class="problematic" id="id53">*</span></a>/
+csp_packet_t <a href="#id54"><span class="problematic" id="id55">*</span></a>packet = csp_buffer_get(data_size);
+if (packet == NULL) {</p>
+<blockquote>
+<div>/* Could not get buffer element <a href="#id56"><span class="problematic" id="id57">*</span></a>/
+printf(&#8220;Failed to get buffer element\n&#8221;);
+return -1;</div></blockquote>
+<p>}</p>
+<p>/* Connect to host HOST, port PORT with regular UDP-like protocol and 1000 ms timeout <a href="#id58"><span class="problematic" id="id59">*</span></a>/
+csp_conn_t <a href="#id60"><span class="problematic" id="id61">*</span></a>conn = csp_connect(CSP_PRIO_NORM, HOST, PORT, 1000, CSP_O_NONE);
+if (conn == NULL) {</p>
+<blockquote>
+<div>/* Connect failed <em>/
+printf(&#8220;Connection failed\n&#8221;);
+/</em> Remember to free packet buffer <a href="#id62"><span class="problematic" id="id63">*</span></a>/
+csp_buffer_free(packet);
+return -1;</div></blockquote>
+<p>}</p>
+<p>/* Copy message to packet <a href="#id64"><span class="problematic" id="id65">*</span></a>/
+char <a href="#id66"><span class="problematic" id="id67">*</span></a>msg = &#8220;HELLO&#8221;;
+strcpy(packet-&gt;data, msg);</p>
+<p>/* Set packet length <a href="#id68"><span class="problematic" id="id69">*</span></a>/
+packet-&gt;length = strlen(msg);</p>
+<p>/* Send packet <a href="#id70"><span class="problematic" id="id71">*</span></a>/
+if (!csp_send(conn, packet, 1000)) {</p>
+<blockquote>
+<div>/* Send failed <a href="#id72"><span class="problematic" id="id73">*</span></a>/
+printf(&#8220;Send failed\n&#8221;);
+csp_buffer_free(packet);</div></blockquote>
+<p>}</p>
+<p>/* Close connection <a href="#id74"><span class="problematic" id="id75">*</span></a>/
+csp_close(conn);</p>
+<p>return 0</p>
+</div></blockquote>
+<div class="section" id="id76">
+<h3>}<a class="headerlink" href="#id76" title="Permalink to this headline">¶</a></h3>
+</div>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015, GomSpace ApS.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

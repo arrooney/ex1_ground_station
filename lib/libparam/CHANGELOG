@@ -1,0 +1,28 @@
+libparam v2.0 08.05.2015
+------------------------
+- protocol break: Allow full table download to be split into multiple frames
+- fix: Init persist arrays #6
+- new: Added param_save and param_load to param_file backend
+- api break: Change param serializer API to use flags
+- api break: Serializer function split
+- new: Make deserializer support packet data format
+- fix: Add safety check on infinite serializer bug
+- new: Added 'param tables' command
+
+libparam v1.0 08.05.2015
+------------------------
+- Initial commit
+- Backend: RAM
+- Backend: FRAM
+- Interface: Local host 'param' commands
+- Interface: CSP Client/Server 'rparam' commands
+- Storage: FRAM
+- Storage: File system
+- Feature: Logical memory mapper
+- Feature: Arrays of parameters
+- Feature: Shared header with definitions
+- Feature: Downloadable parameter table using CSP service
+- Feature: Locking on variables
+- Feature: Serializer / Deserializer
+- Feature: Elaborative hack to make it work on memory limited AVR8s
+

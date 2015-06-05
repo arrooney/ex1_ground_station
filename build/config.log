@@ -1,0 +1,117 @@
+# project csp-term (2.0) configured on Thu May 28 13:13:48 2015 by
+# waf 1.6.9 (abi 98, python 20706f0 on linux2)
+# using ./waf configure eclipse
+#
+----------------------------------------
+Setting top to
+/home/alex/Desktop/csp-term-2.0
+----------------------------------------
+Setting out to
+/home/alex/Desktop/csp-term-2.0/build
+----------------------------------------
+Checking for program gcc,cc
+/usr/bin/gcc
+find program=['gcc', 'cc'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='CC' -> '/usr/bin/gcc'
+----------------------------------------
+Checking for program ar
+/usr/bin/ar
+find program=['ar'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='AR' -> '/usr/bin/ar'
+----------------------------------------
+Checking for program sphinx-build
+/usr/bin/sphinx-build
+find program=['sphinx-build'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='SPHINX_BUILD' -> '/usr/bin/sphinx-build'
+(tool gcc is already loaded, skipping)
+----------------------------------------
+Checking for program pkg-config
+/usr/bin/pkg-config
+find program=['pkg-config'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='PKGCONFIG' -> '/usr/bin/pkg-config'
+----------------------------------------
+Checking for 'libzmq'
+['/usr/bin/pkg-config', 'libzmq', '--cflags', '--libs']
+out:  -lzmq  
+
+yes
+----------------------------------------
+Checking for endianness
+==>
+
+short int ascii_mm[] = { 0x4249, 0x4765, 0x6E44, 0x6961, 0x6E53, 0x7953, 0 };
+short int ascii_ii[] = { 0x694C, 0x5454, 0x656C, 0x6E45, 0x6944, 0x6E61, 0 };
+int use_ascii (int i) {
+	return ascii_mm[i] + ascii_ii[i];
+}
+short int ebcdic_ii[] = { 0x89D3, 0xE3E3, 0x8593, 0x95C5, 0x89C4, 0x9581, 0 };
+short int ebcdic_mm[] = { 0xC2C9, 0xC785, 0x95C4, 0x8981, 0x95E2, 0xA8E2, 0 };
+int use_ebcdic (int i) {
+	return ebcdic_mm[i] + ebcdic_ii[i];
+}
+extern int foo;
+
+<==
+[1/2] [32mc: build/.conf_check_ac15f547411a3631f5147f6ca42bfe19/test.c -> build/.conf_check_ac15f547411a3631f5147f6ca42bfe19/testbuild/test.c.1.o
+[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="unknown"', '-DCSP_POSIX=1', '-DHAVE_LIBZMQ=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [35mgrep_for_endianness: build/.conf_check_ac15f547411a3631f5147f6ca42bfe19/testbuild/test.c.1.o
+[0m
+little
+----------------------------------------
+Checking for header stdbool.h
+==>
+#include <stdbool.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mc: build/.conf_check_1b24b0b3c24d53ce072660942760a09c/test.c -> build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/test.c.1.o
+[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="unknown"', '-DCSP_POSIX=1', '-DHAVE_LIBZMQ=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [33mcstlib: build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/test.c.1.o -> build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/libtestprog.a
+[0m
+['/usr/bin/ar', 'rcs', 'libtestprog.a', 'test.c.1.o']
+yes
+(tool gcc is already loaded, skipping)
+(tool gcc is already loaded, skipping)
+----------------------------------------
+Checking for endianness
+==>
+
+short int ascii_mm[] = { 0x4249, 0x4765, 0x6E44, 0x6961, 0x6E53, 0x7953, 0 };
+short int ascii_ii[] = { 0x694C, 0x5454, 0x656C, 0x6E45, 0x6944, 0x6E61, 0 };
+int use_ascii (int i) {
+	return ascii_mm[i] + ascii_ii[i];
+}
+short int ebcdic_ii[] = { 0x89D3, 0xE3E3, 0x8593, 0x95C5, 0x89C4, 0x9581, 0 };
+short int ebcdic_mm[] = { 0xC2C9, 0xC785, 0x95C4, 0x8981, 0x95E2, 0xA8E2, 0 };
+int use_ebcdic (int i) {
+	return ebcdic_mm[i] + ebcdic_ii[i];
+}
+extern int foo;
+
+<==
+[1/2] [32mc: build/.conf_check_c64e6efc0f2c779a8fa17e022b66f91a/test.c -> build/.conf_check_c64e6efc0f2c779a8fa17e022b66f91a/testbuild/test.c.1.o
+[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DLOG_CDH="1"', '-DCONFIG_DRIVER_DEBUG=1', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [35mgrep_for_endianness: build/.conf_check_c64e6efc0f2c779a8fa17e022b66f91a/testbuild/test.c.1.o
+[0m
+little
+(tool gcc is already loaded, skipping)
+----------------------------------------
+Checking for header time.h
+==>
+#include <time.h>
+
+int main() {
+	return 0;
+}
+
+<==
+[1/2] [32mc: build/.conf_check_a94ec24a42905c0a636d34d45cc16ded/test.c -> build/.conf_check_a94ec24a42905c0a636d34d45cc16ded/testbuild/test.c.1.o
+[0m
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DCONSOLE_HISTORY_ENABLE=1', '-DCONSOLE_HISTORY_ELEMENTS=10', '-DCONSOLE_BUFSIZ=100', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [33mcstlib: build/.conf_check_a94ec24a42905c0a636d34d45cc16ded/testbuild/test.c.1.o -> build/.conf_check_a94ec24a42905c0a636d34d45cc16ded/testbuild/libtestprog.a
+[0m
+['/usr/bin/ar', 'rcs', 'libtestprog.a', 'test.c.1.o']
+yes
+(tool gcc is already loaded, skipping)

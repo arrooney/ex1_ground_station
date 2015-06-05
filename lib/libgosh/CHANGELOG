@@ -1,0 +1,17 @@
+libgosh v1.0 08.05.2015
+-----------------------
+- New: Changed to generic console interface (stdin/stdout)
+- New: Remove need for command_setup calls on all platforms (apart from matlab)
+- New: Remove need for USART_CONSOLE
+- New: Support runtime setup of console
+- New: Added commands for vmem
+- Improved: CMP clock printout
+- New: Clock debug command
+- New: Simplify toolchain configuration
+- New: Clear screen on <CTRL+L>
+- New: Automatic check for time.h
+- New: Network redirection (telnet like)
+- Moved code from libgomspace into libgosh
+- Deleted old csp_if_sia header
+- Added console_messages_waiting
+ 

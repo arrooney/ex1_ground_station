@@ -1,0 +1,12 @@
+libftp v2.0 07-05-2015
+----------------------
+- api: 32-bit size field
+- new: Added ftp zip/unzip
+- improvement: Do not sync for every chunk on linux for faster transfers
+
+libftp v1.0 07-05-2015
+----------------------
+- Original version used on GOMX1 and GOMX2
+- new: FTP client work on nanomind a3200
+- new: FTP server works on linux too
+- new: Updated newlib backend

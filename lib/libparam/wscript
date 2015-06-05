@@ -1,0 +1,111 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'libparam'
+VERSION = '2.0'
+
+def options(ctx):
+	ctx.load('gcc')
+
+	gr = ctx.add_option_group('libparam options')
+	gr.add_option('--enable-param-local-client', action='store_true', help='Enable Parameter Local Client')
+	gr.add_option('--enable-param-csp-client', action='store_true', help='Enable Parameter CSP Client')
+	gr.add_option('--enable-param-csp-server', action='store_true', help='Enable Parameter Server')
+	gr.add_option('--enable-param-cmd', action='store_true', help='Enable on GOSH commands')
+	gr.add_option('--param-backend', action='store', default='none', help='Set backend <none, file>')
+	gr.add_option('--param-max-tables', action='store', default='20', help='Set max table count')
+	gr.add_option('--param-lock', action='store', default='freertos', help='Set locking <none, freertos>')
+	gr.add_option('--enable-bindings', action='store_true', help='Enable Python bindings')
+
+def configure(ctx):
+	ctx.load('gcc')
+	ctx.env.append_unique('CFLAGS', ['-std=gnu99'])
+
+	ctx.env.append_unique('INCLUDES_PARAM',	['include'])
+	
+	ctx.env.append_unique('FILES_PARAM', ['src/store/param_'+ctx.options.param_backend+'.c'])
+	ctx.env.append_unique('INCLUDES_PARAM',	['src/store'])
+	
+	if (ctx.options.enable_param_local_client):
+	
+		ctx.define('ENABLE_PARAM_LOCAL_CLIENT', 1)
+		ctx.env.append_unique('FILES_PARAM', ['src/param_string.c'])
+		ctx.env.append_unique('FILES_PARAM', ['src/store/param_load.c'])
+		ctx.env.append_unique('FILES_PARAM', ['src/host/param_host.c'])
+		ctx.env.append_unique('FILES_PARAM', ['src/host/param_index.c'])
+		ctx.env.append_unique('INCLUDES_PARAM',	['src/host/'])
+		if ctx.options.enable_param_cmd == True:
+			ctx.env.append_unique('FILES_PARAM', ['src/param_serializer.c'])
+			ctx.env.append_unique('FILES_PARAM', ['src/host/cmd_param.c'])
+			ctx.env.append_unique('USE', ['gosh', 'util'])
+
+		ctx.env.append_unique('FILES_PARAM', ['src/lock/param_lock_'+ctx.options.param_lock+'.c'])
+		ctx.env.append_unique('INCLUDES_PARAM',	['src/lock'])
+		
+	if (ctx.options.enable_param_csp_client):
+		ctx.define('ENABLE_PARAM_CSP_CLIENT', 1)	
+		ctx.env.append_unique('USE', ['csp'])
+		ctx.env.append_unique('FILES_PARAM', ['src/client/rparam_client.c'])
+		ctx.env.append_unique('INCLUDES_PARAM',	['src/client/'])
+		ctx.env.append_unique('USE', ['util'])
+
+		if ctx.options.enable_param_cmd == True:
+			ctx.env.append_unique('FILES_PARAM', ['src/client/cmd_rparam.c'])
+			ctx.env.append_unique('USE', ['gosh'])
+		
+	if (ctx.options.enable_param_csp_server):
+		ctx.define('ENABLE_PARAM_SERVER', 1)
+		ctx.env.append_unique('FILES_PARAM', ['src/server/*.c'])
+		ctx.env.append_unique('INCLUDES_PARAM',	['src/server/'])
+		
+	if (ctx.options.enable_param_csp_client) or (ctx.options.enable_param_csp_server):
+		ctx.env.append_unique('FILES_PARAM', ['src/param_string.c'])
+		ctx.env.append_unique('FILES_PARAM', ['src/param_serializer.c'])
+		
+	ctx.env.append_unique('FILES_PARAM', ['src/param_fletcher.c'])
+	
+	if (ctx.options.enable_param_csp_client) or (ctx.options.enable_param_csp_server) or (ctx.options.enable_param_local_client):	
+		ctx.env.append_unique('FILES_PARAM', ['src/lock/param_lock_'+ctx.options.param_lock+'.c'])
+		ctx.env.append_unique('INCLUDES_PARAM',	['src/lock'])
+	
+	ctx.define('PARAM_MAX_TABLES', int(ctx.options.param_max_tables))
+	ctx.define('LIBPARAM_VERSION', VERSION)
+
+	ctx.write_config_header('include/conf_param.h', top=True, remove=True)
+
+def build(ctx):
+
+	ctx(export_includes='include', name='io_include')
+
+	if ctx.env.FILES_PARAM:
+
+		ctx.objects(source=ctx.path.ant_glob(ctx.env.FILES_PARAM, excl=ctx.env.EXCLUDES_PARAM), 
+			target='param', 
+			includes= ctx.env.INCLUDES_PARAM,
+			export_includes = ctx.env.INCLUDES_PARAM,
+			defines = ctx.env.DEFINES_PARAM,
+			use=ctx.env.USE,
+		)
+
+		#if ctx.options.verbose > 0:
+		#	ctx(rule='${SIZE} --format=berkeley ${SRC}', source='libparam.a', name='param_size', always=True)
+
+		if ctx.env.ENABLE_BINDINGS:
+			ctx.shlib(source=ctx.path.ant_glob(ctx.env.FILES_PARAM, excl=ctx.env.EXCLUDES_PARAM),
+				target = 'param',
+				includes= ctx.env.INCLUDES_PARAM,
+				export_includes = ctx.env.INCLUDES_PARAM,
+				use=ctx.env.USE,
+				lib=ctx.env.USE,
+				)
+
+def dist(ctx):
+	ctx.excl = ".*"
+	if ctx.options.enable_param_local_client != True:
+		print "NOTE: No local client"
+		ctx.excl += ' src/host'
+	if ctx.options.enable_param_csp_server != True:
+		print "NOTE: No server"
+		ctx.excl += ' src/server'

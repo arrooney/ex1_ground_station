@@ -1,0 +1,10 @@
+liblog v1.0 08.05.2015
+----------------------
+- First release (host-only)
+- Supports console printout
+- Supports FRAM write using VMEM interface
+- Adjustable log levels (ala gstreamer)
+- Support for libcsp debug hook
+- Very low memory footprint (1 ptr + 2 bytes per log level)
+- Replaces driver debug, csp debug and the former cdh log system
+

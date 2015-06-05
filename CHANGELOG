@@ -1,0 +1,11 @@
+csp-term v2.0 08.05.2015
+------------------------
+- Re-launch of CSP-term based on new gomspace-sdk library structure
+- Builtin FTP client/server (with LZO compression)
+- Builtin GOSH service (with optional support for telnet-like redirection)
+- Supports building for Linux and embedded linux
+- Latest CIDR LibCSP for networking
+- Builtin CSP server for basic CMP services
+- Automatic command discovery in object files
+- libparam client and server
+- liblog example

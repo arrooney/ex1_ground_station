@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>The Cubesat Space Protocol &mdash; csp-term 2.0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/basic.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootstrap-3.2.0/css/bootstrap.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootstrap-3.2.0/css/bootstrap-theme.min.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/bootstrap-sphinx.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '2.0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-1.11.0.min.js"></script>
+    <script type="text/javascript" src="../../_static/js/jquery-fix.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-3.2.0/js/bootstrap.min.js"></script>
+    <script type="text/javascript" src="../../_static/bootstrap-sphinx.js"></script>
+    <link rel="top" title="csp-term 2.0 documentation" href="../../doc/index.html" />
+<meta charset='utf-8'>
+<meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+<meta name="apple-mobile-web-app-capable" content="yes">
+
+  </head>
+  <body role="document">
+
+  <div id="navbar" class="navbar navbar-default navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <!-- .btn-navbar is used as the toggle for collapsed navbar content -->
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".nav-collapse">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="../../doc/index.html">
+          csp-term</a>
+        <span class="navbar-text navbar-version pull-left"><b>2.0</b></span>
+      </div>
+
+        <div class="collapse navbar-collapse nav-collapse">
+          <ul class="nav navbar-nav">
+            
+            
+              <li class="dropdown globaltoc-container">
+  <a role="button"
+     id="dLabelGlobalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="../../doc/index.html">Site <b class="caret"></b></a>
+  <ul class="dropdown-menu globaltoc"
+      role="menu"
+      aria-labelledby="dLabelGlobalToc"><ul>
+<li class="toctree-l1"><a class="reference internal" href="../../doc/csp-term.html">Getting Started</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../libutil/doc/libutil.html">GomSpace Util Library</a></li>
+</ul>
+</ul>
+</li>
+              
+                <li class="dropdown">
+  <a role="button"
+     id="dLabelLocalToc"
+     data-toggle="dropdown"
+     data-target="#"
+     href="#">Page <b class="caret"></b></a>
+  <ul class="dropdown-menu localtoc"
+      role="menu"
+      aria-labelledby="dLabelLocalToc"><ul>
+<li><a class="reference internal" href="#">The Cubesat Space Protocol</a><ul>
+<li><a class="reference internal" href="#features">Features</a></li>
+<li><a class="reference internal" href="#lgpl-software-license">LGPL Software license</a></li>
+</ul>
+</li>
+</ul>
+</ul>
+</li>
+              
+            
+            
+              
+                
+              
+            
+            
+            
+            
+              <li class="hidden-sm">
+<div id="sourcelink">
+  <a href="../../_sources/lib/libcsp/README.txt"
+     rel="nofollow">Source</a>
+</div></li>
+            
+          </ul>
+
+          
+            
+<form class="navbar-form navbar-right" action="../../search.html" method="get">
+ <div class="form-group">
+  <input type="text" name="q" class="form-control" placeholder="Search" />
+ </div>
+  <input type="hidden" name="check_keywords" value="yes" />
+  <input type="hidden" name="area" value="default" />
+</form>
+          
+        </div>
+    </div>
+  </div>
+
+<div class="container">
+  <div class="row">
+    <div class="col-md-12">
+      
+  <div class="section" id="the-cubesat-space-protocol">
+<h1>The Cubesat Space Protocol<a class="headerlink" href="#the-cubesat-space-protocol" title="Permalink to this headline">¶</a></h1>
+<p>Cubesat Space Protocol (CSP) is a small protocol stack written in C. CSP is designed to ease communication between distributed embedded systems in smaller networks, such as Cubesats. The design follows the TCP/IP model and includes a transport protocol, a routing protocol and several MAC-layer interfaces. The core of libcsp includes a router, a socket buffer pool and a connection oriented socket API.</p>
+<p>The protocol is based on a 32-bit header containing both transport and network-layer information. Its implementation is designed for, but not limited to, embedded systems such as the 8-bit AVR microprocessor and the 32-bit ARM and AVR from Atmel. The implementation is written in GNU C and is currently ported to run on FreeRTOS or POSIX operating systems such as Linux.</p>
+<p>The idea is to give sub-system developers of cubesats the same features of a TCP/IP stack, but without adding the huge overhead of the IP header. The small footprint and simple implementation allows a small 8-bit system with less than 4 kB of RAM to be fully connected on the network. This allows all subsystems to provide their services on the same network level, without any master node required. Using a service oriented architecture has several advantages compared to the traditional mater/slave topology used on many cubesats.</p>
+<blockquote>
+<div><ul class="simple">
+<li>Standardised network protocol: All subsystems can communicate with eachother</li>
+<li>Service loose coupling: Services maintain a relationship that minimizes dependencies between subsystems</li>
+<li>Service abstraction: Beyond descriptions in the service contract, services hide logic from the outside world</li>
+<li>Service reusability: Logic is divided into services with the intention of promoting reuse.</li>
+<li>Service autonomy: Services have control over the logic they encapsulate.</li>
+<li>Service Redundancy: Easily add redundant services to the bus</li>
+<li>Reduces single point of failure: The complexity is moved from a single master node to several well defines services on the network</li>
+</ul>
+</div></blockquote>
+<p>The implementation of LibCSP is written with simplicity in mind, but it&#8217;s compile time configuration allows it to have some rather advanced features as well:</p>
+<div class="section" id="features">
+<h2>Features<a class="headerlink" href="#features" title="Permalink to this headline">¶</a></h2>
+<blockquote>
+<div><ul class="simple">
+<li>Thread safe Socket API</li>
+<li>Router task with Quality of Services</li>
+<li>Connection-oriented operation (RFC 908 and 1151).</li>
+<li>Connection-less operation (similar to UDP)</li>
+<li>ICMP-like requests such as ping and buffer status.</li>
+<li>Loopback interface</li>
+<li>Very Small Footprint 48 kB code and less that 1kB ram required on ARM</li>
+<li>Zero-copy buffer and queue system</li>
+<li>Modular network interface system</li>
+<li>Modular OS interface, ported to FreeRTOS, windows (cygwin) and Linux</li>
+<li>Broadcast traffic</li>
+<li>Promiscuous mode</li>
+<li>Encrypted packets with XTEA in CTR mode</li>
+<li>Truncated HMAC-SHA1 Authentication (RFC 2104)</li>
+</ul>
+</div></blockquote>
+</div>
+<div class="section" id="lgpl-software-license">
+<h2>LGPL Software license<a class="headerlink" href="#lgpl-software-license" title="Permalink to this headline">¶</a></h2>
+<p>The source code is available under an LGPL 2.1 license. See COPYING for the license text.</p>
+</div>
+</div>
+
+
+    </div>
+      
+  </div>
+</div>
+<footer class="footer">
+  <div class="container">
+    <p class="pull-right">
+      <a href="#">Back to top</a>
+      
+    </p>
+    <p>
+        &copy; Copyright 2015, GomSpace ApS.<br/>
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.3.1.<br/>
+    </p>
+  </div>
+</footer>
+  </body>
+</html>

@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'liblog'
+VERSION = '1.0'
+
+def options(ctx):
+	ctx.load('gcc')
+
+	# Group options
+	gr = ctx.add_option_group('liblog options')
+	gr.add_option('--enable-log-server', action='store_true', help='Enable log server')
+	gr.add_option('--enable-log-client', action='store_true', help='Enable log client')
+	gr.add_option('--enable-log-node', action='store_true', help='Enable log node')
+	
+	gr.add_option('--enable-readelf', action='store_true', help='Enable read-elf')
+	gr.add_option('--log-pack', action='store', default='str', help='Log pack method [str, va]')
+
+def configure(ctx):
+		
+	if ctx.options.enable_log_node == 1:
+		ctx.define('ENABLE_LOG_NODE', True)
+		ctx.env.append_unique('FILES_LOG', 'src/host/log_level_count.c')
+		ctx.env.append_unique('FILES_LOG', 'src/host/log.c')
+		ctx.env.append_unique('FILES_LOG', 'src/host/log_store.c')
+		ctx.env.append_unique('FILES_LOG', 'src/host/cmd_log.c')
+		ctx.env.append_unique('FILES_LOG', 'src/host/log_csp.c')
+	
+	# Include readelf only on ground station and if pack_va is used
+	if ctx.options.enable_readelf == 1:
+		ctx.env.append_unique('FILES_LOG', 'src/log_readelf.c')
+	
+	# Select packing method
+	ctx.env.append_unique('FILES_LOG', 'src/pack/log_pack_' + ctx.options.log_pack + '.c')
+
+	ctx.define('LIBLOG_VERSION', VERSION)
+
+	ctx.write_config_header('include/conf_log.h', top=True, remove=True)
+	
+def build(ctx):
+	
+	ctx(export_includes='include', name='log_h')
+
+	if ctx.env.FILES_LOG:
+
+		ctx.objects(source=ctx.path.ant_glob(ctx.env.FILES_LOG, excl =ctx.env.EXCLUDES_LOG),
+			target='log',
+			includes='include',
+			export_includes='include',
+			use='util gosh csp',
+		)

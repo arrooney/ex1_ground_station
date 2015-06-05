@@ -1,0 +1,82 @@
+#!/usr/bin/env python
+# encoding: utf-8
+
+import os
+
+APPNAME = 'libftp'
+VERSION = '2.0'
+
+def options(ctx):
+    ctx.load('gcc')
+
+    ctx.add_option('--arch', default='x86', help='Set architechture [x86, avr32, arm, avr]')
+
+    gr = ctx.add_option_group('libftp options')
+    gr.add_option('--enable-ftp-server', action='store_true', help='Enable FTP server')
+    gr.add_option('--enable-ftp-client', action='store_true', help='Enable FTP client (posix only)')
+
+    gr.add_option('--enable-blob-client', action='store_true', help='Enable Blob client')
+    gr.add_option('--enable-blob', action='store_true', help='Enable Blob')
+    gr.add_option('--enable-blob-sink-fat', action='store_true', help='Enable Blob FAT sink')
+    gr.add_option('--enable-blob-sink-file', action='store_true', help='Enable Blob file sink')
+    gr.add_option('--enable-newlib', action='store_true', help='Enable newlib')
+
+
+def configure(ctx):
+    ctx.load('gcc')
+
+    ctx.env.append_unique('USES_FTP', 'csp')
+    ctx.env.append_unique('USES_FTP', 'util')
+    ctx.env.append_unique('USES_FTP', 'gosh')
+    ctx.env.append_unique('USES_FTP', 'storage')
+
+    if ctx.options.enable_ftp_server:
+        ctx.env.append_unique('FILES_FTP',   ['src/ftp/ftp_server.c', 'src/ftp/backend_ram.c'])
+        if hasattr(ctx.options, 'enable_asf_fat') and ctx.options.enable_asf_fat:
+            ctx.env.append_unique('FILES_FTP',   ['src/ftp/backend_fat.c'])
+            ctx.define_cond('ASF_FAT', ctx.options.enable_asf_fat)
+        if ctx.options.enable_fat:
+            ctx.env.append_unique('FILES_FTP',   ['src/ftp/backend_fat.c'])
+            ctx.env.append_unique('FILES_FTP',   ['src/ftp/backend_fs.c'])
+        if ctx.options.enable_uffs:
+            ctx.env.append_unique('FILES_FTP',   ['src/ftp/backend_fs.c'])
+        if ctx.options.enable_newlib:
+            ctx.env.append_unique('FILES_FTP',   ['src/ftp/backend_newlib.c'])
+            ctx.define_cond('ENABLE_FTP_NEWLIB', ctx.options.enable_newlib)
+            
+    if ctx.options.enable_ftp_client:
+        ctx.define_cond('ENABLE_FTP_CLIENT', ctx.options.enable_ftp_client)
+        ctx.env.append_unique('FILES_FTP',   ['src/ftp/ftp_client.c'])
+        ctx.env.append_unique('FILES_FTP',   ['src/ftp/cmd_ftp.c'])
+
+    if ctx.options.enable_blob_client:
+        ctx.define_cond('ENABLE_BLOB_CLIENT', ctx.options.enable_blob_client)
+        ctx.env.append_unique('FILES_FTP',   ['src/blob/blob_client.c'])
+        ctx.env.append_unique('FILES_FTP',   ['src/blob/blob_cmd.c'])
+
+    if ctx.options.enable_blob:
+        ctx.define_cond('ENABLE_BLOB', ctx.options.enable_blob)
+        ctx.env.append_unique('FILES_FTP',   ['src/blob/*.c'])
+        if ctx.options.enable_blob_sink_fat:
+        	ctx.env.append_unique('FILES_FTP',   ['src/blob/sink/blob_sink_fat.c'])
+        if ctx.options.enable_blob_sink_file:
+        	ctx.env.append_unique('FILES_FTP',   ['src/blob/sink/blob_sink_file.c'])
+
+    ctx.define('LIBFTP_VERSION', VERSION)
+
+    ctx.write_config_header('include/conf_ftp.h', top=True, remove=True)
+
+
+def build(ctx):
+
+    ctx(export_includes=['include'], name='ftp_h')
+
+    if ctx.env.FILES_FTP:
+        ctx.objects(source=ctx.path.ant_glob(ctx.env.FILES_FTP, excl=ctx.env.EXCLUDES_FTP), 
+            target='ftp', 
+            includes='include',
+            export_includes=['include'],
+            defines = ctx.env.DEFINES_FTP,
+            use=ctx.env.USES_FTP,
+        )
+
