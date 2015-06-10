@@ -18,7 +18,21 @@
 #include <util/log.h>
 #include <csp-term.h>
 
+
+#define RED     "\x1b[31m"
+#define GREEN   "\x1b[32m"
+#define LGREEN   "\x1b[32;1m"
+#define YELLOW  "\x1b[33m"
+#define BLUE    "\x1b[34m"
+#define MAGENTA "\x1b[35m"
+#define CYAN    "\x1b[36m"
+#define C_RESET   "\x1b[0m"
+#define GREY	   "\x1b[30;1m"
+
+
 void * task_server(void * parameters) {
+
+	uint8_t * mssg;
 
 	/* Create socket */
 	csp_socket_t * sock = csp_socket(0);
@@ -66,8 +80,25 @@ void * task_server(void * parameters) {
 				break;
 
 				case CSPTERM_PORT_PRINT:
-					printf("%*s\r\n",packet->length,packet->data);
-					//csp_buffer_free(packet);
+					mssg=(uint8_t *) malloc((packet->length)+1);
+					strncpy(mssg,packet->data,packet->length);
+					switch(packet->id.src){
+					case 1:
+						printf(LGREEN "Nanomind" C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,mssg);
+						break;
+					case 2:
+						printf("Nanohub # %s\n",mssg);
+						break;
+					case 3:
+						printf("Nanopower # %s\n",mssg);
+						break;
+					case 5:
+						printf("Nanocomm # %s\n",mssg);
+						break;
+					default:
+						printf("Node:%d # %s\n",packet->id.src,mssg);
+						}
+					free(mssg);
 					csp_close(conn);
 				default: {
 					csp_service_handler(conn, packet);

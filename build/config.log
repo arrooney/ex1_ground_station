@@ -1,30 +1,30 @@
-# project csp-term (2.0) configured on Thu May 28 13:13:48 2015 by
+# project csp-term (2.0) configured on Tue Jun  9 17:37:37 2015 by
 # waf 1.6.9 (abi 98, python 20706f0 on linux2)
-# using ./waf configure eclipse
+# using ./waf configure
 #
 ----------------------------------------
 Setting top to
-/home/alex/Desktop/csp-term-2.0
+/home/alex/Desktop/albertasat-ground-station
 ----------------------------------------
 Setting out to
-/home/alex/Desktop/csp-term-2.0/build
+/home/alex/Desktop/albertasat-ground-station/build
 ----------------------------------------
 Checking for program gcc,cc
 /usr/bin/gcc
-find program=['gcc', 'cc'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='CC' -> '/usr/bin/gcc'
+find program=['gcc', 'cc'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='CC' -> '/usr/bin/gcc'
 ----------------------------------------
 Checking for program ar
 /usr/bin/ar
-find program=['ar'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='AR' -> '/usr/bin/ar'
+find program=['ar'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='AR' -> '/usr/bin/ar'
 ----------------------------------------
 Checking for program sphinx-build
 /usr/bin/sphinx-build
-find program=['sphinx-build'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='SPHINX_BUILD' -> '/usr/bin/sphinx-build'
+find program=['sphinx-build'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='SPHINX_BUILD' -> '/usr/bin/sphinx-build'
 (tool gcc is already loaded, skipping)
 ----------------------------------------
 Checking for program pkg-config
 /usr/bin/pkg-config
-find program=['pkg-config'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='PKGCONFIG' -> '/usr/bin/pkg-config'
+find program=['pkg-config'] paths=['/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/home/alex/Desktop/albertasat-gomspace/toolchain/toolchain_link/arm-none-eabi-4.6/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin'] var='PKGCONFIG' -> '/usr/bin/pkg-config'
 ----------------------------------------
 Checking for 'libzmq'
 ['/usr/bin/pkg-config', 'libzmq', '--cflags', '--libs']
@@ -48,10 +48,10 @@ int use_ebcdic (int i) {
 extern int foo;
 
 <==
-[1/2] [32mc: build/.conf_check_ac15f547411a3631f5147f6ca42bfe19/test.c -> build/.conf_check_ac15f547411a3631f5147f6ca42bfe19/testbuild/test.c.1.o
+[1/2] [32mc: build/.conf_check_2cbd9c7a78115eb90b369579793462df/test.c -> build/.conf_check_2cbd9c7a78115eb90b369579793462df/testbuild/test.c.1.o
 [0m
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="unknown"', '-DCSP_POSIX=1', '-DHAVE_LIBZMQ=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', 'test.c.1.o']
-[2/2] [35mgrep_for_endianness: build/.conf_check_ac15f547411a3631f5147f6ca42bfe19/testbuild/test.c.1.o
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="7c53c1d"', '-DCSP_POSIX=1', '-DHAVE_LIBZMQ=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [35mgrep_for_endianness: build/.conf_check_2cbd9c7a78115eb90b369579793462df/testbuild/test.c.1.o
 [0m
 little
 ----------------------------------------
@@ -66,7 +66,7 @@ int main() {
 <==
 [1/2] [32mc: build/.conf_check_1b24b0b3c24d53ce072660942760a09c/test.c -> build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/test.c.1.o
 [0m
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="unknown"', '-DCSP_POSIX=1', '-DHAVE_LIBZMQ=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', 'test.c.1.o']
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="7c53c1d"', '-DCSP_POSIX=1', '-DHAVE_LIBZMQ=1', '-DCSP_DEBUG=1', '-DCSP_USE_RDP=1', '-DCSP_USE_CRC32=1', '-DCSP_USE_HMAC=1', '-DCSP_USE_XTEA=1', '-DCSP_USE_PROMISC=1', '-DCSP_USE_QOS=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', 'test.c.1.o']
 [2/2] [33mcstlib: build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/test.c.1.o -> build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/libtestprog.a
 [0m
 ['/usr/bin/ar', 'rcs', 'libtestprog.a', 'test.c.1.o']
@@ -90,10 +90,10 @@ int use_ebcdic (int i) {
 extern int foo;
 
 <==
-[1/2] [32mc: build/.conf_check_c64e6efc0f2c779a8fa17e022b66f91a/test.c -> build/.conf_check_c64e6efc0f2c779a8fa17e022b66f91a/testbuild/test.c.1.o
+[1/2] [32mc: build/.conf_check_8b85173b2f9184d75c620d29dac91081/test.c -> build/.conf_check_8b85173b2f9184d75c620d29dac91081/testbuild/test.c.1.o
 [0m
 ['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DLOG_CDH="1"', '-DCONFIG_DRIVER_DEBUG=1', '../test.c', '-c', '-o', 'test.c.1.o']
-[2/2] [35mgrep_for_endianness: build/.conf_check_c64e6efc0f2c779a8fa17e022b66f91a/testbuild/test.c.1.o
+[2/2] [35mgrep_for_endianness: build/.conf_check_8b85173b2f9184d75c620d29dac91081/testbuild/test.c.1.o
 [0m
 little
 (tool gcc is already loaded, skipping)
