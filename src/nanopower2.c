@@ -19,6 +19,17 @@
 
 #define COMM_HK_SUCCESS 1
 
+
+#define RED     "\x1b[31m"
+#define GREEN   "\x1b[32m"
+#define LGREEN   "\x1b[32;1m"
+#define YELLOW  "\x1b[33m"
+#define BLUE    "\x1b[34m"
+#define MAGENTA "\x1b[35m"
+#define CYAN    "\x1b[36m"
+#define C_RESET   "\x1b[0m"
+#define GREY	   "\x1b[30;1m"
+
 static uint8_t eps_node = NODE_EPS;
 static uint32_t eps_timeout = 1000;
 
@@ -223,7 +234,9 @@ void eps_hk_print(eps_hk_t * hk) {
 	printf("              +-------------------+  1 (H1-47) --> EN:%u [ %4u, %4u,  %4u,   %4u]\r\n", hk->output[0], hk->curout[0], hk->latchup[0],hk->output_on_delta[0],hk->output_off_delta[0]);
 	printf("  1:          |                   |\r\n");
 	printf("%5u mV ->   |  Voltage          |  2 (H1-49) --> EN:%u [ %4u, %4u,  %4u,   %4u]\r\n", hk->vboost[0], hk->output[1], hk->curout[1], hk->latchup[1],hk->output_on_delta[1],hk->output_off_delta[1]);
-	printf("%5u mA ->   | %05u mV          |\r\n", hk->curin[0], hk->vbatt);
+	if((hk->vbatt)<1440) printf("%5u mA ->   | " YELLOW "%05u mV" C_RESET"         |\r\n", hk->curin[0], hk->vbatt);
+	else if((hk->vbatt)<1420) printf("%5u mA ->   | " RED "%05u mV" C_RESET"         |\r\n", hk->curin[0], hk->vbatt);
+	else printf("%5u mA ->   | " GREEN "%05u mV" C_RESET"         |\r\n", hk->curin[0], hk->vbatt);
 	printf("%5u mW ->   |                   |  3 (H1-51) --> EN:%u [ %4u, %4u,  %4u,   %4u]\r\n",  p_in_1, hk->output[2], hk->curout[2], hk->latchup[2],hk->output_on_delta[2],hk->output_off_delta[2]);
 	printf("  2:          |  Input            |\r\n");
 	printf("%5u mV ->   | %05u mA %05u mW |  4 (H1-48) --> EN:%u [ %4u, %4u,  %4u,   %4u]\r\n",  hk->vboost[1], hk->cursun, p_sun, hk->output[3], hk->curout[3], hk->latchup[3],hk->output_on_delta[3],hk->output_off_delta[3]);
@@ -245,8 +258,21 @@ void eps_hk_print(eps_hk_t * hk) {
 	printf("              +-------------------+\r\n");
 	printf("\r\n");
 	printf("            1       2       3       4       5       6\r\n");
-	printf(" Temp:   %+4d    %+4d    %+4d    %+4d    %+4d    %+4d\r\n", hk->temp[0], hk->temp[1], hk->temp[2], hk->temp[3], hk->temp[4], hk->temp[5]);
-	printf("\r\n");
+	printf(" Temp:   ");
+	uint8_t i=0;
+
+	for(i=0;i<6; i++){
+		if(hk->temp[i]>45){
+			printf(RED "%+4d    " C_RESET, hk->temp[i]);
+		}
+		else if(hk->temp[i]>35){
+			printf(YELLOW "%+4d    " C_RESET, hk->temp[i]);
+		}
+		else{
+			printf(GREEN "%+4d    " C_RESET, hk->temp[i]);
+		}
+	}
+	printf("\r\n\r\n");
 	printf("          Boot   Cause    PPTm\r\n");
 	printf(" Count:  %5"PRIu32"   %5u   %5u\r\n", hk->counter_boot, hk->bootcause, hk->pptmode);
 	printf("\r\n");

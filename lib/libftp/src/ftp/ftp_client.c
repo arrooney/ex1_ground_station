@@ -28,6 +28,7 @@
 #include <ftp/ftp_client.h>
 
 #define FTP_TIMEOUT 30000
+#define FTP_MKFS_TIMEOUT 10*60*1000
 
 /* Chunk status markers */
 static const char const * packet_missing = "-";
@@ -740,7 +741,7 @@ int ftp_mkfs(uint8_t host, uint8_t port, uint8_t backend, uint8_t dev) {
 	int repsiz = sizeof(ftp_type_t) + sizeof(ftp_mkfs_reply_t);
 
 	if (csp_transaction(CSP_PRIO_NORM, host, port,
-			FTP_TIMEOUT, &packet, reqsiz, &packet, repsiz) != repsiz)
+			FTP_MKFS_TIMEOUT, &packet, reqsiz, &packet, repsiz) != repsiz)
 		return -1;
 	if (packet.type != FTP_MKFS_REPLY)
 		return -1;

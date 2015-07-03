@@ -82,11 +82,11 @@ void * task_server(void * parameters) {
 				case CSPTERM_PORT_PRINT:
 					mssg=(uint8_t *) malloc((packet->length)+1);
 					strncpy(mssg,packet->data,packet->length);
-					mssg[packet->length]=0;
+					mssg[packet->length]=0;//manually null terminate string
 
 					switch(packet->id.src){
 					case 1:
-						printf(LGREEN "Nanomind" C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,mssg);
+						printf(LGREEN "Nanomind " C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,mssg);
 						break;
 					case 2:
 						printf("Nanohub # %s\n",mssg);

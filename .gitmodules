@@ -1,0 +1,3 @@
+[submodule "albertasat-gomspace"]
+	path = albertasat-gomspace
+	url = https://protocorbulo@bitbucket.org/bbruner0/albertasat-gomspace.git

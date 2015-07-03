@@ -3,4 +3,10 @@ build/*
 .lock-waf*
 .project
 .settings/*
+*.map
 *~
+*.bin
+*.lzo
+*.txt
+*.TXT
+
