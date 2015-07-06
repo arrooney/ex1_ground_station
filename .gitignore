@@ -1,7 +1,7 @@
 build/*
 .waf-1.6.9*
 .lock-waf*
-.project
+.cproject
 .settings/*
 *.map
 *~
