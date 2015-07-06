@@ -197,11 +197,6 @@ int main(int argc, char * argv[]) {
 
 	void cmd_eps_setup(void);
 	cmd_eps_setup();
-	void cmd_hub_setup(void);
-	cmd_hub_setup();
-	void cmd_obc_setup(void);
-	cmd_obc_setup();
-
 
 	/* Console */
 	command_init();
