@@ -14,7 +14,7 @@
 #include <pthread.h>
 
 #include "nanopower2.h"
-
+#include "telecommand_packet.h"
 
 #include <conf_cspterm.h>
 #include <csp-term.h>

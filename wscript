@@ -33,6 +33,7 @@ def configure(ctx):
 	except ctx.errors.ConfigurationError:
 		pass
 	
+	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client','albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
 	ctx.env.append_unique('LIBS_CSPTERM', ['rt', 'pthread', 'elf'])
 
@@ -88,7 +89,7 @@ def configure(ctx):
 	ctx.recurse(modules, mandatory=False)	
 
 def build(ctx):
-	ctx(export_includes=['include', 'client'], name='include')
+	ctx(export_includes=ctx.env.INCLUDES_CSPTERM, name='include')
 	ctx.recurse(modules, mandatory=False)
 	ctx.program(
 		source=ctx.path.ant_glob(ctx.env.FILES_CSPTERM), 
