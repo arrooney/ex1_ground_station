@@ -39,6 +39,7 @@
 
 #define OBC_PORT_RSH				22
 
+#define OBC_PORT_SET_RTC			24
 #define OBC_PORT_TELECOMMAND		25
 
 typedef struct __attribute__((packed)) obc_beacon_s {
