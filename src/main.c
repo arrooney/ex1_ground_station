@@ -198,6 +198,9 @@ int main(int argc, char * argv[]) {
 	void cmd_eps_setup(void);
 	cmd_eps_setup();
 
+	void cmd_tele_setup(void);
+	cmd_tele_setup();
+
 	/* Console */
 	command_init();
 	console_init();
