@@ -1225,8 +1225,8 @@ int cmd_tele_delete_file(struct command_context *ctx) {
 
 
 
-	tele.telecommand_code = TELECOMMAND_TYPE_DELETE_FILE;
-	tele.payload_bytes = TELE_DELETE_FILE_SIZE;
+	tele.telecommand_code = 0;
+	tele.payload_bytes = 0;
 
 
 
@@ -1289,8 +1289,8 @@ int cmd_tele_conf_delete_file(struct command_context *ctx) {
 
 
 
-	tele.telecommand_code = TELECOMMAND_TYPE_CONF_DELETE_FILE;
-	tele.payload_bytes = TELE_CONF_DELETE_FILE_SIZE;
+	tele.telecommand_code = 0;
+	tele.payload_bytes = 0;
 
 
 
@@ -1353,8 +1353,8 @@ int cmd_tele_query_file(struct command_context *ctx) {
 
 
 
-	tele.telecommand_code = TELECOMMAND_TYPE_QUERY_FILE;
-	tele.payload_bytes = TELE_QUERY_FILE_SIZE;
+	tele.telecommand_code = 0;
+	tele.payload_bytes = 0;
 
 
 
