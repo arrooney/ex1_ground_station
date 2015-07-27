@@ -5,6 +5,8 @@ Something about cats.
 * cd albertasat-gomspace
 * git submodule init
 * git submodule update
+* git fetch
+* git checkout origin/nanomind-master
 * cd ..
 * sudo apt-get install libzmq3-dev
 * sudo apt-get install libelf-dev
