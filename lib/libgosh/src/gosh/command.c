@@ -271,6 +271,15 @@ static int __command_run(command_t *cmds, int cmd_count, char *line) {
 	struct command_context context;
 	char token[MAX_TOKEN_SIZE];
 
+	extern int in_pipe_mode;
+
+	if(in_pipe_mode){
+		context.pipe_mode=1;
+	}
+	else{
+		context.pipe_mode=0;
+	}
+
 	char * next = command_token(line, token, MAX_TOKEN_SIZE);
 
 	for (i = 0; i < cmd_count; i++) {
@@ -344,40 +353,71 @@ static int __command_run(command_t *cmds, int cmd_count, char *line) {
  * @return CMD_ERROR_NONE if parsing succeeded, CMD_ERROR_AMBIGUOUS if multiple
  * commands matches, CMD_ERROR_NOTFOUND if no command matches
  */
-int command_run(char *line) {
+int command_run(char *iline) {
 
+	size_t linelength;
+	linelength=strlen(iline);
+	int i=0;
+	int last=0;
+	char * line;
 	int ret;
+	int go=0;
 
-	/* Return if no commands are registered */
-	if (!commands)
-		return CMD_ERROR_NOMEM;
+	for(i=0; i<=linelength; i++){
+		if(i==linelength){
+			line=(char*) calloc(i-last,sizeof(char));
+			strncpy(line,&iline[last],i-last);
+			go=1;
+		}
+		else if(i<linelength){
+				if(strncmp(&iline[i]," | ",3)==0){
+					line=(char*) calloc(i-last,sizeof(char));
+					strncpy(line,&iline[last],i-last);
+					last=i+3; //beginning of the new line
+					go=1;
+				}
+		}
+		if(go==1){
+			/*RUN THE COMMAND*/
 
-	/* Save original string before command_parse mangles it */
-	char *org = strdup(line);
+			/* Return if no commands are registered */
+			if (!commands)
+				return CMD_ERROR_NOMEM;
 
-	/* Strip leading and ending whitespace, inplace */
-	strstrip(org);
+			/* Save original string before command_parse mangles it */
+			char *org = strdup(line);
 
-	/* Parse and execute command */
-	ret = __command_run(commands, command_count, line);
-	if (ret != CMD_ERROR_NONE) {
-		if (ret == CMD_ERROR_NOTFOUND) {
-			printf("Unknown command \'%s\'\r\n", org);
-		} else if (ret == CMD_ERROR_CHAINED) {
-			printf("\'%s\' contains sub-commands:\r\n", org);
-			char help_str[CONSOLE_BUFSIZ+1];
-			sprintf(help_str, "%s ", org);
-			command_help(help_str);
-		} else if (ret == CMD_ERROR_INVALID) {
-			printf("Could not execute command \'%s\', Invalid argument(s)\r\n", org);
-		} else {
-			printf("Could not execute command \'%s\', error %d\r\n", org, ret);
+			/* Strip leading and ending whitespace, inplace */
+			strstrip(org);
+
+			/* Parse and execute command */
+			ret = __command_run(commands, command_count, line);
+			if (ret != CMD_ERROR_NONE) {
+				if (ret == CMD_ERROR_NOTFOUND) {
+					printf("Unknown command \'%s\'\r\n", org);
+					break;
+				} else if (ret == CMD_ERROR_CHAINED) {
+					printf("\'%s\' contains sub-commands:\r\n", org);
+					char help_str[CONSOLE_BUFSIZ+1];
+					sprintf(help_str, "%s ", org);
+					command_help(help_str);
+					break;
+				} else if (ret == CMD_ERROR_INVALID) {
+					printf("Could not execute command \'%s\', Invalid argument(s)\r\n", org);
+					break;
+				} else {
+					printf("Could not execute command \'%s\', error %d\r\n", org, ret);
+					break;
+				}
+			}
+
+			/* Restore original string */
+			strcpy(line, org);
+			free(org);
+			free(line);
+			go=0;
 		}
 	}
-
-	/* Restore original string */
-	strcpy(line, org);
-	free(org);
 
 	return ret;
 }

@@ -35,7 +35,7 @@ def configure(ctx):
 	
 	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client','albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
-	ctx.env.append_unique('LIBS_CSPTERM', ['rt', 'pthread', 'elf'])
+	ctx.env.append_unique('LIBS_CSPTERM', ['rt', 'pthread', 'elf', 'ncurses'])
 
 	# Options for CSP
 	ctx.options.with_os = 'posix'

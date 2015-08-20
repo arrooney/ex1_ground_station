@@ -201,6 +201,10 @@ int main(int argc, char * argv[]) {
 	void cmd_tele_setup(void);
 	cmd_tele_setup();
 
+	void cmd_utils_setup(void);
+	cmd_utils_setup();
+
+
 	/* Console */
 	command_init();
 	console_init();

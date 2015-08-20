@@ -53,6 +53,8 @@ static const char clear[] = "\033[H\033[2J";
 
 static int escape = CONSOLE_NORMAL;
 
+int in_pipe_mode=0;
+
 #ifdef CONSOLE_HISTORY_ENABLE
 static int history_elements = 0;
 static int history_cur = 0;
@@ -209,6 +211,7 @@ static void console_execute(void) {
 	}
 	console_reset();
 }
+
 
 static void console_complete(void) {
 	/* We don't expand in the middle of a line */
@@ -422,9 +425,16 @@ void *debug_console(void *pvParameters) {
 		case 0x7f:
 			console_backspace();
 			break;
+		case '|':
+			in_pipe_mode=1;
+			console_insert(0x7C);
+			break;
 		case '\r':
 		case '\n':
 			console_execute();
+			if( in_pipe_mode ){
+				in_pipe_mode=0;
+			}
 			break;
 		case '\t':
 			console_complete();

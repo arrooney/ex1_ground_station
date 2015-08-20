@@ -52,6 +52,13 @@ int cmd_rparam_list(struct command_context *ctx) {
 
 int cmd_rparam_init(struct command_context *ctx) {
 
+	printf("argc=%d\n",ctx->argc);
+	int i=0;
+	for(i=0;i<(ctx->argc);i++){
+		printf("argv[%d]=%s\n",i,ctx->argv[i]);
+	}
+
+
 	if ((ctx->argc != 2) && (ctx->argc != 3))
 		return CMD_ERROR_SYNTAX;
 
@@ -104,6 +111,12 @@ int cmd_rparam_init(struct command_context *ctx) {
 }
 
 int cmd_rparam_download(struct command_context *ctx) {
+
+	printf("argc:%d\n",ctx->argc);
+	uint8_t i;
+	for(i=0; i<ctx->argc; i++){
+		printf("argv[%d]=%s\n",i,ctx->argv[i]);
+	}
 
 	if ((ctx->argc != 2) && (ctx->argc != 3))
 		return CMD_ERROR_SYNTAX;
@@ -391,18 +404,24 @@ int cmd_rparam_set(struct command_context *ctx) {
 	if (ctx->argc < 3)
 		return CMD_ERROR_SYNTAX;
 
+
 	if (rparam_mem_i.table == NULL)
 		return CMD_ERROR_FAIL;
+
+
+	printf("query->action %d, query->length %d\n",query->action,query->length);
 
 	/* Ensure correct header */
 	if (query->action != RPARAM_SET) {
 		query->length = 0;
 		query->action = RPARAM_SET;
 	}
+	printf("query->action %d, query->length %d\n",query->action,query->length);
 
 	char shortname[strlen(ctx->argv[1])];
 	int array_index = -1;
 	sscanf(ctx->argv[1], "%[^[][%d]", shortname, &array_index);
+
 
 	const param_table_t * param = param_find_name(rparam_mem_i.table, rparam_mem_i.count, shortname);
 	if (param == NULL) {
@@ -414,6 +433,8 @@ int cmd_rparam_set(struct command_context *ctx) {
 		printf("Array index out of bounds, max index = %u\r\n", param->count - 1);
 		return CMD_ERROR_FAIL;
 	}
+
+	printf("array_index: %d",array_index);
 
 	if (array_index >= 0) {
 

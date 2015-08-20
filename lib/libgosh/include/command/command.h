@@ -138,6 +138,7 @@ struct command_context {
 	size_t arg_size;
 	void *rpc_buf;
 	GOSH_CMD_STRUCT *command;
+	int pipe_mode;
 };
 
 typedef int (*command_handler_t)(struct command_context * context);
