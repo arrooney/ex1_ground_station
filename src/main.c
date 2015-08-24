@@ -58,6 +58,10 @@ static void exithandler(void) {
 	console_exit();
 }
 
+char * pipe_buffer;
+char holdbuff=0;
+
+
 int main(int argc, char * argv[]) {
 
 	atexit(exithandler);
@@ -77,6 +81,8 @@ int main(int argc, char * argv[]) {
 	/* ZMQ STUFF */
 	char zmqhost[100] = "localhost";
 	uint8_t use_zmq = 0;
+
+	pipe_buffer=calloc(1,sizeof(char));
 
 	/**
 	 * Parser

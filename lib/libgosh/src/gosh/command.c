@@ -273,12 +273,7 @@ static int __command_run(command_t *cmds, int cmd_count, char *line) {
 
 	extern int in_pipe_mode;
 
-	if(in_pipe_mode){
-		context.pipe_mode=1;
-	}
-	else{
-		context.pipe_mode=0;
-	}
+	context.pipe_mode=in_pipe_mode;
 
 	char * next = command_token(line, token, MAX_TOKEN_SIZE);
 
@@ -355,6 +350,10 @@ static int __command_run(command_t *cmds, int cmd_count, char *line) {
  */
 int command_run(char *iline) {
 
+	extern char * pipe_buffer;
+	extern int in_pipe_mode;
+	extern char holdbuff;
+
 	size_t linelength;
 	linelength=strlen(iline);
 	int i=0;
@@ -418,7 +417,11 @@ int command_run(char *iline) {
 			go=0;
 		}
 	}
-
+	if(in_pipe_mode){
+		printf("%s\n",pipe_buffer);
+		free(pipe_buffer);
+		pipe_buffer=calloc(1,sizeof(char));
+	}
 	return ret;
 }
 

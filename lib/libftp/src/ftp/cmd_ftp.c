@@ -270,9 +270,14 @@ int cmd_ftp_ls(struct command_context *ctx) {
 
 	if (strlen(remote_path) > FTP_PATH_LENGTH)
 		return CMD_ERROR_SYNTAX;
-
-	if (ftp_list(ftp_host, ftp_port, ftp_backend, remote_path) != 0)
-		return CMD_ERROR_FAIL;
+	if (ctx->pipe_mode==1){
+		if (ftp_list_pipe(ftp_host, ftp_port, ftp_backend, remote_path) != 0)
+			return CMD_ERROR_FAIL;
+	}
+	else{
+		if (ftp_list(ftp_host, ftp_port, ftp_backend, remote_path) != 0)
+			return CMD_ERROR_FAIL;
+	}
 	return CMD_ERROR_NONE;
 
 }

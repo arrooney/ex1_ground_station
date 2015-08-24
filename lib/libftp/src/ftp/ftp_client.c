@@ -805,6 +805,63 @@ int ftp_list(uint8_t host, uint8_t port, uint8_t backend, char * path) {
 
 }
 
+int ftp_list_pipe(uint8_t host, uint8_t port, uint8_t backend, char * path) {
+
+	/* Request */
+	extern char * pipe_buffer;
+	char * temp_buffer;
+	int entries;
+	csp_conn_t * c;
+	csp_packet_t * p;
+	ftp_packet_t packet;
+	packet.type = FTP_LIST_REQUEST;
+	packet.list.backend = backend;
+	strncpy(packet.list.path, path, FTP_PATH_LENGTH);
+	packet.list.path[FTP_PATH_LENGTH-1] = '\0';
+
+	int reqsiz = sizeof(ftp_type_t) + sizeof(ftp_list_request_t);
+	int repsiz = sizeof(ftp_type_t) + sizeof(ftp_list_reply_t);
+
+	c = csp_connect(CSP_PRIO_NORM, host, port, FTP_TIMEOUT, CSP_O_RDP);
+	if (c == NULL)
+		return -1;
+	if (csp_transaction_persistent(c, FTP_TIMEOUT, &packet, reqsiz, &packet, repsiz) != repsiz)
+		return -1;
+	if (packet.type != FTP_LIST_REPLY)
+		return -1;
+	if (packet.listrep.ret != FTP_RET_OK) {
+		ftp_perror(packet.listrep.ret);
+		return -1;
+	}
+
+	entries = csp_ntoh16(packet.listrep.entries);
+
+	/* Read entries */
+	ftp_packet_t * f;
+	while (entries && ((p = csp_read(c, FTP_TIMEOUT)) != NULL)) {
+		f = (ftp_packet_t *) &(p->data);
+		uint16_t ent = csp_ntoh16(f->listent.entry);
+		uint32_t size = csp_ntoh32(f->listent.size);
+
+		char bytebuf[25];
+		bytesize(bytebuf, 25, size);
+
+		temp_buffer=(char *) calloc(strnlen(pipe_buffer,50000)+strnlen(f->listent.path,50000)+(f->listent.type ? 1 : 0)+4,sizeof(char));
+
+		sprintf(temp_buffer,"%s\r\n%s%s\r\n", pipe_buffer, f->listent.path, f->listent.type ? "/" : "");
+		free(pipe_buffer);
+		pipe_buffer=temp_buffer;
+		csp_buffer_free(p);
+		if (ent == entries - 1)
+			break;
+	}
+
+	csp_close(c);
+
+	return 0;
+
+}
+
 int ftp_zip(uint8_t host, uint8_t port, uint8_t backend, char * src, char * dest, uint8_t action) {
 
 	/* Request */

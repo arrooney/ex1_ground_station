@@ -25,6 +25,7 @@ int ftp_move(uint8_t host, uint8_t port, uint8_t backend, char * from, char * to
 int ftp_remove(uint8_t host, uint8_t port, uint8_t backend, char * path);
 int ftp_mkfs(uint8_t host, uint8_t port, uint8_t backend, uint8_t dev);
 int ftp_list(uint8_t host, uint8_t port, uint8_t backend, char * path);
+int ftp_list_pipe(uint8_t host, uint8_t port, uint8_t backend, char * path);
 int ftp_zip(uint8_t host, uint8_t port, uint8_t backend, char * src, char * dest, uint8_t action);
 
 #endif /* FTP_CLIENT_H_ */

@@ -182,6 +182,8 @@ int command_usage(char *line);
 int command_enable(command_t *cmd, int cmd_count);
 int command_init(void);
 
+void strstrip(char *s);
+
 void cmd_dfl_setup(void);
 
 #endif /* _COMMAND_H_ */
