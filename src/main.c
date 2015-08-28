@@ -53,7 +53,7 @@ static void print_help(void) {
 	printf("  -b BAUD,\tSet baud rate (default: 500000)\r\n");
 	printf("  -h,\t\tPrint help and exit\r\n");
 }
-
+static void print_logo( );
 static void exithandler(void) {
 	console_exit();
 }
@@ -63,6 +63,10 @@ char holdbuff=0;
 
 
 int main(int argc, char * argv[]) {
+
+	print_logo( );
+	fflush( stdout );
+	usleep( 1000*1000*1 );
 
 	atexit(exithandler);
 
@@ -224,5 +228,28 @@ int main(int argc, char * argv[]) {
 
 	return 0;
 
+}
+
+static void print_logo( )
+{
+	printf( "               ,        ,			\n" );
+	printf( "              /(        )`			\n" );
+	printf( "              \\ \\___   / |		\n" );
+	printf( "              /- _  `-/  '			\n" );
+	printf( "             (/\\/ \\ \\   /\\		\n" );
+	printf( "             / \\/   | `    \\		\n" );
+	printf( "            O O   ) /    |			\n" );
+	printf( "            `-^--'`<     '			\n" );
+	printf( "           (_.)  _  )   /			\n" );
+	printf( "            `.___/`    /			\n" );
+	printf( "              `-----' /			\n" );
+	printf( "<----.     __ / __   \\			\n" );
+	printf( "<----|====O)))==) \\) /====		\n" );
+	printf( "<----'    `--' `.__,' \\			\n" );
+    printf( "             |        |			\n" );
+	printf( "              \\       /			\n" );
+	printf( "        ______( (_  / \\______		\n" );
+	printf( "       ,'  ,-----'   |        \\	\n" );
+	printf( "       `--{__________)        \\/ 	\n" );
 }
 
