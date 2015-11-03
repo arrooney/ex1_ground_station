@@ -1,6 +1,6 @@
-#include "cmd_tele.h"
+/*#include "cmd_tele.h"
 #include "nanomind.h"
-#include "telecommand_packet.h"
+//#include "telecommand_packet.h"
 #include "csp/csp.h"
 
 #include <stdlib.h>
@@ -2726,4 +2726,4 @@ command_t __root_command tele_commands[] = {
 
 void cmd_tele_setup(void) {
 	command_register(tele_commands);
-}
+}*/

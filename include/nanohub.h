@@ -56,6 +56,7 @@ typedef struct  __attribute__((packed)) {
   nanohub_conf_knife_t knife1;
   nanohub_conf_switch_t switch0;
   nanohub_conf_switch_t switch1;
+  nanohub_conf_switch_t switch2;
   nanohub_conf_timing_t timing;
   nanohub_conf_dio_t dio;
   uint32_t checksum;

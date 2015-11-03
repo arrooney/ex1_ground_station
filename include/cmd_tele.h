@@ -6,7 +6,7 @@
  *      adhamilt@ualbeta.ca
  */
 
-#include "telecommand_packet.h"
+//#include "telecommand_packet.h"
 
 #ifndef CMD_TELE_H_
 #define CMD_TELE_H_

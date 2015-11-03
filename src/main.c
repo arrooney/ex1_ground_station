@@ -14,7 +14,7 @@
 #include <pthread.h>
 
 #include "nanopower2.h"
-#include "telecommand_packet.h"
+//#include "telecommand_packet.h"
 
 #include <conf_cspterm.h>
 #include <csp-term.h>
@@ -207,13 +207,15 @@ int main(int argc, char * argv[]) {
 
 	void cmd_eps_setup(void);
 	cmd_eps_setup();
-
-	void cmd_tele_setup(void);
+/*
+    void cmd_tele_setup(void);
 	cmd_tele_setup();
-
+*/
 	void cmd_utils_setup(void);
 	cmd_utils_setup();
 
+
+	// TODO finish fixing hub gosh commands.
 
 	/* Console */
 	command_init();
