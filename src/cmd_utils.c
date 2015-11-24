@@ -19,6 +19,7 @@
 #include <util/log.h>
 
 #include <command/command.h>
+#include <nanomind.h>
 
 
 
@@ -86,6 +87,26 @@ int cmd_script(struct command_context *ctx) {
 	return CMD_ERROR_NONE;
 }
 
+int cmd_send_string(struct command_context *ctx) {
+
+#define MAX_STRING 100
+
+	if(ctx->argc!=2){
+		return CMD_ERROR_SYNTAX;
+	}
+
+	uint8_t out_string[MAX_STRING] = {0};
+
+	FILE * fid;
+	fid=fopen(ctx->argv[1],"r");
+	fread(&out_string, 100, 1, fid);
+	fclose(fid);
+
+	csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_STRING_SEND, 0, &out_string, MAX_STRING, NULL, 0); // Not converted to network endian
+
+	return CMD_ERROR_NONE;
+}
+
 
 
 
@@ -117,8 +138,18 @@ command_t __root_command script_commands[] = {
 	}
 };
 
+command_t __root_command send_string[] = {
+	{
+		.name = "send_string",
+		.help = "Send a string less than 100 bytes long to NanoMind. String is read from file - single line only.",
+		.usage = "send_string <filename>",
+		.handler = cmd_send_string,
+	}
+};
+
 void cmd_utils_setup(void) {
 	command_register(clear_commands);
 	command_register(delay_commands);
 	command_register(script_commands);
+	command_register(send_string);
 }

@@ -42,6 +42,8 @@
 #define OBC_PORT_SET_RTC			24
 #define OBC_PORT_TELECOMMAND		25
 
+#define OBC_STRING_SEND				28
+
 typedef struct __attribute__((packed)) obc_beacon_s {
 	uint32_t time_sec;			// 4 bytes
 	struct __attribute__((packed)) {
