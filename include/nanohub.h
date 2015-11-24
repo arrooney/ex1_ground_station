@@ -75,9 +75,9 @@ typedef struct __attribute__((packed)) {
 } nanohub_knivesdata_t;
 
 typedef struct __attribute__((packed)) {
-  uint16_t on_timer[2];
-  uint16_t off_timer[2];
-  uint16_t faults[2];
+  uint16_t on_timer[3];
+  uint16_t off_timer[3];
+  uint16_t faults[3];
   uint8_t switchstatus;
 } nanohub_switchdata_t;
 

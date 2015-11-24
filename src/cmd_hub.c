@@ -143,10 +143,10 @@ int cmd_hub_single_output(struct command_context *ctx) {
 		hub_set_single_output(99, 0, 0, &hubswitch);
 		printf("Switchdata:\r\n");
 	}
-	printf(" ontimer  ch0:%u ch1:%u \r\n",hubswitch.on_timer[0],hubswitch.on_timer[1]);
-    printf(" offtimer ch0:%u ch1:%u \r\n",hubswitch.off_timer[0],hubswitch.off_timer[1]);
-	printf(" faults   ch0:%u ch1:%u \r\n",hubswitch.faults[0],hubswitch.faults[1]);
-	printf(" status   ch0:%u ch1:%u \r\n",(hubswitch.switchstatus)&0x01, (hubswitch.switchstatus>>1)&0x01);
+	printf(" ontimer  ch0:%u ch1:%u ch2:%u \r\n",hubswitch.on_timer[0],hubswitch.on_timer[1],hubswitch.on_timer[2]);
+    printf(" offtimer ch0:%u ch1:%u ch2:%u \r\n",hubswitch.off_timer[0],hubswitch.off_timer[1],hubswitch.off_timer[2]);
+	printf(" faults   ch0:%u ch1:%u ch2:%u \r\n",hubswitch.faults[0],hubswitch.faults[1],hubswitch.faults[2]);
+	printf(" status   ch0:%u ch1:%u ch2:%u \r\n",(hubswitch.switchstatus)&0x01, (hubswitch.switchstatus>>1)&0x01, (hubswitch.switchstatus>>2)&0x01);
 	
 	
 	return CMD_ERROR_NONE;

@@ -32,7 +32,7 @@ int hub_get_hk(nanohub_hk_t *nanohub_hk) {
 	nanohub_hk->Iout[1] = csp_ntoh16(nanohub_hk->Iout[1]);
 	nanohub_hk->Iout[2] = csp_ntoh16(nanohub_hk->Iout[2]);
 	nanohub_hk->Vout[0] = csp_ntoh16(nanohub_hk->Vout[0]);
-	nanohub_hk->Vout[1] = csp_ntoh16(nanohub_hk->Vout[0]);
+	nanohub_hk->Vout[1] = csp_ntoh16(nanohub_hk->Vout[1]);
 	return status;
 }
 
@@ -73,6 +73,8 @@ void hub_print_conf(nanohub_conf_t *configuration)
 	printf(" bootdelay    %u \r\n",configuration->switch0.bootdelay);
 	printf("Switch 1 : \r\n");
 	printf(" bootdelay    %u \r\n",configuration->switch1.bootdelay);
+    printf("Switch 2: \r\n");
+    printf(" bootdelay    %u \r\n",configuration->switch2.bootdelay);
 
 	printf("Timing : \r\n");
 	printf(" wdt timeout  %"PRIu32" \r\n",configuration->timing.wdt_timeout);
