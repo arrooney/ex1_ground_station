@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <csp/csp.h>
 #include <csp/csp_endian.h>
@@ -97,18 +98,13 @@ int cmd_send_string(struct command_context *ctx) {
 
 	uint8_t out_string[MAX_STRING] = {0};
 
-	FILE * fid;
-	fid=fopen(ctx->argv[1],"r");
-	fread(&out_string, 100, 1, fid);
-	fclose(fid);
+
+    memcpy(&out_string, ctx->argv[1], MAX_STRING);
 
 	csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_STRING_SEND, 0, &out_string, MAX_STRING, NULL, 0); // Not converted to network endian
 
 	return CMD_ERROR_NONE;
 }
-
-
-
 
 
 command_t __root_command clear_commands[] = {
@@ -141,8 +137,8 @@ command_t __root_command script_commands[] = {
 command_t __root_command send_string[] = {
 	{
 		.name = "send_string",
-		.help = "Send a string less than 100 bytes long to NanoMind. String is read from file - single line only.",
-		.usage = "send_string <filename>",
+		.help = "Send a string less than 100 bytes long to NanoMind. String is read as plain text in SINGLE quotes. Double quotes can be included in the string.",
+		.usage = "send_string 'string'",
 		.handler = cmd_send_string,
 	}
 };
