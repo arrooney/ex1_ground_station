@@ -5,8 +5,7 @@ Contains the gomespace source code for a ground station. The submodules within h
 
 ## Setting up Your Computer
 
-* sudo apt-get install libzmq3-dev
-* sudo apt-get install libelf-dev
+* sudo apt-get install libzmq3-dev libelf-dev libncurses-dev
 
 ## Setting up a Newly Cloned Repository
 
