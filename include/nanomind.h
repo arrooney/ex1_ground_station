@@ -74,7 +74,7 @@ typedef struct obc_ram_to_rom_s {
 } obc_ram_to_rom_t;
 
 void obc_set_node(uint8_t node);
-void obc_timesync(timestamp_t * time, int timeout);
+timestamp_t obc_timesync(timestamp_t * time, int timeout);
 void obc_jump_ram(uint32_t addr);
 void obc_load_image(const char * path);
 void obc_boot_conf(uint32_t checksum, uint32_t boot_counts, const char * path);

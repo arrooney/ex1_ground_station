@@ -148,7 +148,7 @@ int main(int argc, char * argv[]) {
 		}
 		usart_set_callback(my_usart_rx);
 
-		csp_rtable_set(0, 2, &csp_if_kiss, CSP_NODE_MAC);
+		csp_rtable_set(0, 0, &csp_if_kiss, CSP_NODE_MAC);
 /*
 		csp_route_set(1, &csp_if_kiss, CSP_NODE_MAC);
 		csp_route_set(2, &csp_if_kiss, CSP_NODE_MAC);

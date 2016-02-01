@@ -35,18 +35,21 @@ void obc_set_node(uint8_t node) {
  * @param time timespec_t seconds and nanoseconds
  * @param timeout timeout in [ms]
  */
-void obc_timesync(timestamp_t * time, int timeout) {
+timestamp_t obc_timesync(timestamp_t * time, int timeout) {
 
+	timestamp_t ret_time;
 	time->tv_sec = csp_hton32(time->tv_sec);
 	time->tv_nsec = csp_hton32(time->tv_nsec);
-	if (csp_transaction(CSP_PRIO_NORM, node_obc, OBC_PORT_TIMESYNC, timeout, time, sizeof(timestamp_t), time, sizeof(timestamp_t)) > 0) {
-		time->tv_sec = csp_ntoh32(time->tv_sec);
-		time->tv_nsec = csp_ntoh32(time->tv_nsec);
+	if (csp_transaction(CSP_PRIO_NORM, node_obc, OBC_PORT_TIMESYNC, timeout, time, sizeof(timestamp_t), &ret_time, sizeof(timestamp_t)) > 0) {
+		ret_time.tv_sec = csp_ntoh32(ret_time.tv_sec);
+		ret_time.tv_nsec = csp_ntoh32(ret_time.tv_nsec);
+		return ret_time;
 	} else {
-		time->tv_sec = 0;
-		time->tv_nsec = 0;
+		printf("Comms failed. No time transfer!");
 	}
-
+	ret_time.tv_sec = 0;
+	ret_time.tv_nsec = 0;
+	return ret_time;
 }
 
 /**

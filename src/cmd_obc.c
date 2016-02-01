@@ -112,15 +112,32 @@ int cmd_obc_ram_to_rom(struct command_context *ctx) {
 int cmd_obc_timesync(struct command_context *ctx) {
 
 	char * args = command_args(ctx);
-	int32_t sec;
+	//int32_t sec;
+	time_t sec = 0;
 	if (args == NULL || sscanf(args, "%"PRId32, &sec) != 1)
 		return CMD_ERROR_SYNTAX;
-
+/*
 	time_t tt;
 	timestamp_t t = {((sec == 0) ? time(0) : sec), 0};
 	tt = t.tv_sec;
 	printf("Set OBC time to: %s\r\n", ctime(&tt));
 	obc_timesync(&t, 6000);
+*/
+
+	timestamp_t t;
+	timestamp_t ret_t;
+	if(sec == 1)
+	{
+		t.tv_sec = time(NULL);
+	}
+	else
+	{
+		t.tv_sec = sec;
+	}
+	t.tv_nsec = 0;
+	ret_t = obc_timesync(&t, 6000);
+	time_t tt = ret_t.tv_sec;
+	printf("OBC time is now: %s Difference was %d seconds. (New-old)\r\n", ctime(&tt), ret_t.tv_nsec);
 
 	return CMD_ERROR_NONE;
 
@@ -129,10 +146,11 @@ int cmd_obc_timesync(struct command_context *ctx) {
 int cmd_obc_get_time(struct command_context *ctx) {
 
 	timestamp_t t;
+	timestamp_t ret_t;
 	t.tv_sec = 0;
 	t.tv_nsec = 0;
-	obc_timesync(&t, 6000);
-	time_t tt = t.tv_sec;
+	ret_t = obc_timesync(&t, 6000);
+	time_t tt = ret_t.tv_sec;
 	printf("OBC time is: %s\r\n", ctime(&tt));
 
 	return CMD_ERROR_NONE;
@@ -189,12 +207,12 @@ command_t __sub_command obc_subcommands[] = {
 		.handler = cmd_obc_ram_to_rom,
 	},{
 		.name = "ts",
-		.help = "Synchronize time",
+		.help = "Synchronize time. Value of 1 gets current system time automatically.",
 		.usage = "<time>",
 		.handler = cmd_obc_timesync,
 	},{
 		.name = "gt",
-		.help = "Get time",
+		.help = "Get time from NanoMind RTC",
 		.handler = cmd_obc_get_time,
 	},{
 		.name = "bcget",
