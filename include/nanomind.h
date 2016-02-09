@@ -83,5 +83,6 @@ void obc_fs_to_flash(uint32_t addr, const char * path);
 void obc_ram_to_rom(uint32_t size, uint32_t checksum, uint32_t src, uint32_t dst);
 int obc_boot_count_get(uint32_t *boot_count, int timeout);
 int obc_boot_count_reset(uint32_t *boot_count, int timeout);
+void obc_force_state(void);
 
 #endif /* NANOMIND_H_ */

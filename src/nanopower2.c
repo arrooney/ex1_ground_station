@@ -31,7 +31,7 @@
 #define GREY	   "\x1b[30;1m"
 
 static uint8_t eps_node = NODE_EPS;
-static uint32_t eps_timeout = 1000;
+static uint32_t eps_timeout = 2000;
 
 void eps_set_node(uint8_t node) {
 	eps_node = node;

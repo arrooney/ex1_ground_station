@@ -174,6 +174,11 @@ int cmd_obc_reset_boot_count(struct command_context *ctx) {
 	return CMD_ERROR_NONE;
 }
 
+int cmd_obc_force_state(struct command_context *ctx) {
+	obc_force_state();
+	return CMD_ERROR_NONE;
+}
+
 
 command_t __sub_command obc_subcommands[] = {
 	{
@@ -222,6 +227,10 @@ command_t __sub_command obc_subcommands[] = {
 		.name = "bcreset",
 		.help = "Reset obc boot counter",
 		.handler = cmd_obc_reset_boot_count,
+	},{
+		.name = "forcestate",
+		.help = "Forces obc into low power mode",
+		.handler = cmd_obc_force_state,
 	}
 };
 

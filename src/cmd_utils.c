@@ -97,11 +97,13 @@ int cmd_send_string(struct command_context *ctx) {
 	}
 
 	uint8_t out_string[MAX_STRING] = {0};
+	size_t string_length = strlen(ctx->argv[1]);
+	if( string_length > MAX_STRING )
+		return CMD_ERROR_SYNTAX;
 
-
-    memcpy(&out_string, ctx->argv[1], MAX_STRING);
-
-	csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_STRING_SEND, 0, &out_string, MAX_STRING, NULL, 0); // Not converted to network endian
+    memcpy(out_string, ctx->argv[1], string_length);
+    printf("sending...\n");
+	csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_TELECOMMAND, 0, out_string, string_length, NULL, 0); // Not converted to network endian
 
 	return CMD_ERROR_NONE;
 }
