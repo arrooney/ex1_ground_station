@@ -9,6 +9,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 #include <time.h>
 #include <malloc.h>
 
@@ -19,6 +20,8 @@
 #include <util/vermagic.h>
 #include <util/log.h>
 #include <csp/csp_endian.h>
+
+#include <adcs.h>
 
 
 int cmd_obc_node(struct command_context *ctx) { 
@@ -174,8 +177,41 @@ int cmd_obc_reset_boot_count(struct command_context *ctx) {
 	return CMD_ERROR_NONE;
 }
 
-int cmd_obc_force_state(struct command_context *ctx) {
-	obc_force_state();
+int cmd_obc_adcs(struct command_context *ctx) {
+if(ctx->argc!=3){
+		return CMD_ERROR_SYNTAX;
+	}
+
+	FILE* fid;
+	char buf[200]; // Commands must be less than 201 bytes total for radio link.
+	uint8_t number = atoi(ctx->argv[1]);
+	uint8_t length = atoi(ctx->argv[2]);
+	uint8_t file_length = 0;
+    uint8_t file_number = 0;
+    uint8_t reply[2];
+    if(number < 128)
+    {
+	    fid = fopen("adcs_command.txt","r");
+	    fread(&file_length,1,1,fid);
+        fread(&file_number,1,1,fid);
+	    if(file_length != length || file_number != number)
+        {
+            return CMD_ERROR_SYNTAX;    
+        }
+	    fseek(fid, 1, SEEK_SET); //go back to file number entry to read in command
+        fread(buf,1,length+1,fid); // length+1 to include command ID
+        fclose(fid);
+    }
+    else
+    {
+        memset(buf, 0 , length);
+        buf[0] = number;
+    }
+
+    csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_ADCS, 0, buf, length+1, reply, 2); // Not network endian.
+    printf("Reply ID: %d\n",reply[0]);
+    printf("Reply Error: %d\n",reply[1]);
+
 	return CMD_ERROR_NONE;
 }
 
@@ -228,9 +264,9 @@ command_t __sub_command obc_subcommands[] = {
 		.help = "Reset obc boot counter",
 		.handler = cmd_obc_reset_boot_count,
 	},{
-		.name = "forcestate",
-		.help = "Forces obc into low power mode",
-		.handler = cmd_obc_force_state,
+		.name = "adcs",
+		.help = "Asks NanoMind to communicate with ADCS. Takes command/telem number and length of send struct",
+		.handler = cmd_obc_adcs,
 	}
 };
 

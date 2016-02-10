@@ -133,7 +133,3 @@ void obc_ram_to_rom(uint32_t size, uint32_t checksum, uint32_t src, uint32_t dst
 
 }
 
-void obc_force_state( void) {
-	csp_transaction(CSP_PRIO_NORM, node_obc, 29, 0, NULL, 0, NULL, 0);
-}
-
