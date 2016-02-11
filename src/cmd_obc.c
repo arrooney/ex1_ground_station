@@ -189,7 +189,7 @@ if(ctx->argc!=3){
 	uint8_t file_length = 0;
     uint8_t file_number = 0;
     uint8_t reply[2];
-    if(number < 128)
+    if(number < 128 && length > 0)
     {
 	    fid = fopen("adcs_command.txt","r");
 	    fread(&file_length,1,1,fid);
@@ -201,6 +201,16 @@ if(ctx->argc!=3){
 	    fseek(fid, 1, SEEK_SET); //go back to file number entry to read in command
         fread(buf,1,length+1,fid); // length+1 to include command ID
         fclose(fid);
+    }
+    else if(number < 128 && length == 0)
+    {
+        memset(buf, 0, 1);
+        buf[0] = number;
+    }
+    else if(number == 242)
+    {
+        memset(buf, 0, 1);
+        buf[0] = number;
     }
     else
     {
