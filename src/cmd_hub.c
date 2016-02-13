@@ -83,8 +83,8 @@ int cmd_hub_hk(struct command_context *ctx) {
 		break;
 	}
 
-	printf("Powerswitch output currents: (1) = %d  (2) = %d  (3) = %d [mA]\r\n",nanohub_hk.Iout[0],nanohub_hk.Iout[1],nanohub_hk.Iout[2]);
-	printf("Powerswitch output voltages: (1) = %d  (2) = %d [mV]\r\n",nanohub_hk.Vout[0],nanohub_hk.Vout[1]);
+	printf("Powerswitch output currents: (1) = %u  (2) = %u  (3) = %u [mA]\r\n",nanohub_hk.Iout[0],nanohub_hk.Iout[1],nanohub_hk.Iout[2]);
+	printf("Powerswitch output voltages: (1) = %u  (2) = %u [mV]\r\n",nanohub_hk.Vout[0],nanohub_hk.Vout[1]);
 	return CMD_ERROR_NONE;
 }
 

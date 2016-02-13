@@ -312,8 +312,8 @@ int ftp_status_request(void) {
 	rep.statusrep.total = csp_ntoh32(rep.statusrep.total);
 	rep.statusrep.entries = csp_ntoh16(rep.statusrep.entries);
 
-	color_printf(COLOR_BLUE, "\r\nTransfer Status: ");
-	color_printf(COLOR_BLUE, "%u of %u (%.2f%%)\r\n",
+	color_printf(COLOR_YELLOW, "\r\nTransfer Status: ");
+	color_printf(COLOR_YELLOW, "%u of %u (%.2f%%)\r\n",
 			rep.statusrep.complete, rep.statusrep.total,
 			(double) rep.statusrep.complete * 100 / (double) rep.statusrep.total);
 
