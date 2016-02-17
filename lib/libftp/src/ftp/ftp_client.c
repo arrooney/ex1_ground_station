@@ -484,13 +484,13 @@ int ftp_status_reply(void) {
 			double p = ((double)ftp_packet->data.chunk / (double)(ftp_chunks - 1));
 			int k, l = (int)(40 * p);
 			/* Clear line */
-			color_printf(COLOR_BLUE, "%s", cl);
-			color_printf(COLOR_BLUE, "\r%5.1f%% [", p * 100.0);
+			color_printf(COLOR_YELLOW, "%s", cl);
+			color_printf(COLOR_YELLOW, "\r%5.1f%% [", p * 100.0);
 			for (k = 0; k < l; k++)
-				color_printf(COLOR_BLUE, "#");
+				color_printf(COLOR_YELLOW, "#");
 			for (k = 0; k < 40 - l; k++)
-				color_printf(COLOR_BLUE, " ");
-			color_printf(COLOR_BLUE, "] %4.1f kB/s eta %s",  bps/1024, sec_to_time(((ftp_chunks - ftp_packet->data.chunk)*ftp_chunk_size)/(int)bps+1));
+				color_printf(COLOR_YELLOW, " ");
+			color_printf(COLOR_YELLOW, "] %4.1f kB/s eta %s",  bps/1024, sec_to_time(((ftp_chunks - ftp_packet->data.chunk)*ftp_chunk_size)/(int)bps+1));
 			fflush(stdout);
 
 			/* Update last time */
@@ -561,13 +561,13 @@ int ftp_data(int count) {
 				double p = ((double)packet.data.chunk / (double)(ftp_chunks - 1));
 				int k, l = (int)(40 * p);
 				/* Clear line */
-				color_printf(COLOR_BLUE, "%s", cl);
-				color_printf(COLOR_BLUE, "\r%5.1f%% [", p * 100.0);
+				color_printf(COLOR_YELLOW, "%s", cl);
+				color_printf(COLOR_YELLOW, "\r%5.1f%% [", p * 100.0);
 				for (k = 0; k < l; k++)
-					color_printf(COLOR_BLUE, "#");
+					color_printf(COLOR_YELLOW, "#");
 				for (k = 0; k < 40 - l; k++)
-					color_printf(COLOR_BLUE, " ");
-				color_printf(COLOR_BLUE, "] %4.1f kB/s eta %s",  bps/1024.0, sec_to_time(((ftp_chunks - packet.data.chunk)*ftp_chunk_size)/bps+1));
+					color_printf(COLOR_YELLOW, " ");
+				color_printf(COLOR_YELLOW, "] %4.1f kB/s eta %s",  bps/1024.0, sec_to_time(((ftp_chunks - packet.data.chunk)*ftp_chunk_size)/bps+1));
 				fflush(stdout);
 
 
