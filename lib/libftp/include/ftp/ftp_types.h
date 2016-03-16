@@ -16,7 +16,6 @@
 
 /** Maximum chunk size */
 #define FTP_CHUNK_SIZE 256
-
 /** Number of chunks in status message */
 #define FTP_STATUS_CHUNKS 10
 

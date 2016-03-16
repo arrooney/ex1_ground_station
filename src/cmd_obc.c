@@ -204,18 +204,17 @@ if(ctx->argc!=3){
     }
     else if(number < 128 && length == 0)
     {
-        memset(buf, 0, 1);
+        memset(buf, 0, 200);
         buf[0] = number;
     }
-    else if(number == 242)
+	else if(number >= 128)
     {
-        memset(buf, 0, 1);
+        memset(buf, 0, 200);
         buf[0] = number;
     }
     else
     {
-        memset(buf, 0 , length);
-        buf[0] = number;
+        return CMD_ERROR_SYNTAX;
     }
 
     csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_ADCS, 0, buf, length+1, reply, 2); // Not network endian.

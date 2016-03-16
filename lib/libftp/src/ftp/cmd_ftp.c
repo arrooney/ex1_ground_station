@@ -27,9 +27,9 @@ int ftp_data(int count);
 
 /* Settings */
 static unsigned int ftp_host = 1;
-static unsigned int ftp_port = 9;
-static unsigned int ftp_chunk_size = 190;
-static unsigned int ftp_backend = 3; 		// Use newlib backend as standard
+static unsigned int ftp_port = 7;
+static unsigned int ftp_chunk_size = 186;
+static unsigned int ftp_backend = 2; 		// Use newlib backend as standard
 
 /* State variables */
 static uint32_t ftp_size;
