@@ -1,0 +1,2 @@
+#!/bin/bash
+./build/csp-term -a 8 -d /dev/ttyUSB2 -b 500000

@@ -27,7 +27,7 @@
 
 #include <ftp/ftp_client.h>
 
-#define FTP_TIMEOUT 30000
+#define FTP_TIMEOUT 10000
 #define FTP_MKFS_TIMEOUT 10*60*1000
 
 /* Chunk status markers */
@@ -217,11 +217,11 @@ int ftp_download(uint8_t host, uint8_t port, const char * path, uint8_t backend,
 	req_length = sizeof(ftp_type_t) + sizeof(ftp_download_request_t);
 	rep_length = sizeof(ftp_type_t) + sizeof(ftp_download_reply_t);
 
-	conn = csp_connect(CSP_PRIO_NORM, host, port, 5000, CSP_O_RDP);
+	conn = csp_connect(CSP_PRIO_NORM, host, port, 10000, CSP_O_RDP);
 	if (conn == NULL)
 		return -1;
 
-	int res_length = csp_transaction_persistent(conn, 15000, &req, req_length, &rep, rep_length);
+	int res_length = csp_transaction_persistent(conn, 120000, &req, req_length, &rep, rep_length);
 	if (res_length != rep_length) {
 		color_printf(COLOR_RED, "Length mismatch. Expected %d, got %d\r\n", rep_length, res_length);
 		return -1;

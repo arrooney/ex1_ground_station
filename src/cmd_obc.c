@@ -218,12 +218,29 @@ if(ctx->argc!=3){
     }
 
     csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_ADCS, 0, buf, length+1, reply, 2); // Not network endian.
-    printf("Reply ID: %d\n",reply[0]);
-    printf("Reply Error: %d\n",reply[1]);
+    //printf("Reply ID: %d\n",reply[0]);
+    //printf("Reply Error: %d\n",reply[1]);
 
 	return CMD_ERROR_NONE;
 }
 
+int cmd_obc_dfgm(struct command_context *ctx) {
+	uint8_t on_or_off = atoi(ctx->argv[1]);
+	uint8_t reply[2];
+	if(on_or_off == 1)
+	{
+		csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_DFGM_TEST, 0, &on_or_off, 1, reply, 2); // Not network endian.
+	}
+	else if(on_or_off == 0)
+	{
+		csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_DFGM_TEST, 0, &on_or_off, 1, reply, 2); // Not network endian.
+	}
+	else
+	{	
+		return CMD_ERROR_FAIL;
+	}
+	return CMD_ERROR_NONE;
+}
 
 command_t __sub_command obc_subcommands[] = {
 	{
@@ -276,6 +293,10 @@ command_t __sub_command obc_subcommands[] = {
 		.name = "adcs",
 		.help = "Asks NanoMind to communicate with ADCS. Takes command/telem number and length of send struct",
 		.handler = cmd_obc_adcs,
+	},{
+		.name = "dfgm",
+		.help = "Starts or stops DFGM test with raw mode save.",
+		.handler = cmd_obc_dfgm,
 	}
 };
 

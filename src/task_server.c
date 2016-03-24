@@ -71,7 +71,7 @@ void * task_server(void * parameters) {
 		}
 
 		/* Read packets. Timout is 1000 ms */
-		while ((packet = csp_read(conn, 1000)) != NULL) {
+		while ((packet = csp_read(conn, 5000)) != NULL) {
 
 			switch(csp_conn_dport(conn)) {
 
