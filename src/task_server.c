@@ -29,6 +29,9 @@
 #define C_RESET   "\x1b[0m"
 #define GREY	   "\x1b[30;1m"
 
+#define WOD_BEACON_PORT 32
+#define CALLSIGN_PORT 33
+
 
 void * task_server(void * parameters) {
 
@@ -70,7 +73,7 @@ void * task_server(void * parameters) {
 			continue;
 		}
 
-		/* Read packets. Timout is 1000 ms */
+		/* Read packets. Timout is 5000 ms */
 		while ((packet = csp_read(conn, 5000)) != NULL) {
 
 			switch(csp_conn_dport(conn)) {
@@ -102,6 +105,25 @@ void * task_server(void * parameters) {
 						}
 					free(mssg);
 					csp_close(conn);
+					break;
+				case WOD_BEACON_PORT:
+					printf("Got beacon. \n");
+
+                    uint16_t vbatt = (packet->data[7] << 8) + packet->data[6];
+                    uint8_t callsign[6] = {};
+                    for(int i=0;i<6;i++)
+                    {
+                        callsign[i] = packet->data[131+i];
+                    }
+	                printf("Callsign: %s \n", callsign);
+					printf("VBatt: %d \n", vbatt);
+					csp_close(conn);
+					break;
+				case CALLSIGN_PORT:
+					printf("Got callsign. \n");
+					printf("%s \n", packet->data);
+					csp_close(conn);
+					break;
 				default: {
 					csp_service_handler(conn, packet);
 					csp_close(conn);
