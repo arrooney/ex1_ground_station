@@ -96,13 +96,14 @@ int cmd_send_string(struct command_context *ctx) {
 		return CMD_ERROR_SYNTAX;
 	}
 
-	uint8_t out_string[MAX_STRING] = {0};
-	size_t string_length = strlen(ctx->argv[1]);
+	char out_string[MAX_STRING] = {0};
+	uint16_t string_length = strlen(ctx->argv[1]);
 	if( string_length > MAX_STRING )
 		return CMD_ERROR_SYNTAX;
 
     memcpy(out_string, ctx->argv[1], string_length);
-    printf("sending...\n");
+    //printf("Sending %s \n", out_string);
+	//printf("Size: %d \n", string_length);
 	csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_TELECOMMAND, 0, out_string, string_length, NULL, 0); // Not converted to network endian
 
 	return CMD_ERROR_NONE;
@@ -139,7 +140,7 @@ command_t __root_command script_commands[] = {
 command_t __root_command send_string[] = {
 	{
 		.name = "send_string",
-		.help = "Send a string less than 100 bytes long to NanoMind. String is read as plain text in SINGLE quotes. Double quotes can be included in the string.",
+		.help = "Send 'COMMAND(\"<command_name>\");' for nanomind telecommand.",
 		.usage = "send_string 'string'",
 		.handler = cmd_send_string,
 	}

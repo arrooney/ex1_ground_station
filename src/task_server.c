@@ -36,6 +36,8 @@
 void * task_server(void * parameters) {
 
 	uint8_t * mssg;
+	uint8_t callsign[6] = {};
+	uint16_t vbatt;
 
 	/* Create socket */
 	csp_socket_t * sock = csp_socket(0);
@@ -107,16 +109,14 @@ void * task_server(void * parameters) {
 					csp_close(conn);
 					break;
 				case WOD_BEACON_PORT:
-					printf("Got beacon. \n");
-
-                    uint16_t vbatt = (packet->data[7] << 8) + packet->data[6];
-                    uint8_t callsign[6] = {};
+					//printf("Got beacon. \n");
+					vbatt = (packet->data[7] << 8) + packet->data[6];
                     for(int i=0;i<6;i++)
                     {
                         callsign[i] = packet->data[131+i];
                     }
-	                printf("Callsign: %s \n", callsign);
-					printf("VBatt: %d \n", vbatt);
+	                //printf("Callsign: %s \n", callsign);
+					//printf("VBatt: %d \n", vbatt);
 					csp_close(conn);
 					break;
 				case CALLSIGN_PORT:

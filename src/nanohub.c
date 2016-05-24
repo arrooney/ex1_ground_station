@@ -26,6 +26,12 @@ int hub_get_hk(nanohub_hk_t *nanohub_hk) {
 	int status = csp_transaction(CSP_PRIO_NORM, node_hub, NANOHUB_PORT_HK, 1000, NULL, 0, nanohub_hk, sizeof(nanohub_hk_t));
 	if (status != sizeof(nanohub_hk_t))
 		return -1;
+
+    float cur_gain[3] = {0.391/0.8, 0.388/0.8, 0.389/0.8};
+    float cur_offset[3] = {-2.409, -1.192, 2.913};
+    float volt_gain[2] = {1.988, 2.327};
+    float volt_offset[2] = {2.890, -4.400};
+
 	nanohub_hk->bootcount = csp_ntoh32(nanohub_hk->bootcount);
 	nanohub_hk->temp = csp_ntoh16(nanohub_hk->temp);
 	nanohub_hk->Iout[0] = csp_ntoh16(nanohub_hk->Iout[0]);
@@ -33,6 +39,14 @@ int hub_get_hk(nanohub_hk_t *nanohub_hk) {
 	nanohub_hk->Iout[2] = csp_ntoh16(nanohub_hk->Iout[2]);
 	nanohub_hk->Vout[0] = csp_ntoh16(nanohub_hk->Vout[0]);
 	nanohub_hk->Vout[1] = csp_ntoh16(nanohub_hk->Vout[1]);
+
+    // Fixing uncalibratable nanohub here.
+
+    nanohub_hk->Iout[0] = nanohub_hk->Iout[0]*cur_gain[0] + cur_offset[0];
+    nanohub_hk->Iout[1] = nanohub_hk->Iout[1]*cur_gain[1] + cur_offset[1];
+    nanohub_hk->Iout[2] = nanohub_hk->Iout[2]*cur_gain[2] + cur_offset[2];
+    nanohub_hk->Vout[0] = nanohub_hk->Vout[0]*volt_gain[0] + volt_offset[0];
+    nanohub_hk->Vout[1] = nanohub_hk->Vout[1]*volt_gain[1] + volt_offset[1];
 	return status;
 }
 
