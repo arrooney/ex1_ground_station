@@ -408,6 +408,16 @@ void hub_edit_conf(nanohub_conf_t *configuration)
 		fflush(stdin);
 		printf("\r\n");
 	}
+	printf("Switch 2 : (press 'e' to edit)\r\n");
+	if (getchar()=='e')
+	{
+		printf(" bootdelay    %u \r\n",configuration->switch2.bootdelay);
+		printf(">");
+		result = scanf("%u",&i);
+		configuration->switch2.bootdelay = (uint16_t) i;
+		fflush(stdin);
+		printf("\r\n");
+	}
 
 	printf("Timing : (press 'e' to edit) \r\n");
 	if (getchar()=='e')
@@ -508,6 +518,7 @@ int hub_get_conf(nanohub_conf_t *conf) {
 
 	  conf->switch0.bootdelay = csp_ntoh16(conf->switch0.bootdelay);
 	  conf->switch1.bootdelay = csp_ntoh16(conf->switch1.bootdelay);
+	  conf->switch2.bootdelay = csp_ntoh16(conf->switch2.bootdelay);
 
 
 	  conf->timing.wdt_timeout = csp_ntoh32(conf->timing.wdt_timeout);
@@ -542,6 +553,7 @@ int hub_set_conf(nanohub_conf_t *globalconf) {
 
 	conf.switch0.bootdelay = csp_hton16(conf.switch0.bootdelay);
 	conf.switch1.bootdelay = csp_hton16(conf.switch1.bootdelay);
+	conf.switch2.bootdelay = csp_hton16(conf.switch2.bootdelay);
 
 	conf.timing.wdt_timeout = csp_hton32(conf.timing.wdt_timeout);
 	conf.timing.com_tx_inhibit_timeout = csp_hton32(conf.timing.com_tx_inhibit_timeout);
@@ -670,3 +682,15 @@ int hub_reset_wdt(uint8_t magic, uint32_t *timer) {
 
 	return status;
 }
+
+void hub_hardload_conf(nanohub_conf_t *conf) {
+
+	  conf->switch0.bootdelay = 0;
+	  conf->switch1.bootdelay = 0;
+	  conf->switch2.bootdelay = 100;
+
+	  conf->dio.enable = 0;
+	  conf->dio.dirmask = 0x00;
+	  conf->dio.outputvalue = 0x00;
+}
+

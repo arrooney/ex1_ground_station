@@ -116,5 +116,6 @@ int hub_set_conf(nanohub_conf_t *conf);
 void hub_print_conf(nanohub_conf_t *configuration);
 void hub_edit_conf(nanohub_conf_t *configuration);
 int hub_knife(uint8_t knife, uint8_t channel, uint16_t delay, uint16_t duration,  nanohub_knivesdata_t *knivesdata);
+void hub_hardload_conf(nanohub_conf_t *configuration);
 
 #endif /* NANOHUB_H_ */

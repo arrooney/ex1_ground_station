@@ -324,6 +324,11 @@ int cmd_hub_savedefault_conf(struct command_context *ctx) {
   return CMD_ERROR_NONE;
 }
 
+int cmd_hub_hardload_conf(struct command_context *ctx) {
+	hub_hardload_conf(&nanohub_config);
+	return CMD_ERROR_NONE;
+}
+
 command_t __sub_command hub_gyro_subcommands[] = {
 	{
 		.name = "start",
@@ -373,6 +378,10 @@ command_t __sub_command hub_conf_subcommands[] = {
 		.name = "loaddefault",
 		.help = "Load default config on Hub",
 		.handler = cmd_hub_loaddefault_conf,
+	},{
+		.name = "hardload",
+		.help = "Load hardcoded config commands are failing.",
+		.handler = cmd_hub_hardload_conf,
 	}
 };
 
