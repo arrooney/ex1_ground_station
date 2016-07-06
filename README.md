@@ -56,9 +56,7 @@ Running this will print the letter "k" to the console every one second, for exam
 ```bash
 gcc -Wall main.c -o main
 ./main
-Got: k
-Got: k
-...
+kkkkkkkkkk...
 ```
 
 Using unix pipes, we can send this output to the gomshell instead:
@@ -73,4 +71,4 @@ Now, everyone one second, the gomeshell gets the letter "k". By significantly im
 * main stdout -> gomshell
 * gomshell stdout -> console 
 
-When the gomshell prints to stdout, the data is sent to the terminal, not to the main program's stdin. 
+When the gomshell prints to stdout, the data is sent to the terminal, not to the main program's stdin.
