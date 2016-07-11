@@ -109,6 +109,13 @@ int cmd_send_string(struct command_context *ctx) {
 	return CMD_ERROR_NONE;
 }
 
+int cmd_ax100_rst_wdt(struct command_context *ctx) {
+
+	csp_transaction(CSP_PRIO_HIGH, 5, 9, 1000, NULL, 0, NULL, 0);
+
+	return CMD_ERROR_NONE;
+}
+
 
 command_t __root_command clear_commands[] = {
 	{
@@ -146,9 +153,19 @@ command_t __root_command send_string[] = {
 	}
 };
 
+command_t __root_command ax100_rst_wdt[] = {
+	{
+		.name = "ax100_rst_wdt",
+		.help = "Poke the AX100 to reset ground watchdog",
+		.usage = "ax100_rst_wdt",
+		.handler = cmd_ax100_rst_wdt,
+	}
+};
+
 void cmd_utils_setup(void) {
 	command_register(clear_commands);
 	command_register(delay_commands);
 	command_register(script_commands);
 	command_register(send_string);
+	command_register(ax100_rst_wdt);
 }
