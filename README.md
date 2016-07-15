@@ -56,18 +56,11 @@ The source file ```./scripts/ram.c``` contains instructions on how to run and us
 ./scripts/ram.o ../new_image.bin | ./gomshell
 ```
 
-On some computers, the gomshell cannot be stopped when started like this. To stop it, open a second terminal and run ```ps aux```
+On some computers, the gomshell cannot be stopped when started like this. There is a script in the root of this repository that will
+kill the gomshell if this happens. First, open a new terminal and go to this repository, then run:
 
 ```bash
-ps aux | grep "gomshell"
-username  155003  0.0  0.0  924329  2049 pts/18   S+   09:43   0:00 /bin/bash ./gomshell 
-username  195043  0.0  0.0  343229  2049 pts/19   S+   10:43   0:00 grep --color=auto gomshell
-```
-
-This is an example of output from ```ps aux```. Yours will contain different numbers, in the same format. The first line of the output is gomshell process that needs to be killed. The second line is the command that ran to produce the output. The second number in the first output line is the process ID.
-
-```bash
-kill 155003
+./killgom.sh
 ```
 
 The gomshell will be killed and your terminal be returned to you.
