@@ -30,3 +30,45 @@ Contains the gomespace source code for a ground station. The submodules within h
 ## Editing Source
 
 The entire repo is an eclipse project. The source can be edited from eclipse. Note, due to the submodules used, the eclipse indexer finds three CSP libraries. Only refer to the CSP library in this repo. Anything within the albertasat-gomspace directory and beyond is CSP code for a different project.
+
+#Piping data to gomshell
+
+For future automation, we need to pipe data to the gomshell. The easiest way is with unix pipes. Take the following example program:
+
+```C
+#include <stdio.h>
+#include <unistd.h>
+
+int main( int argc, char** argv )
+{
+	for( ;; ) {
+		fputs("k", stdout);
+		fflush(stdout);
+		usleep(1000*1000);
+	}
+	
+	return 0;
+}
+```
+
+Running this will print the letter "k" to the console every one second, for example:
+
+```bash
+gcc -Wall main.c -o main
+./main
+kkkkkkkkkk...
+```
+
+Using unix pipes, we can send this output to the gomshell instead:
+
+```bash
+./main | ./gomshell
+```
+
+Now, everyone one second, the gomeshell gets the letter "k". By significantly improving the functionality of this program, we can automate the process of sending data to the satellite. Note, this is a unidirectional shell with data flow like this:
+
+* console -> main stdin
+* main stdout -> gomshell
+* gomshell stdout -> console 
+
+When the gomshell prints to stdout, the data is sent to the terminal, not to the main program's stdin.
