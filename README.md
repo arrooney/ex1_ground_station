@@ -34,7 +34,7 @@ The entire repo is an eclipse project. The source can be edited from eclipse. No
 #Safemode and RAM Image Script
 ---
 
-In the directory ```./scripts``` is a script for putting the satellite into safemode and uploading a new RAM image. There is a makefile in the ```/scripts``` directory that can be used to configure this script. Open the makefile with a test editor. There are two symbols which can be used for configuration.
+In the directory ```./scripts``` is a script for putting the satellite into safemode and uploading a new RAM image. There is a makefile in the ```/scripts``` directory that can be used to configure this script. Open the makefile with a text editor. There are two symbols which can be used for configuration.
 
 ```bash
 # Enables debug printing while running. 
@@ -50,10 +50,10 @@ cd scripts
 make
 ```
 
-The source file ```./scripts/ram.c``` contains instructions on how to run and use the file. Open it with a test editor to read the usage documentation. To run this script, the data must be piped to the gomshell. This is done like so:
+The source file ```./scripts/ram.c``` contains instructions on how to run and use the file. Open it with a text editor to read the usage documentation. To run this script, the data must be piped to the gomshell. This is done like so:
 
 ```bash
-./ram.o new_image.bin | ./gomshell
+./scripts/ram.o ../new_image.bin | ./gomshell
 ```
 
 On some computers, the gomshell cannot be stopped when started like this. To stop it, open a second terminal and run ```ps aux```
