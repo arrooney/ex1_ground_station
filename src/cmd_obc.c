@@ -21,7 +21,7 @@
 #include <util/log.h>
 #include <csp/csp_endian.h>
 
-#include <adcs.h>
+//#include <adcs.h>
 
 
 int cmd_obc_node(struct command_context *ctx) { 

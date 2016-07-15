@@ -139,8 +139,8 @@ command_t __root_command script_commands[] = {
 
 command_t __root_command send_string[] = {
 	{
-		.name = "send_string",
-		.help = "Send 'COMMAND(\"<command_name>\");' for nanomind telecommand.",
+		.name = "exec",
+		.help = "Send 'COMMAND(\"<command_name>\" [,\"<arg>\"]);' for nanomind telecommand.",
 		.usage = "send_string 'string'",
 		.handler = cmd_send_string,
 	}

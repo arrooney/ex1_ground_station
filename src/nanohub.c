@@ -689,8 +689,13 @@ void hub_hardload_conf(nanohub_conf_t *conf) {
 	  conf->switch1.bootdelay = 0;
 	  conf->switch2.bootdelay = 100;
 
+	  /* Original */ /*
 	  conf->dio.enable = 0;
 	  conf->dio.dirmask = 0x00;
-	  conf->dio.outputvalue = 0x00;
+	  conf->dio.outputvalue = 0x00; */
+
+	  conf->dio.enable = 1;
+	  conf->dio.dirmask = 0x03;
+	  conf->dio.outputvalue = 0x02;
 }
 
