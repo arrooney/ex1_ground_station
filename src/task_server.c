@@ -109,14 +109,14 @@ void * task_server(void * parameters) {
 					csp_close(conn);
 					break;
 				case WOD_BEACON_PORT:
-					//printf("Got beacon. \n");
+					printf("Got beacon. \n");
 					vbatt = (packet->data[7] << 8) + packet->data[6];
                     for(int i=0;i<6;i++)
                     {
-                        callsign[i] = packet->data[131+i];
+                        callsign[i] = packet->data[131+3+i];
                     }
-	                //printf("Callsign: %s \n", callsign);
-					//printf("VBatt: %d \n", vbatt);
+	                printf("Callsign: %s \n", callsign);
+					printf("VBatt: %d \n", vbatt);
 					csp_close(conn);
 					break;
 				case CALLSIGN_PORT:

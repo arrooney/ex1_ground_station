@@ -183,11 +183,14 @@ int main( int argc, char** argv )
 		debug_printf("Failed to create safemode command: %.*s\n", MAX_PATH_LENGTH, SAFEMODE_COMMAND_FILE);
 		return -1;
 	}
+    fprintf(fp, "cats");
+    fclose(fp);
+
 
 	/* Put the nanomind into safe mode.
 	 */
 	command_printf("eps hardreset\n");
-	usleep(5*ONE_SECOND_SLEEP);
+	usleep(10*ONE_SECOND_SLEEP);
 	command_printf("ftp upload_file %.*s /boot/%.*s\n", MAX_PATH_LENGTH, SAFEMODE_COMMAND_FILE, MAX_PATH_LENGTH, SAFEMODE_COMMAND_FILE);
 	
 	/* Upload new image.
