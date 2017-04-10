@@ -2,14 +2,15 @@
 #############################################
 # Compiler
 CC := gcc
-AR := ar
 
 # Compile flags
 CFLAGS := -Wall -Wextra -pedantic -g -std=c99
 
+# defines
+DEFINE := _GNU_SOURCE
+
 # Output name
-PROG := main
-IOHOOK := IOHook
+LIB := IOHook
 
 # Location of custom include files
 INC_PATH := ./
@@ -20,26 +21,19 @@ BUILD_DIR := debug
 # Stop editting  compile time settings here #
 
 # Path to CObject libraries
-COBJ_CLASS_PATH = ../CObject/liba/Class
-COBJ_UTIL_PATH = ../CObject/liba/util
+COBJ_CLASS_PATH = ../../CObject/liba/Class
+COBJ_UTIL_PATH = ../../CObject/liba/util
 
 # Source files and include directories
-SRC := $(shell echo ./*.c) $(shell echo ./**/*.c)
+# add this if putting source files in directories #$(shell echo ./**/*.c)
+SRC := $(shell echo ./*.c) 
 INC := -I$(COBJ_CLASS_PATH) -I$(COBJ_UTIL_PATH) $(addprefix -I,$(INC_PATH))
 
 all: MKDIR
-	make -C $(COBJ_CLASS_PATH) all
-	make -C $(COBJ_UTIL_PATH) all
-	$(CC) $(CFLAGS) -o $(PROG) main.c
-	gcc -Wall -D_GNU_SOURCE -fPIC -shared -o $(IOHOOK).so IOHook.c -ldl
+	$(CC) $(CFLAGS) $(addprefix -D,$(DEFINE)) $(INC) -fPIC -shared -o $(BUILD_DIR)/$(LIB).so $(SRC) -ldl
 
 MKDIR:
 	mkdir -p $(dir $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%)))
 
-run:
-	$ LD_PRELOAD="./IOHook.so" ./main
-
 clean:
-	make -C $(COBJ_CLASS_PATH) clean
-	make -C $(COBJ_UTIL_PATH) clean
 	rm -rf $(BUILD_DIR)
