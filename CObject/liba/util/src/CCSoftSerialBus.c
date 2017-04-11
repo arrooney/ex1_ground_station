@@ -41,6 +41,19 @@ static CError CCSoftSerialBus_CreateLocks( struct CCSoftSerialBus* self )
 		pthread_cond_destroy(&self->priv.select_cond);
 		return COBJ_EXT_FAIL;
 	}
+	if( pthread_cond_init(&self->priv.miso_read_cond, NULL) != 0 ) {
+		pthread_mutex_destroy(&self->priv.device_lock);
+		pthread_cond_destroy(&self->priv.select_cond);
+		pthread_cond_destroy(&self->priv.idle_cond);
+		return COBJ_EXT_FAIL;
+	}
+	if( pthread_cond_init(&self->priv.mosi_write_cond, NULL) != 0 ) {
+		pthread_mutex_destroy(&self->priv.device_lock);
+		pthread_cond_destroy(&self->priv.select_cond);
+		pthread_cond_destroy(&self->priv.idle_cond);
+		pthread_cond_destroy(&self->priv.miso_read_cond);
+		return COBJ_EXT_FAIL;
+	}       
 	return COBJ_OK;
 }
 
@@ -87,16 +100,11 @@ static CError CCSoftSerialBus_CommonConst( struct CCSoftSerialBus* self,
 			      CCSoftSerialBus_PriorityCompare,
 			      sizeof(unsigned char));
 	if( err != COBJ_OK ) {
-		CDestroy(self->priv.mosi_channel);
-		CDestroy(self->priv.miso_channel);
-		CDestroy(&self->priv.pending_masters);
 		return err;
 	}
 
 	err = CCSoftSerialBus_CreateLocks(self);
 	if( err != COBJ_OK ) {
-		CDestroy(self->priv.mosi_channel);
-		CDestroy(self->priv.miso_channel);
 		CDestroy(&self->priv.pending_masters);
 		return err;
 	}
@@ -160,16 +168,26 @@ static CError CCSoftSerialBus_CreateChannel( struct CCSoftSerialBus* self,
 /* Class Methods							*/
 /************************************************************************/
 /* Cyclic complexity map:
- * 1(bounds check) -> 2(is master) --+-->------------>--+--> 3(assign channel) --+
- *                                   |                  |                        |
- *                                   +--> 4(is slave) --+                        |
- *                                                      |                        |
- *                                                      +------> 5(return) <-----+
- * Complexity of: 6(edges) - 5(nodes) + 2 = 3
+ * 1(bounds check) -> 2(if master) ----------------+--> 3(write) -> 4(return) <--+
+ *                                                 |                             |
+ * +-- 6(if insert ok) <--+--<--+-- 5(if slave) <--+                             |
+ * |                      |     |                                                |
+ * |                      |     +---------------------> 10(not slave) -------->--+
+ * |                      |                                                      |
+ * |                      +--<-------------------------+                         |
+ * |                                                   |                         |
+ * +--> 7(block) -> 8(if timeout) --+--> 9(if slave) --+---------------------->--+
+ *                                  |                                            |
+ *                                  +----------------------------------------->--+
+ *                                
+ * Complexity of: 13(edges) - 10(nodes) + 2 = 5
  * Test cases:
  *	* Slave writing
  *	* Master writing
  *	* Unauthorized device writing
+ *	* Slave reselect while slave blocking to write
+ *	* Slave timeout blocking to write
+ *	* Master timeout blocking to write
  */
 CCSoftSerialError CCSoftSerialBus_Write( struct CCSoftSerialBus* self,
 					 struct CCSoftSerialDev* querying_device,
@@ -179,6 +197,7 @@ CCSoftSerialError CCSoftSerialBus_Write( struct CCSoftSerialBus* self,
 	CCSoftSerialDevID deviceID;
 	CCTQueueError err;
 	struct CCThreadedQueue* channel;
+	struct timespec abstime;
 	CAssertObject(self);
 
 	if( querying_device == NULL ) {
@@ -195,22 +214,67 @@ CCSoftSerialError CCSoftSerialBus_Write( struct CCSoftSerialBus* self,
 	 */
 	deviceID = CCSoftSerialDev_GetID(querying_device);
 	if( deviceID == self->priv.masterID ) {
-		channel = self->priv.miso_channel;
+		/* querying device is the bus master.
+		 */
+		channel = self->priv.mosi_channel;
+		pthread_mutex_unlock(&self->priv.device_lock);
+		err = CCThreadedQueue_Insert(channel, data, block_time);
+		if( err == CCTQUEUE_ERR_TIMEOUT ) {
+			return CCSOFTSERIAL_ERR_TIMEOUT;
+		}
+		pthread_cond_broadcast(&self->priv.mosi_write_cond);
+		return CCSOFTSERIAL_OK;
 	}
 	else if( deviceID == self->priv.slaveID ) {
-		channel = self->priv.mosi_channel;
+		/* querying device is the slave.
+		 */
+		channel = self->priv.miso_channel;
+
+		/* Try to add message to the channel. If it's full
+		 * we have to use a conditional variable to block
+		 * on. If the slave device blocked on the queue instead
+		 * and the master releases the bus, the slave will write a message
+		 * in here (because unselect clears these channels). The next master
+		 * to read out the bus will read that message. We don't want that.
+		 * We want the block to be interrupted if the master releases the bus.
+		 */
+		clock_gettime(CLOCK_REALTIME, &abstime);
+		abstime.tv_sec += block_time / MS_PER_SECOND;
+		abstime.tv_nsec += (block_time % MS_PER_SECOND) * NS_PER_MS;
+		for( ;; ) {
+			err = CCThreadedQueue_Insert(channel, data, COS_NO_BLOCK);
+			if( err == CCTQUEUE_OK ) {
+				pthread_mutex_unlock(&self->priv.device_lock);
+				return CCSOFTSERIAL_OK;
+			}
+
+			if( block_time == COS_BLOCK_FOREVER ) {
+				pthread_cond_wait(&self->priv.miso_read_cond, &self->priv.device_lock);
+			}
+			else {
+				err = pthread_cond_timedwait(&self->priv.miso_read_cond, &self->priv.device_lock, &abstime);
+				if( err != 0 ) {
+					/* Timed out. 
+					 */
+					pthread_mutex_unlock(&self->priv.device_lock);
+					return CCSOFTSERIAL_ERR_TIMEOUT;
+				}
+			}
+
+			if( deviceID != self->priv.slaveID ) {
+				/* Master released bus before this write could happen. 
+				 */
+				pthread_mutex_unlock(&self->priv.device_lock);
+				return CCSOFTSERIAL_ERR_TIMEOUT;
+			}
+
+		}
 	}
 	else {
 		/* Not the current slave or master.
 		 */
 		pthread_mutex_unlock(&self->priv.device_lock);
 		return CCSOFTSERIAL_ERR_PRIV;
-	}
-
-	pthread_mutex_unlock(&self->priv.device_lock);
-	err = CCThreadedQueue_Insert(channel, data, block_time);
-	if( err == CCTQUEUE_ERR_TIMEOUT ) {
-		return CCSOFTSERIAL_ERR_TIMEOUT;
 	}
 	return CCSOFTSERIAL_OK;
 }
@@ -220,6 +284,9 @@ CCSoftSerialError CCSoftSerialBus_Write( struct CCSoftSerialBus* self,
  *	* Slave device reading
  *	* Master device reading
  *	* Unauthorized device reading
+ *	* Slave reselect while slave blocking to read
+ *	* Slave timeout blocking to read
+ *	* Master timeout blocking to read
  */
 CCSoftSerialError CCSoftSerialBus_Read( struct CCSoftSerialBus* self,
 					struct CCSoftSerialDev* querying_device,
@@ -229,6 +296,7 @@ CCSoftSerialError CCSoftSerialBus_Read( struct CCSoftSerialBus* self,
 	CCSoftSerialDevID deviceID;
 	CCTQueueError err;
 	struct CCThreadedQueue* channel;
+	struct timespec abstime;
 	CAssertObject(self);
 
 	if( querying_device == NULL ) {
@@ -244,22 +312,66 @@ CCSoftSerialError CCSoftSerialBus_Read( struct CCSoftSerialBus* self,
 	 */
 	deviceID = CCSoftSerialDev_GetID(querying_device);
 	if( deviceID == self->priv.slaveID ) {
-		channel = self->priv.miso_channel;
+		/* querying device is the slave.
+		 */
+		channel = self->priv.mosi_channel;
+
+		/* Try to from the channel. If it's empty
+		 * we have to use a conditional variable to block
+		 * on. If the slave device blocked on the queue instead
+		 * and the master releases the bus, the slave will wrongly read the next 
+		 * message written to the bus. The next message will be meant for a different slave
+		 * though.
+		 */
+		clock_gettime(CLOCK_REALTIME, &abstime);
+		abstime.tv_sec += block_time / MS_PER_SECOND;
+		abstime.tv_nsec += (block_time % MS_PER_SECOND) * NS_PER_MS;
+		for( ;; ) {
+			err = CCThreadedQueue_Remove(channel, data, COS_NO_BLOCK);
+			if( err == CCTQUEUE_OK ) {
+				pthread_mutex_unlock(&self->priv.device_lock);
+				return CCSOFTSERIAL_OK;
+			}
+
+			if( block_time == COS_BLOCK_FOREVER ) {
+				pthread_cond_wait(&self->priv.mosi_write_cond, &self->priv.device_lock);
+			}
+			else {
+				err = pthread_cond_timedwait(&self->priv.mosi_write_cond, &self->priv.device_lock, &abstime);
+				if( err != 0 ) {
+					/* Timed out. 
+					 */
+					pthread_mutex_unlock(&self->priv.device_lock);
+					return CCSOFTSERIAL_ERR_TIMEOUT;
+				}
+			}
+
+			if( deviceID != self->priv.slaveID ) {
+				/* Master released bus before this read could happen. 
+				 */
+				pthread_mutex_unlock(&self->priv.device_lock);
+				return CCSOFTSERIAL_ERR_TIMEOUT;
+			}
+
+		}		
 	}
 	else if( deviceID == self->priv.masterID ) {
-		channel = self->priv.mosi_channel;
+		/* querying device is the bus master.
+		 */
+		channel = self->priv.miso_channel;
+		pthread_mutex_unlock(&self->priv.device_lock);
+		err = CCThreadedQueue_Remove(channel, data, block_time);
+		if( err == CCTQUEUE_ERR_TIMEOUT ) {
+			return CCSOFTSERIAL_ERR_TIMEOUT;
+		}
+		pthread_cond_broadcast(&self->priv.miso_read_cond);
+		return CCSOFTSERIAL_OK;
 	}
 	else {
 		/* Not the current slave or master.
 		 */
 		pthread_mutex_unlock(&self->priv.device_lock);
 		return CCSOFTSERIAL_ERR_PRIV;
-	}
-
-	pthread_mutex_unlock(&self->priv.device_lock);
-	err = CCThreadedQueue_Remove(channel, data, block_time);       
-	if( err == CCTQUEUE_ERR_TIMEOUT ) {
-		return CCSOFTSERIAL_ERR_TIMEOUT;
 	}
 	return CCSOFTSERIAL_OK;      
 }
@@ -432,11 +544,16 @@ CCSoftSerialError CCSoftSerialBus_Unselect( struct CCSoftSerialBus* self,
 	 */
 	if( CCSoftSerialDev_GetID(querying_device) == self->priv.masterID ) {
 		/* The querying device is indeed the current bus master.
-		 * release the bus and signal the idle bus condition.
+		 * release the bus and signal the idle bus condition. Clear
+		 * the queues.
 		 */
 		self->priv.slaveID = CCSOFTSERIAL_NO_ID;
 		self->priv.masterID = CCSOFTSERIAL_NO_ID;
+		CCThreadedQueue_Clear(self->priv.miso_channel);
+		CCThreadedQueue_Clear(self->priv.mosi_channel);
 		pthread_cond_broadcast(&self->priv.idle_cond);
+		pthread_cond_broadcast(&self->priv.miso_read_cond);
+		pthread_cond_broadcast(&self->priv.mosi_write_cond);
 		err = CCSOFTSERIAL_OK;
 	}
 	else {
@@ -609,7 +726,12 @@ CError CCSoftSerialBus( struct CCSoftSerialBus* self,
 		return err;
 	}
 
-	return CCSoftSerialBus_CommonConst(self, miso_channel, mosi_channel);
+	err = CCSoftSerialBus_CommonConst(self, miso_channel, mosi_channel);
+	if( err != COBJ_OK ) {
+		CDestroy(miso_channel);
+		CDestroy(mosi_channel);
+	}
+	return err;
 }
 
 CError CCSoftSerialBusStatic( struct CCSoftSerialBus* self,

@@ -7,13 +7,13 @@ CC := gcc
 CFLAGS := -Wall -Wextra -pedantic -g -std=c99
 
 # defines
-DEFINE := _GNU_SOURCE
+DEFINE := _POSIX_C_SOURCE=199309L _GNU_SOURCE
 
 # Output name
 LIB := IOHook
 
 # Location of custom include files
-INC_PATH := ./
+INC_PATH := ./ ../../CObject/liba/Class ../../CObject/liba/util ../../CObject/liba/tests ../IOHook
 
 # Directory to put all object files in
 BUILD_DIR := debug
@@ -30,7 +30,7 @@ SRC := $(shell echo ./*.c)
 INC := -I$(COBJ_CLASS_PATH) -I$(COBJ_UTIL_PATH) $(addprefix -I,$(INC_PATH))
 
 all: MKDIR
-	$(CC) $(CFLAGS) $(addprefix -D,$(DEFINE)) $(INC) -fPIC -shared -o $(BUILD_DIR)/$(LIB).so $(SRC) -ldl
+	$(CC) $(CFLAGS) $(addprefix -D,$(DEFINE)) $(INC) -fPIC -shared -o $(BUILD_DIR)/lib$(LIB).so $(SRC) -ldl
 
 MKDIR:
 	mkdir -p $(dir $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%)))

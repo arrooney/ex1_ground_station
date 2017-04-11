@@ -32,6 +32,7 @@
 #endif
 
 #define TEST_MSG_1 'a'
+#define TEST_MSG_2 'A'
 #define TEST_TENTH_SECOND_MS (1000/10) /* one tenth of a second in milli seconds. */
 #define TEST_TENTH_SECOND (1000*1000/10) /* one tenth of a second in micro seconds. */
 #define TEST_TOTAL_MASTERS (CCSOFTSERIAL_MAX_PENDING_MASTERS+2)
@@ -353,6 +354,7 @@ TEST(arbitration_timeout)
 TEST(bus_release)
 {
 	CCSoftSerialError err;
+	char msg;
 	
 	/* Release bus when not current bus master.
 	 */
@@ -364,6 +366,24 @@ TEST(bus_release)
 	CCSoftSerialDev_Select(&master[0], TEST_SLAVE_ID, COS_BLOCK_FOREVER);
 	err = CCSoftSerialDev_Unselect(&master[0]);
 	ASSERT(err == CCSOFTSERIAL_OK, "Could not release owned bus");
+
+	/* Releasing bus clears the communication channel for the
+	 * next bus master/slave pair.
+	 */
+	msg = TEST_MSG_1;
+	CCSoftSerialDev_Select(&master[0], TEST_SLAVE_ID, COS_BLOCK_FOREVER);
+	CCSoftSerialDev_Write(&master[0], &msg, COS_BLOCK_FOREVER);
+	err = CCSoftSerialDev_Unselect(&master[0]);
+	ASSERT(err == CCSOFTSERIAL_OK, "Could not release owned bus");
+
+	/* Reselect slave, then let slave read off bus. There should be no
+	 * msg.
+	 */
+	CCSoftSerialDev_Select(&master[0], TEST_SLAVE_ID, COS_BLOCK_FOREVER);
+	msg = TEST_MSG_2;
+	err = CCSoftSerialDev_Read(&slave, &msg, COS_NO_BLOCK);
+	ASSERT(err == CCSOFTSERIAL_ERR_TIMEOUT, "msg still in buffer");
+	ASSERT(msg != TEST_MSG_1, "Should not be able to read out msg");
 }
 
 TEST(is_selected_current_master)
@@ -526,6 +546,148 @@ TEST(data_transfer)
 	ASSERT(err == CCSOFTSERIAL_OK, "Got error writing: %d", err);
 }
 
+static void* slave_write_release_thread( void* args )
+{
+	struct CCSoftSerialDev* dev;
+	CCSoftSerialError err;
+	char msg;
+	
+	dev = args;
+	msg = TEST_MSG_1;
+	
+	err = CCSoftSerialDev_Write(dev, &msg, COS_BLOCK_FOREVER);
+	ASSERT(err == CCSOFTSERIAL_ERR_TIMEOUT, "Got wrong error: %d", err);
+
+	pthread_exit(NULL);
+}
+
+TEST(slave_write_release)
+{
+	CCSoftSerialError err;
+	int thread_err;
+	pthread_t thread_handle;
+	void* status;
+	char msg;
+	int i;
+	
+	/* Test that a slave will stop trying to write
+	 * after the master releases the bus. For example,
+	 * say a slave is blocking to write to the bus. Before
+	 * it gets to do this write, the master releases the bus.
+	 * We want to test that the slave will end it's block
+	 * and not write anything to the bus.
+	 */
+	msg = TEST_MSG_1;
+	CCSoftSerialDev_Select(&master[0], TEST_SLAVE_ID, COS_NO_BLOCK);
+
+	/* Test that unauthorized devices are blocked from reading/writing.
+	 */
+	for( i = 0; i < TEST_CHANNEL_LENGTH; ++i ) {
+		err = CCSoftSerialDev_Write(&slave, &msg, COS_NO_BLOCK);
+		ASSERT(err == CCSOFTSERIAL_OK, "Got wrong error: %d and iteration %d", err, i);
+	}
+	
+	/* Create thread for slave to block trying to write.
+	 */
+	thread_err = pthread_create(&thread_handle, &attr, slave_write_release_thread, &slave);
+	if( thread_err != 0 ) {
+		ABORT_TEST("Error creating thread");
+	}
+
+	/* Give thread time to run.
+	 */
+	usleep(TEST_TENTH_SECOND);
+
+	/* Unselect the slave and wait for thread to abort the write.
+	 */
+	CCSoftSerialDev_Unselect(&master[0]);
+	pthread_join(thread_handle, &status);
+}
+
+static void* slave_read_release_thread( void* args )
+{
+	struct CCSoftSerialDev* dev;
+	CCSoftSerialError err;
+	char msg;
+	
+	dev = args;
+	msg = TEST_MSG_1;
+	
+	err = CCSoftSerialDev_Read(dev, &msg, COS_BLOCK_FOREVER);
+	ASSERT(err == CCSOFTSERIAL_ERR_TIMEOUT, "Got wrong error: %d", err);
+
+	pthread_exit(NULL);
+}
+
+TEST(slave_read_release)
+{
+	CCSoftSerialError err;
+	int thread_err;
+	pthread_t thread_handle;
+	void* status;
+	char msg;
+	int i;
+
+	/* Test that a slave will stop trying to read
+	 * after the master releases the bus. For example,
+	 * say a slave is blocking to read from the bus. Before
+	 * it gets to do this read, the master releases the bus.
+	 * We want to test that the slave will end it's block
+	 * and not read anything off the bus.
+	 */
+	msg = TEST_MSG_1;
+	CCSoftSerialDev_Select(&master[0], TEST_SLAVE_ID, COS_NO_BLOCK);
+
+	/* Test that unauthorized devices are blocked from reading/writing.
+	/* Create thread for slave to block trying to read.
+	 */
+	thread_err = pthread_create(&thread_handle, &attr, slave_read_release_thread, &slave);
+	if( thread_err != 0 ) {
+		ABORT_TEST("Error creating thread");
+	}
+
+	/* Give thread time to run.
+	 */
+	usleep(TEST_TENTH_SECOND);
+
+	/* Unselect the slave and wait for thread to abort the read.
+	 */
+	CCSoftSerialDev_Unselect(&master[0]);
+	pthread_join(thread_handle, &status);
+}
+
+TEST(data_transfer_timeout)
+{
+	/* Test the timeouts work correctly.
+	 */
+	CCSoftSerialError err;
+	char msg;
+	int i;
+	
+	msg = TEST_MSG_1;
+	CCSoftSerialDev_Select(&master[0], TEST_SLAVE_ID, COS_NO_BLOCK);
+	
+	/* Test that we timeout reading from an empty bus
+	 */
+	err = CCSoftSerialDev_Read(&master[0], &msg, TEST_TENTH_SECOND_MS);
+	ASSERT(err == CCSOFTSERIAL_ERR_TIMEOUT, "Got wrong error: %d", err);
+	err = CCSoftSerialDev_Read(&slave, &msg, TEST_TENTH_SECOND_MS);
+	ASSERT(err == CCSOFTSERIAL_ERR_TIMEOUT, "Got wrong error: %d", err);
+
+	/* Test that we timeout writing to a full bus
+	 */
+	for( i = 0; i < TEST_CHANNEL_LENGTH; ++i ) {
+		err = CCSoftSerialDev_Write(&slave, &msg, COS_NO_BLOCK);
+		ASSERT(err == CCSOFTSERIAL_OK, "Got wrong error: %d and iteration %d", err, i);
+		err = CCSoftSerialDev_Write(&master[0], &msg, COS_NO_BLOCK);
+		ASSERT(err == CCSOFTSERIAL_OK, "Got wrong error: %d and iteration %d", err, i);
+	}
+	err = CCSoftSerialDev_Write(&slave, &msg, COS_NO_BLOCK);
+	ASSERT(err == CCSOFTSERIAL_ERR_TIMEOUT, "Got wrong error: %d", err);
+	err = CCSoftSerialDev_Write(&master[0], &msg, COS_NO_BLOCK);
+	ASSERT(err == CCSOFTSERIAL_ERR_TIMEOUT, "Got wrong error: %d", err);	       
+}
+
 TEST_SUITE(soft_serial)
 {
 	ADD_TEST(arbitration_max_masters);
@@ -538,4 +700,7 @@ TEST_SUITE(soft_serial)
 	ADD_TEST(is_selected_slave_timeout);
 	ADD_TEST(is_selected_blocking_slave);
 	ADD_TEST(data_transfer);
+	ADD_TEST(slave_write_release);
+	ADD_TEST(slave_read_release);
+	ADD_TEST(data_transfer_timeout);
 }

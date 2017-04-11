@@ -1,159 +1,179 @@
+/*
+ * Copyright 2017 Brendan Bruner
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *   http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *
+ * bbruner@ualberta.ca
+ * April 11, 2017
+ */
+/**
+ * @file
+ * @defgroup IOHook
+ * Redefinition of standard io functions like printf() and getchar().
+ */
+#include <IOHook.h>
 #include <stdio.h>
 #include <stdarg.h>
 #include <dlfcn.h>
+#include <pthread.h>
 
-/*
- * Function pointers that will be initialized to point to the
+#define IOHOOK_STRING_BUFFER_LENGTH 1024
+
+/* Function pointers that will be initialized to point to the
  * standard libc implementation of printf and getchar. ie,
  * these are the functions that must be called to do IO with
  * the terminal.
  */
-static int (*IOHook_Libcvprintf)( const char* format, va_list args ) = NULL;
-static int (*IOHook_Libcprintf)( const char* format, ... ) = NULL;
-static int (*IOHook_Libcgetchar)() = NULL;
+static IOHook_Printf_FP IOHook_Libcprintf = NULL;
+static IOHook_Getchar_FP IOHook_Libcgetchar = NULL;
 
-/* 
- * Possible states of IO sources/sinks
+/* Variables used for buffering data
  */
-enum IOHook_State
-  {
-    IOHOOK_STATE_STD = 0,	/* State to use standard libc definitions. */
-    IOHOOK_STATE_FORTH = 1	/* State to use Forth specific implementations. */
-  };
-
-/*
- * IOState handler structure. Used to contain references to
- * all hooks for a particular state.
- */
-struct IOHook_Handle
-{
-  int (*vprintf)( const char*, va_list );
-  int (*getchar)( );
-};
-
-/*
- * Declaration of functions. See function definition for a description.
- */
-static int IOHook_Stdvprintf( const char* format, va_list );
-static int IOHook_Stdgetchar( void );
-static int IOHook_Forthvprintf( const char* format, va_list );
-static int IOHook_Forthgetchar( void );
-
-/*
- * The current state, IOHook_State (defined below), is used
- * to index this array. If the current state is IOHOOK_STATE_STD,
- * then the std versions of printf/getchar are called when ever application code
- * makes a call to printf() or getchar().
- * If the current state is IOHOOK_STATE_FORTH, then the forth versions
- * of printf/getchar will be called when ever application code
- * makes a call to printf() or getchar().
- */
-static struct IOHook_Handle IOHook_Index[] =
-{
-  { .vprintf = IOHook_Stdvprintf, .getchar = IOHook_Stdgetchar },
-  { .vprintf = IOHook_Forthvprintf, .getchar = IOHook_Forthgetchar }
-};
-
-/* 
- * Current state
- */
-static enum IOHook_State IOHook_State = IOHOOK_STATE_STD;
+static struct CCSoftSerialDev* iohook_device = NULL;
+static char iohook_string_buffer[IOHOOK_STRING_BUFFER_LENGTH];
+static pthread_mutex_t print_lock;
 
 /****************************************************************************************************************/
-/* Initialization and overriding of libc standard functions							*/	
+/* Function definitions.											*/
 /****************************************************************************************************************/
-/* 
- * Initialization for hooks. 
+/**
+ * @ingroup IOHook
+ * @brief
+ * 	Initialization for hooks. 
+ * @param device
+ *	An intialized software serial object with a bus attached to it. See documentation/source code
+ * 	for details on what the software serial class is for.
+ * @return 
+ *	true/false if initialization was successful/failed
  */
-int IOHook_Init( )
+CBool IOHook_Init( struct CCSoftSerialDev* device )
 {
-	if( IOHook_Libcvprintf == NULL || IOHook_Libcprintf == NULL || IOHook_Libcgetchar == NULL ) {
+	if( device == NULL ) {
+		return CFALSE;
+	}
+
+	if( pthread_mutex_init(&print_lock, NULL) != 0 ) {
+		return CFALSE;
+	}
+
+	iohook_device = device;
+	if( IOHook_Libcprintf == NULL || IOHook_Libcgetchar == NULL ) {
 		/* Find the standard implementations printf, vprintf, and getchar. Note that the
 		 * type cast will give a compile time warning. It says an object pointer should not
 		 * be converted to function pointer. While generally one should never do this,
 		 * there is no other way to reference the std implementation of printf, vprintf
 		 * and getchar.
 		 */
-		IOHook_Libcvprintf = (int (*)(const char* format, va_list args)) dlsym(RTLD_NEXT, "vprintf");
 		IOHook_Libcprintf = (int (*)(const char* format, ...)) dlsym(RTLD_NEXT, "printf");
 		IOHook_Libcgetchar = (int (*)()) dlsym(RTLD_NEXT, "getchar");
 
 		/* On failure to find, return false. 
 		 */
-		if( IOHook_Libcvprintf == NULL || IOHook_Libcprintf == NULL || IOHook_Libcgetchar == NULL ) {
-			return -1;
+		if( IOHook_Libcprintf == NULL || IOHook_Libcgetchar == NULL ) {
+			return CFALSE;
 		}
 	}
-
-	return 1;
+	return CTRUE;
 }
 
+/**
+ * @ingroup IOHook
+ * @brief
+ *	Override of standard printf() function
+ * @details
+ * 	All data is written to the software serial device provided as input to the
+ * 	IOHook_Init() funciton. The device acts a slave on the serial bus, so no
+ * 	data gets written to the bus if the device is selected by a bus master.
+ */
 int printf( const char* format, ... )
 {
 	va_list args;
-	int errCode;
-  
-	if( !IOHook_Init( ) ) {
-		return -1;
-	}
-  
+	int bytes_copied, i;
+	CCSoftSerialError err;
+
+	pthread_mutex_lock(&print_lock);
+	
 	va_start(args, format);
-	errCode = IOHook_Index[IOHook_State].vprintf(format, args);
+	bytes_copied = vsnprintf(iohook_string_buffer, IOHOOK_STRING_BUFFER_LENGTH, format, args);
 	va_end(args);
 
-	return errCode;
-}
-
-int getchar( )
-{
-	if( !IOHook_Init( ) ) {
-		return -1;
+	if( CCSoftSerialDev_Isselected(iohook_device, COS_BLOCK_FOREVER) != CCSOFTSERIAL_OK ) {
+		/* Device doesn't have a  channel to write to.
+		 */
+		IOHook_Libcprintf("printf: no channel\n");
+		pthread_mutex_unlock(&print_lock);
+		return 0;
 	}
 
-	return IOHook_Index[IOHook_State].getchar( );
+	/* Write the message into the software serial bus.
+	 */
+	for( i = 0; i < bytes_copied; ++i ) {
+		err = CCSoftSerialDev_Write(iohook_device, &iohook_string_buffer[i], COS_BLOCK_FOREVER);
+		if( err != CCSOFTSERIAL_OK ) {
+			/* Lost access to the bus, abort write.
+			 */
+			IOHook_Libcprintf("printf: lost channel\n");
+			pthread_mutex_unlock(&print_lock);
+			break;
+		}
+	}
+	pthread_mutex_unlock(&print_lock);
+	return i;
 }
-  
-/****************************************************************************************************************/
-/* Hook implementation for standard libc IO.									*/	
-/****************************************************************************************************************/
-/* These are the printf/getchar functions that will be used when in the IOHOOK_STATE_STD
+
+/**
+ * @ingroup IOHook
+ * @brief
+ *	Override of standard getchar() function
+ * @details
+ * 	Data is read from the software serial device provided as input to the
+ * 	IOHook_Init() function. The device acts a slave on the serial bus, so no
+ * 	data gets read from the bus until the device is selected by a bus master.
+ *	This function does a blocking wait for data.
  */
-static int IOHook_Stdvprintf( const char* format, va_list args )
+int getchar( )
 {
-	return IOHook_Libcvprintf(format, args);
+	char msg;
+	CCSoftSerialError err;
+
+	/* Block until given access to the software serial bus.
+	 * try to read from the bus. If for some reason an error
+	 * occurs reading from the bus, try again.
+	 */
+	do {
+		CCSoftSerialDev_Isselected(iohook_device, COS_BLOCK_FOREVER);
+		err = CCSoftSerialDev_Read(iohook_device, &msg, COS_BLOCK_FOREVER);
+	} while( err != CCSOFTSERIAL_OK );
+
+	return (int) msg;
 }
 
-static int IOHook_Stdgetchar( void )
-{
-	return IOHook_Libcgetchar( );
-}
-
-/****************************************************************************************************************/
-/* Hook implementation for Forth.										*/	
-/****************************************************************************************************************/
-/* These are the printf/getchar functions that will be used when in the IOHOOK_STATE_FORTH
+/**
+ * @ingroup IOHook
+ * @brief
+ * 	Returns a function pointer to the standard implementation of printf().
  */
-static int IOHook_Forthvprintf( const char* format, va_list args )
+IOHook_Printf_FP IOHook_GetPrintf( )
 {
-	(void) format;
-	(void) args;
-	return -1;
+	return IOHook_Libcprintf;
 }
 
-static int IOHook_Forthgetchar( void )
+/**
+ * @ingroup IOHook
+ * @brief
+ * 	Returns a function pointer to the standard implementation of getchar().
+ */
+IOHook_Getchar_FP IOHook_GetGetchar( )
 {
-	return 'n';
-}
-
-/****************************************************************************************************************/
-/* State change functions.											*/	
-/****************************************************************************************************************/
-void IOHook_SetForthState( )
-{
-	IOHook_State = IOHOOK_STATE_FORTH;
-}
-
-void IOHook_SetSTDState( )
-{
-	IOHook_State = IOHOOK_STATE_STD;
+	return IOHook_Libcgetchar;
 }

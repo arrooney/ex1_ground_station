@@ -59,6 +59,8 @@ struct CCSoftSerialBus
 		struct CCThreadedQueue* mosi_channel;
 		struct CCBinaryTree pending_masters;
 		#ifdef __unix__
+		pthread_cond_t miso_read_cond;
+		pthread_cond_t mosi_write_cond;
 		pthread_mutex_t device_lock;
 		pthread_cond_t select_cond;
 		pthread_cond_t idle_cond;

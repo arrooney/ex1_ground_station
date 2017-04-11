@@ -74,8 +74,8 @@ typedef enum
 typedef enum
 {
 	CCSOFTSERIAL_NO_ID = -1, /* reserved */
-	CCSOFTSERIAL_ID0,
-	CCSOFTSERIAL_ID1
+	IO_SLAVE_ID,
+	IO_MASTER_ID
 } CCSoftSerialDevID;
 
 /* Maximum number of bus masters which can block on selecting a 
@@ -321,7 +321,52 @@ CCSoftSerialError CCSoftSerialDev_Select( struct CCSoftSerialDev* self, CCSoftSe
  * @memberof CCSoftSerialDev
  * @details
  *	Release the bus when finished writing/reading from it so that another
- *	master device can use it. Returns an error if called by a slave device.
+ *	master device can use it. Any data in the bus that hasn't been read out
+ *	yet will be lost. For example, in the following code, a bus master writes
+ *	a message "hello" onto the bus. However, the selected slave never reads it
+ *	off the bus before the master releases it and the message is lost.
+ *	@code
+ *	struct CCSoftSerialBus bus; 
+ *	struct CCSoftSerialDev master;
+ *	struct CCSoftSerialDev slave;
+ *	char* masterMsg = "hello";
+ *	int masterMsgLen = 5
+ *	char msgBuf[5];
+ *
+ *	void main()
+ *	{
+ *		// Construct bus and devices to read/write to the bus.
+ *		CCSoftSerialBus(&bus, sizeof(char), BUFFER_LENGTH);
+ *		CCSoftSerialDevMaster(&master, 1, CCSOFTSERIALDEV_0, &bus);
+ *		CCSoftSerialDevSlave(&slave, CCSOFTSERIALDEV_1, &bus);
+ *
+ *		// Select slave.
+ *		CCSoftSerialDev_Select(&master, CCSOFTSERIALDEV_1, COS_BLOCK_FOREVER);
+ *
+ *		// Write a message.
+ *		for( int i = 0; i < masterMsgLen; ++i ) {
+ *			CCSoftSerialDev_Write(&master, &masterMsg[i], COS_BLOCK_FOREVER);
+ *		}
+ *	
+ *		// Unselect the slave device.
+ *		CCSoftSerialDev_Unselect(&master);
+ *
+ *		// Read message. This will fail because the slave is currently not
+ *		// selected.
+ *		for( int i = 0; i < masterMsgLen; ++i ) {
+ *			CCSoftSerialDev_Read(&slave, &msgBuf[i], COS_NO_BLOCK);
+ *		}
+ *
+ *		// Select slave again.
+ *		CCSoftSerialDev_Select(&master, CCSOFTSERIALDEV_1, COS_BLOCK_FOREVER);
+ *
+ *		// Read message. This fail because there is no message to read.
+ *		for( int i = 0; i < masterMsgLen; ++i ) {
+ *			CCSoftSerialDev_Read(&slave, &msgBuf[i], COS_NO_BLOCK);
+ *		}
+ *
+ *	}
+ *	@endcode
  */
 CCSoftSerialError CCSoftSerialDev_Unselect( struct CCSoftSerialDev* self );
 
