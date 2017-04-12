@@ -5,7 +5,7 @@ CC := gcc
 AR := ar
 
 # Compile and link flags
-CFLAGS := -Wall -Wextra -pedantic -g -std=c99
+CFLAGS := -Wall -Wextra -pedantic -g -std=c99 -O0
 LFLAGS := $(CFLAGS) -Wl,-rpath=../IOHook/debug
 
 # Output name (ie, the thing you execute in the terminal)
@@ -15,7 +15,7 @@ PROG := main
 INC_PATH := ./ ../../CObject/liba/Class ../../CObject/liba/util ../../CObject/liba/tests ../IOHook
 
 # Defines
-DEFINES := _POSIX_C_SOURCE=199309L _GNU_SOURCE UNIT_TEST_SUITE
+DEFINES := _POSIX_C_SOURCE=199309L _GNU_SOURCE
 
 # Directories of static libraries
 LIB_PATH := ../../CObject/liba/Class/debug ../../CObject/liba/util/debug ../IOHook/debug
@@ -35,6 +35,9 @@ OBJ := $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
 DEF := $(addprefix -D,$(DEFINES))
 LIB_SRC := $(addprefix -L,$(LIB_PATH))
 LIB := $(addprefix -l,$(LIB_NAME))
+
+inspect:
+	$(CC) -Wall -E $(INC) $(DEF) main.c -o main.e
 
 all: MKDIR $(OBJ)
 	$(CC) $(LFLAGS) $(OBJ) -o $(BUILD_DIR)/$(PROG) $(DEF) $(LIB_SRC) $(LIB)

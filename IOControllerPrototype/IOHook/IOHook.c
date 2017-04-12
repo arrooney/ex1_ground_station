@@ -95,23 +95,17 @@ CBool IOHook_Init( struct CCSoftSerialDev* device )
  * 	IOHook_Init() funciton. The device acts a slave on the serial bus, so no
  * 	data gets written to the bus if the device is selected by a bus master.
  */
-int printf( const char* format, ... )
+static int goawaycompiler_vprintf( const char* format, va_list args )
 {
-	va_list args;
 	int bytes_copied, i;
 	CCSoftSerialError err;
-
-	pthread_mutex_lock(&print_lock);
 	
-	va_start(args, format);
 	bytes_copied = vsnprintf(iohook_string_buffer, IOHOOK_STRING_BUFFER_LENGTH, format, args);
-	va_end(args);
 
 	if( CCSoftSerialDev_Isselected(iohook_device, COS_BLOCK_FOREVER) != CCSOFTSERIAL_OK ) {
 		/* Device doesn't have a  channel to write to.
 		 */
 		IOHook_Libcprintf("printf: no channel\n");
-		pthread_mutex_unlock(&print_lock);
 		return 0;
 	}
 
@@ -123,12 +117,46 @@ int printf( const char* format, ... )
 			/* Lost access to the bus, abort write.
 			 */
 			IOHook_Libcprintf("printf: lost channel\n");
-			pthread_mutex_unlock(&print_lock);
 			break;
 		}
 	}
-	pthread_mutex_unlock(&print_lock);
 	return i;
+}
+
+static int goawaycompiler_printf( const char* format, ... )
+{
+	va_list args;
+	int bytes;
+
+	va_start(args, format);
+	bytes = goawaycompiler_vprintf(format, args);
+	va_end(args);
+	return bytes;
+}
+
+int printf( const char* format, ... )
+{
+	va_list args;
+	int bytes;
+
+	va_start(args, format);
+	bytes = goawaycompiler_vprintf(format, args);
+	va_end(args);
+	return bytes;
+}
+
+int puts( const char* str )
+{
+	int bytes;
+	bytes = goawaycompiler_printf(str);
+	goawaycompiler_printf("\n");
+	return bytes;
+}
+
+int putchar( int byte )
+{
+	goawaycompiler_printf("%c", (char) byte);
+	return byte;
 }
 
 /**

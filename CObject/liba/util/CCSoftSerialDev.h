@@ -75,7 +75,8 @@ typedef enum
 {
 	CCSOFTSERIAL_NO_ID = -1, /* reserved */
 	IO_SLAVE_ID,
-	IO_MASTER_ID
+	IO_MASTER_ID,
+	IO_FORTH_ID
 } CCSoftSerialDevID;
 
 /* Maximum number of bus masters which can block on selecting a 
