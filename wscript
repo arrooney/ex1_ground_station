@@ -33,7 +33,7 @@ def configure(ctx):
 	except ctx.errors.ConfigurationError:
 		pass
 	
-	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client','albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include'])
+	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client', 'IOController/IOHook', 'albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include', 'CObject/liba/Class', 'CObject/liba/util'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
 	ctx.env.append_unique('LIBS_CSPTERM', ['rt', 'pthread', 'elf', 'ncurses'])
 
@@ -91,10 +91,14 @@ def configure(ctx):
 def build(ctx):
 	ctx(export_includes=ctx.env.INCLUDES_CSPTERM, name='include')
 	ctx.recurse(modules, mandatory=False)
+	#ctx.cflags = ['-Wall']
+	#ctx.cxxflags = ['-Wl,-rpath=IOController/IOHook/debug']
+	#ctx.cxxflags = ['-LCObject/liba/Class/debug/', '-LCObject/liba/util/debug', '-LIOController/IOHook/debug'],
 	ctx.program(
 		source=ctx.path.ant_glob(ctx.env.FILES_CSPTERM), 
+		stdlibpath = ['-LCObject/liba/Class/debug/', '-LCObject/liba/util/debug', '-LIOController/IOHook/debug'],
 		target='csp-term', 
-		use=['csp', 'param', 'util', 'gosh', 'ftp', 'log'],
+		use=['csp', 'param', 'util', 'gosh', 'ftp', 'log', 'cclass', 'cutil', 'IOHook'],
 		lib=ctx.env.LIBS_CSPTERM + ctx.env.LIBS
 		)
 

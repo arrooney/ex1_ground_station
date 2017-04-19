@@ -496,8 +496,8 @@ int console_init(void) {
 	new_stdout = old_stdout;
 
 	/*setting the approriate bit in the termios struct*/
-	new_stdin.c_iflag &= ~(IGNCR | ICRNL);
-	new_stdin.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
+	new_stdin.c_iflag &= ~(IGNCR | ICRNL); /* Prevents \r characters from being stripped */
+	new_stdin.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG); /* Prevent echoing of characters. */
 	new_stdin.c_cc[VTIME]=0;
 	new_stdin.c_cc[VMIN]=1;
 
@@ -510,14 +510,15 @@ int console_init(void) {
 	tcsetattr(STDIN_FILENO, TCSANOW, &new_stdin);
 	tcsetattr(STDOUT_FILENO, TCSANOW, &new_stdout);
 
-	setvbuf(stdout, NULL, _IONBF, 0);
+	setvbuf(stdout, NULL, _IONBF, 0); /* No buffering, ie, calling stdflush() would be redundant */
 	setvbuf(stdin, NULL, _IONBF, 0);
 #endif
 
 	void cmd_dfl_setup(void);
 	cmd_dfl_setup();
 #ifndef __AVR__
-	/** This is very important on AVR32 */
+	/** This is very important on AVR32 */ /* What the hell are you talking about gomspace. This code
+	 * won't get compiled on an AVR target */
 	setvbuf(stdin, NULL, _IONBF, 0);
 	setvbuf(stdout, NULL, _IONBF, 0);
 	setvbuf(stderr, NULL, _IONBF, 0);

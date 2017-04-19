@@ -12,35 +12,43 @@
 #include <inttypes.h>
 #include <unistd.h>
 #include <pthread.h>
-
 #include "nanopower2.h"
-//#include "telecommand_packet.h"
-
 #include <conf_cspterm.h>
 #include <csp-term.h>
-
 #ifdef WITH_ADCS
 #include <conf_adcs.h>
 #endif
-
 /* Parameter system */
 #include <param/param.h>
 #include <param/param_example_table.h>
-
 /* Log system */
 #include <log/log.h>
-
 /* CSP */
 #include <csp/csp.h>
 #include <csp/interfaces/csp_if_kiss.h>
 #include <csp/interfaces/csp_if_can.h>
 #include <csp/interfaces/csp_if_zmqhub.h>
 #include <csp/drivers/usart.h>
-
 /* Drivers / Util */
 #include <util/console.h>
 #include <util/log.h>
 #include <util/vmem.h>
+/* IO Controller */
+#ifdef AUTOMATION
+#include <CCSoftSerialDev.h>
+#include <unistd.h>
+#include <CCSoftSerialBus.h>
+#include <IOHook.h>
+
+#define COS_PRINT_ACK_TIMEOUT 15
+#define IO_BUS_CHANNEL_LENGTH 5096
+#define IO_MASTER_PRIO 2
+#define IO_FORTH_PRIO 1
+
+static struct CCSoftSerialDev io_slave;
+struct CCSoftSerialDev io_master;
+struct CCSoftSerialBus io_bus;
+#endif
 
 const vmem_t vmem_map[] = {{0}};
 
@@ -60,10 +68,32 @@ static void exithandler(void) {
 
 char * pipe_buffer;
 char holdbuff=0;
+#ifdef AUTOMATION
+static pthread_t terminal_input_thread_handle;
 
+static void* terminal_input_thread( void* arg );
+#endif
 
-int main(int argc, char * argv[]) {
+int main(int argc, char * argv[])
+{
+#ifdef AUTOMATION
+	/* Initialize IOHook.
+	 */
+	if( CCSoftSerialBus(&io_bus, sizeof(char), IO_BUS_CHANNEL_LENGTH) != COBJ_OK ) {
+		return -1;
+	}
+	if( CCSoftSerialDevSlave(&io_slave, IO_SLAVE_ID, &io_bus) != COBJ_OK ) {
+		return -1;
+	}
+	if( CCSoftSerialDevMaster(&io_master, IO_MASTER_PRIO, IO_MASTER_ID, &io_bus) != COBJ_OK ) {
+		return -1;
+	}
+	if( IOHook_Init(&io_slave) != CTRUE ) {
+		return -1;
+	}
 
+	pthread_create(&terminal_input_thread_handle, NULL, terminal_input_thread, NULL);
+#endif
 	print_logo( );
 	fflush( stdout );
 	usleep( 1000*1000*1 );
@@ -227,10 +257,42 @@ int main(int argc, char * argv[]) {
 	/* Wait here for console to end */
 	pthread_join(handle_console, NULL);
 	pthread_join(handle_server, NULL);
+#ifdef AUTOMATION
+	pthread_join(terminal_input_thread_handle, NULL);
+#endif
 
 	return 0;
 
 }
+
+#ifdef AUTOMATION
+static void* terminal_input_thread( void* arg )
+{
+	(void) arg;
+	char msg;
+	IOHook_Getchar_FP getchar_fp;
+	IOHook_Printf_FP printf_fp;
+	CCSoftSerialError err;
+
+	printf_fp = IOHook_GetPrintf( );
+	getchar_fp = IOHook_GetGetchar( );
+	CCSoftSerialDev_Select(&io_master, IO_SLAVE_ID, COS_BLOCK_FOREVER);
+	for( ;; ) {
+		for( ;; ) {
+			err = CCSoftSerialDev_Read(&io_master, &msg, COS_PRINT_ACK_TIMEOUT);
+			if( err == CCSOFTSERIAL_OK ) {
+				printf_fp("%c", msg);
+			}
+			else {
+				break;
+			}
+		}
+		msg = getchar_fp( );
+		CCSoftSerialDev_Write(&io_master, &msg, COS_BLOCK_FOREVER);
+	}
+	pthread_exit(NULL);
+}
+#endif
 
 static void print_logo( )
 {

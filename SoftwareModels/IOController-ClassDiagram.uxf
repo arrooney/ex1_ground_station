@@ -310,7 +310,7 @@ m2=1</panel_attributes>
       <w>208</w>
       <h>24</h>
     </coordinates>
-    <panel_attributes>inputBuffer : TerminalOutputBuffer
+    <panel_attributes>outputBuffer : TerminalOutputBuffer
 lw=2</panel_attributes>
     <additional_attributes/>
   </element>

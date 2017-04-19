@@ -4,7 +4,7 @@
   <element>
     <id>UMLFrame</id>
     <coordinates>
-      <x>170</x>
+      <x>270</x>
       <y>40</y>
       <w>590</w>
       <h>1450</h>
@@ -77,7 +77,7 @@ Gomshell - writing and reading</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>520</x>
+      <x>620</x>
       <y>100</y>
       <w>200</w>
       <h>50</h>
@@ -89,7 +89,7 @@ to Gomshell</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>300</x>
+      <x>400</x>
       <y>100</y>
       <w>170</w>
       <h>50</h>
@@ -101,7 +101,7 @@ getchar()</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>210</x>
+      <x>310</x>
       <y>110</y>
       <w>20</w>
       <h>20</h>
@@ -112,7 +112,7 @@ getchar()</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>220</x>
+      <x>320</x>
       <y>760</y>
       <w>380</w>
       <h>80</h>
@@ -124,7 +124,7 @@ getchar()</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>220</x>
+      <x>320</x>
       <y>110</y>
       <w>100</w>
       <h>30</h>
@@ -135,7 +135,7 @@ getchar()</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>460</x>
+      <x>560</x>
       <y>100</y>
       <w>80</w>
       <h>40</h>
@@ -147,7 +147,7 @@ getchar()</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>520</x>
+      <x>620</x>
       <y>180</y>
       <w>200</w>
       <h>50</h>
@@ -159,7 +159,7 @@ to the Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>610</x>
+      <x>710</x>
       <y>140</y>
       <w>30</w>
       <h>60</h>
@@ -170,7 +170,7 @@ to the Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>610</x>
+      <x>710</x>
       <y>220</y>
       <w>130</w>
       <h>120</h>
@@ -184,7 +184,7 @@ elapsed</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>290</x>
+      <x>390</x>
       <y>400</y>
       <w>190</w>
       <h>60</h>
@@ -197,7 +197,7 @@ and pending commands</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>600</x>
+      <x>700</x>
       <y>320</y>
       <w>40</w>
       <h>40</h>
@@ -208,7 +208,7 @@ and pending commands</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>470</x>
+      <x>570</x>
       <y>350</y>
       <w>200</w>
       <h>100</h>
@@ -220,7 +220,7 @@ and pending commands</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>460</x>
+      <x>560</x>
       <y>200</y>
       <w>160</w>
       <h>160</h>
@@ -232,7 +232,7 @@ and pending commands</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>320</x>
+      <x>420</x>
       <y>290</y>
       <w>30</w>
       <h>130</h>
@@ -243,7 +243,7 @@ and pending commands</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>210</x>
+      <x>310</x>
       <y>560</y>
       <w>20</w>
       <h>20</h>
@@ -254,7 +254,7 @@ and pending commands</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>270</x>
+      <x>370</x>
       <y>920</y>
       <w>170</w>
       <h>50</h>
@@ -266,7 +266,7 @@ from Gomshell</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>560</x>
+      <x>660</x>
       <y>840</y>
       <w>170</w>
       <h>50</h>
@@ -277,7 +277,7 @@ from Gomshell</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>510</x>
+      <x>610</x>
       <y>540</y>
       <w>170</w>
       <h>50</h>
@@ -289,7 +289,7 @@ Gomshell to terminal</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>260</x>
+      <x>360</x>
       <y>530</y>
       <w>200</w>
       <h>70</h>
@@ -303,7 +303,7 @@ to the Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>220</x>
+      <x>320</x>
       <y>560</y>
       <w>60</w>
       <h>30</h>
@@ -314,7 +314,7 @@ to the Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>450</x>
+      <x>550</x>
       <y>550</y>
       <w>80</w>
       <h>30</h>
@@ -325,7 +325,7 @@ to the Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>360</x>
+      <x>460</x>
       <y>580</y>
       <w>250</w>
       <h>80</h>
@@ -336,7 +336,7 @@ to the Gomshell</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>210</x>
+      <x>310</x>
       <y>740</y>
       <w>20</w>
       <h>20</h>
@@ -347,7 +347,7 @@ to the Gomshell</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>260</x>
+      <x>360</x>
       <y>720</y>
       <w>180</w>
       <h>60</h>
@@ -359,7 +359,7 @@ to Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>220</x>
+      <x>320</x>
       <y>740</y>
       <w>60</w>
       <h>30</h>
@@ -370,7 +370,7 @@ to Gomshell</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>560</x>
+      <x>660</x>
       <y>730</y>
       <w>40</w>
       <h>40</h>
@@ -381,7 +381,7 @@ to Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>430</x>
+      <x>530</x>
       <y>730</y>
       <w>150</w>
       <h>50</h>
@@ -394,7 +394,7 @@ arbitration</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>210</x>
+      <x>310</x>
       <y>810</y>
       <w>20</w>
       <h>20</h>
@@ -405,7 +405,7 @@ arbitration</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>590</x>
+      <x>690</x>
       <y>730</y>
       <w>70</w>
       <h>130</h>
@@ -417,7 +417,7 @@ arbitration</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>270</x>
+      <x>370</x>
       <y>850</y>
       <w>170</w>
       <h>50</h>
@@ -429,7 +429,7 @@ access to Gomshell</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>250</x>
+      <x>350</x>
       <y>250</y>
       <w>170</w>
       <h>50</h>
@@ -441,7 +441,7 @@ access to Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>370</x>
+      <x>470</x>
       <y>140</y>
       <w>30</w>
       <h>130</h>
@@ -452,7 +452,7 @@ access to Gomshell</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>590</x>
+      <x>690</x>
       <y>880</y>
       <w>150</w>
       <h>80</h>
@@ -466,7 +466,7 @@ expected</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>350</x>
+      <x>450</x>
       <y>890</y>
       <w>30</w>
       <h>50</h>
@@ -477,7 +477,7 @@ expected</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>210</x>
+      <x>310</x>
       <y>820</y>
       <w>80</w>
       <h>70</h>
@@ -488,7 +488,7 @@ expected</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>200</x>
+      <x>300</x>
       <y>1060</y>
       <w>250</w>
       <h>270</h>
@@ -501,7 +501,7 @@ overrode getchar()</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>310</x>
+      <x>410</x>
       <y>1100</y>
       <w>20</w>
       <h>20</h>
@@ -512,7 +512,7 @@ overrode getchar()</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>240</x>
+      <x>340</x>
       <y>1140</y>
       <w>180</w>
       <h>60</h>
@@ -524,7 +524,7 @@ by Forth/Terminal</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>310</x>
+      <x>410</x>
       <y>1110</y>
       <w>30</w>
       <h>50</h>
@@ -535,7 +535,7 @@ by Forth/Terminal</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>240</x>
+      <x>340</x>
       <y>1220</y>
       <w>180</w>
       <h>50</h>
@@ -547,7 +547,7 @@ character</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>310</x>
+      <x>410</x>
       <y>1190</y>
       <w>30</w>
       <h>50</h>
@@ -558,7 +558,7 @@ character</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>310</x>
+      <x>410</x>
       <y>1290</y>
       <w>20</w>
       <h>20</h>
@@ -569,7 +569,7 @@ character</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>310</x>
+      <x>410</x>
       <y>1260</y>
       <w>30</w>
       <h>50</h>
@@ -580,7 +580,7 @@ character</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>480</x>
+      <x>580</x>
       <y>1060</y>
       <w>250</w>
       <h>410</h>
@@ -593,7 +593,7 @@ overrode printf()</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>590</x>
+      <x>690</x>
       <y>1100</y>
       <w>20</w>
       <h>20</h>
@@ -604,7 +604,7 @@ overrode printf()</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>520</x>
+      <x>620</x>
       <y>1140</y>
       <w>180</w>
       <h>60</h>
@@ -616,7 +616,7 @@ by Forth/Terminal</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>590</x>
+      <x>690</x>
       <y>1110</y>
       <w>30</w>
       <h>50</h>
@@ -627,7 +627,7 @@ by Forth/Terminal</panel_attributes>
   <element>
     <id>UMLState</id>
     <coordinates>
-      <x>540</x>
+      <x>640</x>
       <y>1350</y>
       <w>180</w>
       <h>50</h>
@@ -638,7 +638,7 @@ by Forth/Terminal</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>590</x>
+      <x>690</x>
       <y>1190</y>
       <w>90</w>
       <h>80</h>
@@ -651,7 +651,7 @@ selected</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>590</x>
+      <x>690</x>
       <y>1420</y>
       <w>20</w>
       <h>20</h>
@@ -662,7 +662,7 @@ selected</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>600</x>
+      <x>700</x>
       <y>1390</y>
       <w>70</w>
       <h>60</h>
@@ -673,7 +673,7 @@ selected</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>580</x>
+      <x>680</x>
       <y>1250</y>
       <w>40</w>
       <h>40</h>
@@ -684,7 +684,7 @@ selected</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>590</x>
+      <x>690</x>
       <y>1280</y>
       <w>60</w>
       <h>90</h>
@@ -696,7 +696,7 @@ selected</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>490</x>
+      <x>590</x>
       <y>1260</y>
       <w>120</w>
       <h>190</h>
@@ -708,7 +708,7 @@ selected</panel_attributes>
   <element>
     <id>UMLSpecialState</id>
     <coordinates>
-      <x>560</x>
+      <x>660</x>
       <y>920</y>
       <w>40</w>
       <h>40</h>
@@ -719,7 +719,7 @@ selected</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>430</x>
+      <x>530</x>
       <y>860</y>
       <w>170</w>
       <h>80</h>
@@ -731,7 +731,7 @@ selected</panel_attributes>
   <element>
     <id>Relation</id>
     <coordinates>
-      <x>430</x>
+      <x>530</x>
       <y>920</y>
       <w>150</w>
       <h>40</h>

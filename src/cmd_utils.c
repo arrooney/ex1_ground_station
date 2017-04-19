@@ -109,6 +109,16 @@ int cmd_send_string(struct command_context *ctx) {
 	return CMD_ERROR_NONE;
 }
 
+int cmd_print_string( struct command_context *ctx )
+{
+	if( ctx->argc != 2 ) {
+		return CMD_ERROR_SYNTAX;
+	}
+	printf(ctx->argv[1]);
+	printf("\n");
+	return CMD_ERROR_NONE;
+}
+
 int cmd_ax100_rst_wdt(struct command_context *ctx) {
 
 	csp_transaction(CSP_PRIO_HIGH, 5, 9, 1000, NULL, 0, NULL, 0);
@@ -153,6 +163,15 @@ command_t __root_command send_string[] = {
 	}
 };
 
+command_t __root_command print_string[] = {
+		{
+				.name = "print",
+				.help = "print '<string to print>' | <string_to_print>",
+				.usage = "print argument to console",
+				.handler = cmd_print_string,
+		}
+};
+
 command_t __root_command ax100_rst_wdt[] = {
 	{
 		.name = "ax100_rst_wdt",
@@ -168,4 +187,5 @@ void cmd_utils_setup(void) {
 	command_register(script_commands);
 	command_register(send_string);
 	command_register(ax100_rst_wdt);
+	command_register(print_string);
 }
