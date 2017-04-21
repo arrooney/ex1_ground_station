@@ -276,6 +276,7 @@ static void* terminal_input_thread( void* arg )
 
 	printf_fp = IOHook_GetPrintf( );
 	getchar_fp = IOHook_GetGetchar( );
+	printf_fp("Gomshell IO Controller Running\n")
 	CCSoftSerialDev_Select(&io_master, IO_SLAVE_ID, COS_BLOCK_FOREVER);
 	for( ;; ) {
 		for( ;; ) {

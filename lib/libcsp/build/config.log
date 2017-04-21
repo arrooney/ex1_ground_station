@@ -1,4 +1,4 @@
-# project libcsp (1.4) configured on Wed Apr 19 12:41:07 2017 by
+# project libcsp (1.4) configured on Fri Apr 21 11:45:41 2017 by
 # waf 1.6.9 (abi 98, python 2070cf0 on linux2)
 # using ./waf configure
 #
@@ -33,10 +33,10 @@ int use_ebcdic (int i) {
 extern int foo;
 
 <==
-[1/2] [32mc: build/.conf_check_23dff2d22cb69ab46201df401ce77198/test.c -> build/.conf_check_23dff2d22cb69ab46201df401ce77198/testbuild/test.c.1.o
+[1/2] [32mc: build/.conf_check_95e7784f558ddc56fb8c8d818de6101c/test.c -> build/.conf_check_95e7784f558ddc56fb8c8d818de6101c/testbuild/test.c.1.o
 [0m
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="5cf4dd2"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', 'test.c.1.o']
-[2/2] [35mgrep_for_endianness: build/.conf_check_23dff2d22cb69ab46201df401ce77198/testbuild/test.c.1.o
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="322f063"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '../test.c', '-c', '-o', 'test.c.1.o']
+[2/2] [35mgrep_for_endianness: build/.conf_check_95e7784f558ddc56fb8c8d818de6101c/testbuild/test.c.1.o
 [0m
 little
 ----------------------------------------
@@ -51,7 +51,7 @@ int main() {
 <==
 [1/2] [32mc: build/.conf_check_1b24b0b3c24d53ce072660942760a09c/test.c -> build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/test.c.1.o
 [0m
-['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="5cf4dd2"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', 'test.c.1.o']
+['/usr/bin/gcc', '-Os', '-Wall', '-g', '-std=gnu99', '-DGIT_REV="322f063"', '-DCSP_POSIX=1', '-DCSP_DEBUG=1', '-DCSP_CONN_MAX=10', '-DCSP_CONN_QUEUE_LENGTH=100', '-DCSP_FIFO_INPUT=10', '-DCSP_MAX_BIND_PORT=31', '-DCSP_RDP_MAX_WINDOW=20', '-DCSP_PADDING_BYTES=8', '-DCSP_TRANSACTION_SO=0', '-DCSP_LOG_LEVEL_DEBUG=1', '-DCSP_LOG_LEVEL_INFO=1', '-DCSP_LOG_LEVEL_WARN=1', '-DCSP_LOG_LEVEL_ERROR=1', '-DCSP_LITTLE_ENDIAN=1', '../test.c', '-c', '-o', 'test.c.1.o']
 [2/2] [33mcstlib: build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/test.c.1.o -> build/.conf_check_1b24b0b3c24d53ce072660942760a09c/testbuild/libtestprog.a
 [0m
 ['/usr/bin/ar', 'rcs', 'libtestprog.a', 'test.c.1.o']

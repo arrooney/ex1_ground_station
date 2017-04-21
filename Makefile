@@ -28,19 +28,25 @@ BUILD_DIR := debug
 #############################################
 # Stop editting  compile time settings here #
 
-# Source files and include directories. $(shell echo ./**/*.c)
-SRC := $(shell echo ./*.c) $(shell echo ./src/*.c) 
+# Source files and include directories. $(shell echo ./**/*.c) $(shell echo ./*.c) 
+SRC := $(shell echo ./src/*.c) 
 INC := $(addprefix -I,$(INC_PATH))
 OBJ := $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
 DEF := $(addprefix -D,$(DEFINES))
 LIB_SRC := $(addprefix -L,$(LIB_PATH))
 LIB := $(addprefix -l,$(LIB_NAME))
 
+#['lib/libcsp', 'lib/libparam', 'lib/libutil', 'lib/libgosh', 'lib/libftp', 'lib/liblog']
+
 inspect:
 	$(CC) -Wall -E $(INC) $(DEF) main.c -o main.e
 
-all: MKDIR $(OBJ)
-	$(CC) $(LFLAGS) $(OBJ) -o $(BUILD_DIR)/$(PROG) $(DEF) $(LIB_SRC) $(LIB)
+configure:
+	./waf configure
+
+all: MKDIR #$(OBJ)
+	./waf build
+#	$(CC) $(LFLAGS) $(OBJ) -o $(BUILD_DIR)/$(PROG) $(DEF) $(LIB_SRC) $(LIB)
 
 # Note, $< is the first pre-req, in this case, %.c
 # Note, $@ is the call, in this case, $(BUILD_DIR)/%.o
@@ -54,6 +60,7 @@ run:
 	$ LD_PRELOAD="../IOHook/debug/libIOHook.so" ./$(BUILD_DIR)/$(PROG)
 
 clean:
+	(cd lib/libcsp && ./waf clean)
 	rm -rf $(BUILD_DIR)
 
 print-%:

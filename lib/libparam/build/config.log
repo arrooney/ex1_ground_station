@@ -1,0 +1,18 @@
+# project libparam (2.0) configured on Fri Apr 21 11:45:41 2017 by
+# waf 1.6.9 (abi 98, python 2070cf0 on linux2)
+# using ./waf configure
+#
+----------------------------------------
+Setting top to
+/home/bbruner/Dropbox/ExAlta1/GroundStation/git/albertasat-ground-station/lib/libparam
+----------------------------------------
+Setting out to
+/home/bbruner/Dropbox/ExAlta1/GroundStation/git/albertasat-ground-station/lib/libparam/build
+----------------------------------------
+Checking for program gcc,cc
+/usr/bin/gcc
+find program=['gcc', 'cc'] paths=['/home/bbruner/Dropbox/ExAlta1/GroundStation/git/nanomind/toolchain/64bit/arm-none-eabi-4.6/bin', '/home/bbruner/bin', '/home/bbruner/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='CC' -> '/usr/bin/gcc'
+----------------------------------------
+Checking for program ar
+/usr/bin/ar
+find program=['ar'] paths=['/home/bbruner/Dropbox/ExAlta1/GroundStation/git/nanomind/toolchain/64bit/arm-none-eabi-4.6/bin', '/home/bbruner/bin', '/home/bbruner/.local/bin', '/usr/local/sbin', '/usr/local/bin', '/usr/sbin', '/usr/bin', '/sbin', '/bin', '/usr/games', '/usr/local/games', '/snap/bin'] var='AR' -> '/usr/bin/ar'
