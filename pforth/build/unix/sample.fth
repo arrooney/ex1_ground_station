@@ -10,3 +10,8 @@ anew task-sample.fth
   CR ." 3 squared = "
   3 square . CR
 ;
+
+char w
+char w
+emit
+emit

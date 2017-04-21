@@ -345,7 +345,11 @@ ThrowCode pfQuit( void )
 /***************************************************************
 ** Include file based on 'C' name.
 ***************************************************************/
-
+/*
+ * @brendan
+ * 	This function will compile a forth source file @FileName and execute the
+ * 	code. Use this function to run scripts automatically and avoid the console.
+ */
 cell_t pfIncludeFile( const char *FileName )
 {
     FileStream *fid;
@@ -537,7 +541,7 @@ cell_t pfDoForth( const char *DicFileName, const char *SourceName, cell_t IfInit
             if( SourceName == NULL )
             {
                 pfDebugMessage("pfDoForth: pfQuit\n");
-                Result = pfQuit();
+                Result = pfQuit(); /* This is where the command line I/O loop happens. */
             }
             else
             {

@@ -12,13 +12,16 @@ LFLAGS := $(CFLAGS) -Wl,-rpath=../IOHook/debug
 PROG := main
 
 # Location of include files
-INC_PATH := ./ ../../CObject/liba/Class ../../CObject/liba/util ../../CObject/liba/tests ../IOHook
+#INC_PATH := ./ ../../CObject/liba/Class ../../CObject/liba/util ../../CObject/liba/tests ../IOHook
+INC_PATH := include client
 
 # Defines
-DEFINES := _POSIX_C_SOURCE=199309L _GNU_SOURCE
+#DEFINES := _POSIX_C_SOURCE=199309L _GNU_SOURCE
+DEFINES :=
 
 # Directories of static libraries
-LIB_PATH := ../../CObject/liba/Class/debug ../../CObject/liba/util/debug ../IOHook/debug
+#LIB_PATH := ../../CObject/liba/Class/debug ../../CObject/liba/util/debug ../IOHook/debug
+
 
 # Static libraries to link
 LIB_NAME := IOHook cutil cclass pthread
