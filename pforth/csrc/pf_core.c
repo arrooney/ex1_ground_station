@@ -349,6 +349,12 @@ ThrowCode pfQuit( void )
  * @brendan
  * 	This function will compile a forth source file @FileName and execute the
  * 	code. Use this function to run scripts automatically and avoid the console.
+ *
+ * 	How to use this outside of pDoForth()?
+ * 	I'll have to make a second pDoForth() function that does all the
+ * 	Initialization, but then hands control back to application code.
+ * 	I'll have to make an associated pStopForth() function to do the
+ * 	tear down.
  */
 cell_t pfIncludeFile( const char *FileName )
 {
