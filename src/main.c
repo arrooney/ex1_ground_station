@@ -50,6 +50,8 @@ struct CCSoftSerialDev io_master;
 struct CCSoftSerialBus io_bus;
 #endif
 
+#include <sayhi.h>
+
 const vmem_t vmem_map[] = {{0}};
 
 static void print_help(void) {
@@ -97,7 +99,7 @@ int main(int argc, char * argv[])
 	print_logo( );
 	fflush( stdout );
 	usleep( 1000*1000*1 );
-
+	sayhi();
 	atexit(exithandler);
 
 	/* Config */
@@ -276,7 +278,7 @@ static void* terminal_input_thread( void* arg )
 
 	printf_fp = IOHook_GetPrintf( );
 	getchar_fp = IOHook_GetGetchar( );
-	printf_fp("Gomshell IO Controller Running\n")
+	printf_fp("Gomshell IO Controller Running\n");
 	CCSoftSerialDev_Select(&io_master, IO_SLAVE_ID, COS_BLOCK_FOREVER);
 	for( ;; ) {
 		for( ;; ) {

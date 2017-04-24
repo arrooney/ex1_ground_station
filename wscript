@@ -33,11 +33,21 @@ def configure(ctx):
 	except ctx.errors.ConfigurationError:
 		pass
 	
-	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client', 'IOController/IOHook', 'albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include', 'CObject/liba/Class', 'CObject/liba/util'])
+	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client', 'Prototypes/libex', 'IOController/IOHook', 'albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include', 'CObject/liba/Class', 'CObject/liba/util'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
-	ctx.env.append_unique('LIBS_CSPTERM', ['rt', 'pthread', 'elf', 'ncurses'])
+	ctx.env.append_unique('LIBS_CSPTERM', ['IOHook', 'cutil', 'cclass', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
 	ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION'])
-	#ctx.env.append_unique('LINKFLAGS_CSPTERM', [])
+	ctx.env.append_unique('LIBPATH_CSPTERM', [os.getcwd() + '/Prototypes/libex/debug', \
+											  os.getcwd() + '/CObject/liba/Class/debug', \
+											  os.getcwd() + '/CObject/liba/util/debug', \
+											  os.getcwd() + '/IOController/IOHook/debug'])
+	ctx.env.append_unique('LINKFLAGS_CSPTERM', ['-Wl,-rpath=' + os.getcwd() + '/IOController/IOHook/debug'])											  
+	
+	# Check WAF can find the required libraries.
+	ctx.check_cc(lib = 'sayhi', use = 'CSPTERM')
+	ctx.check_cc(lib = 'cclass', use = 'CSPTERM')
+	ctx.check_cc(lib = 'cutil', use = 'CSPTERM')
+	ctx.check_cc(lib = 'IOHook', use = 'CSPTERM')
 
 	# Options for CSP
 	ctx.options.with_os = 'posix'
@@ -101,7 +111,7 @@ def build(ctx):
 		stdlibpath = ['-LCObject/liba/Class/debug/', '-LCObject/liba/util/debug', '-LIOController/IOHook/debug'],
 		defines = ctx.env.DEFINES_NANOMIND,
 		target='csp-term', 
-		use=['csp', 'param', 'util', 'gosh', 'ftp', 'log', 'cclass', 'cutil', 'IOHook'],
+		use=['CSPTERM', 'csp', 'param', 'util', 'gosh', 'ftp', 'log', 'cclass', 'cutil', 'IOHook'],
 		lib=ctx.env.LIBS_CSPTERM + ctx.env.LIBS
 		)
 
