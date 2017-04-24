@@ -35,8 +35,8 @@ def configure(ctx):
 	
 	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client', 'Prototypes/libex', 'IOController/IOHook', 'albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include', 'CObject/liba/Class', 'CObject/liba/util'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
-	ctx.env.append_unique('LIBS_CSPTERM', ['IOHook', 'cutil', 'cclass', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
-	ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION'])
+	ctx.env.append_unique('LIBS_CSPTERM', ['cutil', 'cclass', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
+	#ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION'])
 	ctx.env.append_unique('LIBPATH_CSPTERM', [os.getcwd() + '/Prototypes/libex/debug', \
 											  os.getcwd() + '/CObject/liba/Class/debug', \
 											  os.getcwd() + '/CObject/liba/util/debug', \

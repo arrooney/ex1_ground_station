@@ -29,7 +29,7 @@ BUILD_DIR := debug
 # Stop editting  compile time settings here #
 
 # Source files and include directories. $(shell echo ./**/*.c)
-SRC := $(shell echo ./*.c) $(shell echo ./src/*.c) 
+SRC := $(shell echo ./*.c)
 INC := $(addprefix -I,$(INC_PATH))
 OBJ := $(addprefix $(BUILD_DIR)/,$(SRC:%.c=%.o))
 DEF := $(addprefix -D,$(DEFINES))
@@ -38,6 +38,9 @@ LIB := $(addprefix -l,$(LIB_NAME))
 
 inspect:
 	$(CC) -Wall -E $(INC) $(DEF) main.c -o main.e
+
+assem: 
+	$(CC) $(LFLAGS) main.c -S $(INC) $(DEF) $(LIB_SRC) $(LIB)
 
 all: MKDIR $(OBJ)
 	$(CC) $(LFLAGS) $(OBJ) -o $(BUILD_DIR)/$(PROG) $(DEF) $(LIB_SRC) $(LIB)

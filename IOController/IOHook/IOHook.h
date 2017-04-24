@@ -23,13 +23,17 @@
 #ifndef IOHOOK_H_
 #define IOHOOK_H_
 
-#include <CCSoftSerialDev.h>
+#include <CCThreadedQueue.h>
 
 typedef int (*IOHook_Printf_FP)(const char*, ...);
 typedef int (*IOHook_Getchar_FP)( );
 
-extern CBool IOHook_Init( struct CCSoftSerialDev* );
+extern int IOHook_Init( );
+
 extern IOHook_Printf_FP IOHook_GetPrintf( );
 extern IOHook_Getchar_FP IOHook_GetGetchar( );
+
+extern struct CCThreadedQueue* IOHook_GetGomshellOutputQueue( );
+extern struct CCThreadedQueue* IOHook_GetGomshellInputQueue( );
 
 #endif /* IOHOOK_H_ */

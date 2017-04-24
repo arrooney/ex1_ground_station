@@ -1,6 +1,6 @@
 CC := gcc
 AR := ar
-CFLAGS := -Wall -Wextra -pedantic -g -std=c99
+CFLAGS := -Wall -Wextra -pedantic -g -std=c99 -O0
 
 # Set this to true if using iterators, ie LIB_USE_ITER := true
 # otherwise, leave it empty.

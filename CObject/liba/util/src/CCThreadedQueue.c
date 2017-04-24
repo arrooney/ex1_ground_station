@@ -106,7 +106,7 @@ static CCTQueueError CCThreadedQueue_RemoveLock( struct CCThreadedQueue* self, C
 		/* We have the mutex, Check to see if there are elements to remove. */
 		/* If not, wait on the conditional variable. */
 		if( CIQueue_Size(self->_.backbone) > 0 ) {
-			pthread_mutex_unlock(&self->_.mutex);
+			//pthread_mutex_unlock(&self->_.mutex);
 			return CCTQUEUE_OK;
 		}
 
@@ -160,7 +160,7 @@ static CCTQueueError CCThreadedQueue_InsertLock( struct CCThreadedQueue* self, C
 	for( ;; ) {
 		/* We have the mutex, Check to see if there room to add elements. */
 		if( CIQueue_Size(self->_.backbone) < CIQueue_MaxSize(self->_.backbone) ) {
-			pthread_mutex_unlock(&self->_.mutex);
+			//pthread_mutex_unlock(&self->_.mutex);
 			return CCTQUEUE_OK;
 		}
 

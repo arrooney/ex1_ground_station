@@ -494,24 +494,24 @@ int console_init(void) {
 
 	new_stdin = old_stdin;
 	new_stdout = old_stdout;
-
+//
 	/*setting the approriate bit in the termios struct*/
 	new_stdin.c_iflag &= ~(IGNCR | ICRNL); /* Prevents \r characters from being stripped */
 	new_stdin.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG); /* Prevent echoing of characters. */
 	new_stdin.c_cc[VTIME]=0;
 	new_stdin.c_cc[VMIN]=1;
-
+//
 	new_stdout.c_iflag &= ~(IGNCR | ICRNL);
 	new_stdout.c_lflag &= ~(ECHO | ICANON | IEXTEN | ISIG);
 	new_stdout.c_cc[VTIME]=0;
 	new_stdout.c_cc[VMIN]=1;
-
+//
 	/*setting the new bits*/
 	tcsetattr(STDIN_FILENO, TCSANOW, &new_stdin);
 	tcsetattr(STDOUT_FILENO, TCSANOW, &new_stdout);
 
 	setvbuf(stdout, NULL, _IONBF, 0); /* No buffering, ie, calling stdflush() would be redundant */
-	setvbuf(stdin, NULL, _IONBF, 0);
+	setvbuf(stdin, NULL, _IONBF, 0); /* This causes a lock atm. */
 #endif
 
 	void cmd_dfl_setup(void);

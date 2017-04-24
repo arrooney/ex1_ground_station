@@ -26,8 +26,12 @@
 #include <stdarg.h>
 #include <dlfcn.h>
 #include <pthread.h>
+#include <CCThreadedQueue.h>
+#include <CCArrayQueue.h>
 
 #define IOHOOK_STRING_BUFFER_LENGTH 1024
+#define GOMSHELL_IO_ELEMENT_SIZE sizeof(char)
+#define GOMSHELL_IO_BUFFER_SIZE 1
 
 /* Function pointers that will be initialized to point to the
  * standard libc implementation of printf and getchar. ie,
@@ -39,9 +43,12 @@ static IOHook_Getchar_FP IOHook_Libcgetchar = NULL;
 
 /* Variables used for buffering data
  */
-static struct CCSoftSerialDev* iohook_device = NULL;
 static char iohook_string_buffer[IOHOOK_STRING_BUFFER_LENGTH];
-static pthread_mutex_t print_lock;
+static struct CCThreadedQueue gomshell_output;
+static struct CCArrayQueue gomshell_output_backbone;
+static struct CCThreadedQueue gomshell_input;
+static struct CCArrayQueue gomshell_input_backbone;
+
 
 /****************************************************************************************************************/
 /* Function definitions.											*/
@@ -50,23 +57,13 @@ static pthread_mutex_t print_lock;
  * @ingroup IOHook
  * @brief
  * 	Initialization for hooks. 
- * @param device
- *	An intialized software serial object with a bus attached to it. See documentation/source code
- * 	for details on what the software serial class is for.
  * @return 
  *	true/false if initialization was successful/failed
  */
-CBool IOHook_Init( struct CCSoftSerialDev* device )
+int IOHook_Init( )
 {
-	if( device == NULL ) {
-		return CFALSE;
-	}
-
-	if( pthread_mutex_init(&print_lock, NULL) != 0 ) {
-		return CFALSE;
-	}
-
-	iohook_device = device;
+	CError err;
+	
 	if( IOHook_Libcprintf == NULL || IOHook_Libcgetchar == NULL ) {
 		/* Find the standard implementations printf, vprintf, and getchar. Note that the
 		 * type cast will give a compile time warning. It says an object pointer should not
@@ -80,10 +77,34 @@ CBool IOHook_Init( struct CCSoftSerialDev* device )
 		/* On failure to find, return false. 
 		 */
 		if( IOHook_Libcprintf == NULL || IOHook_Libcgetchar == NULL ) {
-			return CFALSE;
+			return -1;
 		}
 	}
-	return CTRUE;
+
+	err = CCArrayQueue(&gomshell_input_backbone, GOMSHELL_IO_ELEMENT_SIZE, GOMSHELL_IO_BUFFER_SIZE);
+	if( err != COBJ_OK ) {
+		return -1;
+	}
+	err = CCThreadedQueue(&gomshell_input, &gomshell_input_backbone.ciqueue);
+	if( err != COBJ_OK ) {
+		CDestroy(&gomshell_input_backbone);
+		return -1;
+	}
+
+	err = CCArrayQueue(&gomshell_output_backbone, GOMSHELL_IO_ELEMENT_SIZE, GOMSHELL_IO_BUFFER_SIZE);
+	if( err != COBJ_OK ) {
+		CDestroy(&gomshell_input);
+		return -1;
+	}
+	err = CCThreadedQueue(&gomshell_output, &gomshell_output_backbone.ciqueue);
+	if( err != COBJ_OK ) {
+		CDestroy(&gomshell_input);
+		CDestroy(&gomshell_output_backbone);
+		return -1;
+	}
+	
+	
+	return 0;
 }
 
 /**
@@ -98,28 +119,17 @@ CBool IOHook_Init( struct CCSoftSerialDev* device )
 static int goawaycompiler_vprintf( const char* format, va_list args )
 {
 	int bytes_copied, i;
-	CCSoftSerialError err;
+	CCTQueueError err;
 	
 	bytes_copied = vsnprintf(iohook_string_buffer, IOHOOK_STRING_BUFFER_LENGTH, format, args);
 
-	if( CCSoftSerialDev_Isselected(iohook_device, COS_BLOCK_FOREVER) != CCSOFTSERIAL_OK ) {
-		/* Device doesn't have a  channel to write to.
-		 */
-		IOHook_Libcprintf("printf: no channel\n");
-		return 0;
-	}
-
-	/* Write the message into the software serial bus.
-	 */
 	for( i = 0; i < bytes_copied; ++i ) {
-		err = CCSoftSerialDev_Write(iohook_device, &iohook_string_buffer[i], COS_BLOCK_FOREVER);
-		if( err != CCSOFTSERIAL_OK ) {
-			/* Lost access to the bus, abort write.
-			 */
-			IOHook_Libcprintf("printf: lost channel\n");
+		err = CCThreadedQueue_Insert(&gomshell_output, &iohook_string_buffer[i], COS_BLOCK_FOREVER);
+		if( err != CCTQUEUE_OK ) {
 			break;
 		}
 	}
+	
 	return i;
 }
 
@@ -172,19 +182,35 @@ int putchar( int byte )
 int getchar( )
 {
 	char msg;
-	CCSoftSerialError err;
+	CCTQueueError err;
 
 	/* Block until given access to the software serial bus.
 	 * try to read from the bus. If for some reason an error
 	 * occurs reading from the bus, try again.
 	 */
 	do {
-		CCSoftSerialDev_Isselected(iohook_device, COS_BLOCK_FOREVER);
-		err = CCSoftSerialDev_Read(iohook_device, &msg, COS_BLOCK_FOREVER);
-	} while( err != CCSOFTSERIAL_OK );
+		err = CCThreadedQueue_Remove(&gomshell_input, &msg, COS_BLOCK_FOREVER);
+	} while( err != CCTQUEUE_OK );
 
 	return (int) msg;
 }
+
+char* gets( char* str )
+{
+	char msg;
+	CCTQueueError err;
+	int i;
+
+	i = 0;
+	do {
+		err = CCThreadedQueue_Remove(&gomshell_input, &msg, COS_BLOCK_FOREVER);
+		str[i] = msg;
+		++i;
+	} while( err == CCTQUEUE_OK && msg != '\n' );
+	str[i-1] = '\0';
+	return str;
+}
+	
 
 /**
  * @ingroup IOHook
@@ -204,4 +230,24 @@ IOHook_Printf_FP IOHook_GetPrintf( )
 IOHook_Getchar_FP IOHook_GetGetchar( )
 {
 	return IOHook_Libcgetchar;
+}
+
+/**
+ * @ingroup IOHook
+ * @brief
+ *	Get a reference to the queue where all output from the gomshell is put.
+ */
+struct CCThreadedQueue* IOHook_GetGomshellOutputQueue( )
+{
+	return &gomshell_output;
+}
+
+/**
+ * @ingroup IOHook
+ * @brief
+ *	Get a reference to the queue where the gomshell pulls all its input from.
+ */
+struct CCThreadedQueue* IOHook_GetGomshellInputQueue( )
+{
+	return &gomshell_input;
 }

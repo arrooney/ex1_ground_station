@@ -40,8 +40,8 @@
 #include <CCSoftSerialBus.h>
 #include <IOHook.h>
 
-#define COS_PRINT_ACK_TIMEOUT 15
-#define IO_BUS_CHANNEL_LENGTH 5096
+#define COS_PRINT_ACK_TIMEOUT 50
+#define IO_BUS_CHANNEL_LENGTH 1024
 #define IO_MASTER_PRIO 2
 #define IO_FORTH_PRIO 1
 
@@ -72,8 +72,10 @@ char * pipe_buffer;
 char holdbuff=0;
 #ifdef AUTOMATION
 static pthread_t terminal_input_thread_handle;
+static pthread_t terminal_output_thread_handle;
 
 static void* terminal_input_thread( void* arg );
+static void* terminal_output_thread( void* arg );
 #endif
 
 int main(int argc, char * argv[])
@@ -95,12 +97,14 @@ int main(int argc, char * argv[])
 	}
 
 	pthread_create(&terminal_input_thread_handle, NULL, terminal_input_thread, NULL);
+	pthread_create(&terminal_output_thread_handle, NULL, terminal_output_thread, NULL);
 #endif
 	print_logo( );
 	fflush( stdout );
 	usleep( 1000*1000*1 );
 	sayhi();
 	atexit(exithandler);
+
 
 	/* Config */
 	uint8_t addr = 8;
@@ -276,22 +280,33 @@ static void* terminal_input_thread( void* arg )
 	IOHook_Printf_FP printf_fp;
 	CCSoftSerialError err;
 
-	printf_fp = IOHook_GetPrintf( );
 	getchar_fp = IOHook_GetGetchar( );
-	printf_fp("Gomshell IO Controller Running\n");
+	printf_fp = IOHook_GetPrintf( );
+	printf_fp("Gomshell I Controller Running\n");
 	CCSoftSerialDev_Select(&io_master, IO_SLAVE_ID, COS_BLOCK_FOREVER);
 	for( ;; ) {
-		for( ;; ) {
-			err = CCSoftSerialDev_Read(&io_master, &msg, COS_PRINT_ACK_TIMEOUT);
-			if( err == CCSOFTSERIAL_OK ) {
-				printf_fp("%c", msg);
-			}
-			else {
-				break;
-			}
-		}
 		msg = getchar_fp( );
 		CCSoftSerialDev_Write(&io_master, &msg, COS_BLOCK_FOREVER);
+	}
+	pthread_exit(NULL);
+}
+
+static void* terminal_output_thread( void* arg )
+{
+	(void) arg;
+	char msg;
+	IOHook_Getchar_FP getchar_fp;
+	IOHook_Printf_FP printf_fp;
+	CCSoftSerialError err;
+
+	printf_fp = IOHook_GetPrintf( );
+	printf_fp("Gomshell O Controller Running\n");
+	CCSoftSerialDev_Select(&io_master, IO_SLAVE_ID, COS_BLOCK_FOREVER);
+	for( ;; ) {
+		err = CCSoftSerialDev_Read(&io_master, &msg, COS_BLOCK_FOREVER);
+		if( err == CCSOFTSERIAL_OK ) {
+			printf_fp("%c", msg);
+		}
 	}
 	pthread_exit(NULL);
 }
