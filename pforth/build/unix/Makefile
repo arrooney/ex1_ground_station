@@ -38,7 +38,7 @@ FULL_WARNINGS =  \
         -Wmissing-declarations
 
 DEBUGOPTS = -g
-CCOPTS = $(WIDTHOPT) -x c -O2 $(FULL_WARNINGS) $(EXTRA_CCOPTS) $(DEBUGOPTS)
+CCOPTS = $(WIDTHOPT) -x c -O0 $(FULL_WARNINGS) $(EXTRA_CCOPTS) $(DEBUGOPTS)
 
 IO_SOURCE = pf_io_posix.c pf_fileio_stdio.c
 #IO_SOURCE = pf_io_stdio.c
@@ -59,7 +59,7 @@ VPATH = .:$(CSRCDIR):$(CSRCDIR)/posix:$(CSRCDIR)/stdio:$(CSRCDIR)/win32_console:
 
 XCFLAGS = $(CCOPTS)
 XCPPFLAGS = -DPF_SUPPORT_FP -D_GNU_SOURCE
-XLDFLAGS = $(WIDTHOPT)
+XLDFLAGS = $(WIDTHOPT) -O0
 
 CPPFLAGS = -I. $(XCPPFLAGS)
 CFLAGS = $(XCFLAGS)
@@ -97,6 +97,10 @@ pffiles:
 # Build pforth by compiling 'C' source.
 $(PFDICAPP): $(PFINCLUDES) $(PFOBJS)
 	$(LINK) -o $@ $(PFOBJS) $(LDADD) -lm
+	ar rcs -o libpforth.a $(PFOBJS)
+
+libtest: $(PFDICAPP)
+	$(LINK) $(CFLAGS) $(CPPFLAGS) $(CSRCDIR)/main_libtest.c -L. -lpforth -lm -o libtest
 
 # Build basic dictionary image by running newly built pforth and including "system.fth".
 $(PFORTHDIC): $(PFDICAPP)
