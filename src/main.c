@@ -35,19 +35,8 @@
 #include <util/vmem.h>
 /* IO Controller */
 #ifdef AUTOMATION
-#include <CCSoftSerialDev.h>
 #include <unistd.h>
-#include <CCSoftSerialBus.h>
 #include <IOHook.h>
-
-#define COS_PRINT_ACK_TIMEOUT 50
-#define IO_BUS_CHANNEL_LENGTH 1024
-#define IO_MASTER_PRIO 2
-#define IO_FORTH_PRIO 1
-
-static struct CCSoftSerialDev io_slave;
-struct CCSoftSerialDev io_master;
-struct CCSoftSerialBus io_bus;
 #endif
 
 #include <sayhi.h>
@@ -83,16 +72,7 @@ int main(int argc, char * argv[])
 #ifdef AUTOMATION
 	/* Initialize IOHook.
 	 */
-	if( CCSoftSerialBus(&io_bus, sizeof(char), IO_BUS_CHANNEL_LENGTH) != COBJ_OK ) {
-		return -1;
-	}
-	if( CCSoftSerialDevSlave(&io_slave, IO_SLAVE_ID, &io_bus) != COBJ_OK ) {
-		return -1;
-	}
-	if( CCSoftSerialDevMaster(&io_master, IO_MASTER_PRIO, IO_MASTER_ID, &io_bus) != COBJ_OK ) {
-		return -1;
-	}
-	if( IOHook_Init(&io_slave) != CTRUE ) {
+	if( IOHook_Init( ) != 0 ) {
 		return -1;
 	}
 
@@ -265,6 +245,7 @@ int main(int argc, char * argv[])
 	pthread_join(handle_server, NULL);
 #ifdef AUTOMATION
 	pthread_join(terminal_input_thread_handle, NULL);
+	pthread_join(terminal_output_thread_handle, NULL);
 #endif
 
 	return 0;
@@ -276,17 +257,21 @@ static void* terminal_input_thread( void* arg )
 {
 	(void) arg;
 	char msg;
-	IOHook_Getchar_FP getchar_fp;
 	IOHook_Printf_FP printf_fp;
-	CCSoftSerialError err;
+	IOHook_Getchar_FP getchar_fp;
+	struct CCThreadedQueue* gomshell_input;
 
 	getchar_fp = IOHook_GetGetchar( );
 	printf_fp = IOHook_GetPrintf( );
-	printf_fp("Gomshell I Controller Running\n");
-	CCSoftSerialDev_Select(&io_master, IO_SLAVE_ID, COS_BLOCK_FOREVER);
+	gomshell_input = IOHook_GetGomshellInputQueue( );
+
+	printf_fp("Input handler running\n");
 	for( ;; ) {
 		msg = getchar_fp( );
-		CCSoftSerialDev_Write(&io_master, &msg, COS_BLOCK_FOREVER);
+		CCThreadedQueue_Insert(gomshell_input, &msg, COS_BLOCK_FOREVER);
+#ifdef VERIFY
+		CCThreadedQueue_Insert(gomshell_input, &msg, COS_BLOCK_FOREVER);
+#endif
 	}
 	pthread_exit(NULL);
 }
@@ -295,19 +280,34 @@ static void* terminal_output_thread( void* arg )
 {
 	(void) arg;
 	char msg;
-	IOHook_Getchar_FP getchar_fp;
 	IOHook_Printf_FP printf_fp;
-	CCSoftSerialError err;
+	struct CCThreadedQueue* gomshell_output;
+#ifdef OUTPUT_LOG
+	FILE* output_log;
+	time_t ltime;
+
+	output_log = fopen(OUTPUT_LOG_NAME, "a+");
+	if( output_log == NULL ) {
+		pthread_exit(NULL);
+	}
+
+	ltime = time(NULL);
+	fprintf(output_log, "\n\nNew Entry: %s\n", asctime(localtime(&ltime)));
+#endif
 
 	printf_fp = IOHook_GetPrintf( );
-	printf_fp("Gomshell O Controller Running\n");
-	CCSoftSerialDev_Select(&io_master, IO_SLAVE_ID, COS_BLOCK_FOREVER);
+	gomshell_output = IOHook_GetGomshellOutputQueue( );
+
+	printf_fp("Output handler running\n");
 	for( ;; ) {
-		err = CCSoftSerialDev_Read(&io_master, &msg, COS_BLOCK_FOREVER);
-		if( err == CCSOFTSERIAL_OK ) {
-			printf_fp("%c", msg);
-		}
+		CCThreadedQueue_Remove(gomshell_output, &msg, COS_BLOCK_FOREVER);
+		printf_fp("%c", msg);
+#ifdef OUTPUT_LOG
+		fputc(msg, output_log);
+#endif
 	}
+
+	fclose(output_log);
 	pthread_exit(NULL);
 }
 #endif
@@ -328,7 +328,7 @@ static void print_logo( )
 	printf( "<----.     __ / __   \\			\n" );
 	printf( "<----|====O)))==) \\) /====		\n" );
 	printf( "<----'    `--' `.__,' \\			\n" );
-    printf( "             |        |			\n" );
+	printf( "             |        |			\n" );
 	printf( "              \\       /			\n" );
 	printf( "        ______( (_  / \\______		\n" );
 	printf( "       ,'  ,-----'   |        \\	\n" );

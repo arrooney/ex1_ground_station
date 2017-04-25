@@ -35,13 +35,14 @@ def configure(ctx):
 	
 	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client', 'Prototypes/libex', 'IOController/IOHook', 'albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include', 'CObject/liba/Class', 'CObject/liba/util'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
-	ctx.env.append_unique('LIBS_CSPTERM', ['cutil', 'cclass', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
-	#ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION'])
+	ctx.env.append_unique('LIBS_CSPTERM', ['IOHook', 'cutil', 'cclass', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
+	ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION', 'OUTPUT_LOG', 'OUTPUT_LOG_NAME="' + os.getcwd() + '/logs/output_log.txt"'])
 	ctx.env.append_unique('LIBPATH_CSPTERM', [os.getcwd() + '/Prototypes/libex/debug', \
 											  os.getcwd() + '/CObject/liba/Class/debug', \
 											  os.getcwd() + '/CObject/liba/util/debug', \
 											  os.getcwd() + '/IOController/IOHook/debug'])
-	ctx.env.append_unique('LINKFLAGS_CSPTERM', ['-Wl,-rpath=' + os.getcwd() + '/IOController/IOHook/debug'])											  
+        ctx.env.append_unique('LINKFLAGS_CSPTERM', ['-Wl,-rpath=' + os.getcwd() + '/IOController/IOHook/debug', '-O0'])
+	ctx.env.append_unique('CFLAGS_CSPTERM', ['-O0'])
 	
 	# Check WAF can find the required libraries.
 	ctx.check_cc(lib = 'sayhi', use = 'CSPTERM')

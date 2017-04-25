@@ -44,7 +44,6 @@ void* gomshell_thread( void* arg )
 	pthread_exit(NULL);
 }
 
-#ifndef RAW_INPUT
 void* terminal_input_thread( void* arg )
 {
 	(void) arg;
@@ -61,11 +60,12 @@ void* terminal_input_thread( void* arg )
 	for( ;; ) {
 		msg = getchar_fp( );
 		CCThreadedQueue_Insert(gomshell_input, &msg, COS_BLOCK_FOREVER);
+#ifdef VERIFY
+		CCThreadedQueue_Insert(gomshell_input, &msg, COS_BLOCK_FOREVER);
+#endif
 	}
 }
-#endif
 
-#ifndef RAW_OUTPUT
 void* terminal_output_thread( void* arg )
 {
 	(void) arg;
@@ -79,10 +79,13 @@ void* terminal_output_thread( void* arg )
 	printf_fp("Output handler running\n");
 	for( ;; ) {
 		CCThreadedQueue_Remove(gomshell_output, &msg, COS_BLOCK_FOREVER);
+#ifdef VERIFY
+		printf_fp("%c*", msg);
+#else
 		printf_fp("%c", msg);
+#endif
 	}
 }
-#endif
 
 int main( int argc, char** argv )
 {
@@ -96,12 +99,8 @@ int main( int argc, char** argv )
 	}
 
 	pthread_create(&gomshell_thread_handle, NULL, gomshell_thread, NULL);
-#ifndef RAW_INPUT
 	pthread_create(&terminal_input_thread_handle, NULL, terminal_input_thread, NULL);
-#endif
-#ifndef RAW_OUTPUT	
 	pthread_create(&terminal_output_thread_handle, NULL, terminal_output_thread, NULL);
-#endif
 	pthread_join(gomshell_thread_handle, NULL);
 	
 	return 0;

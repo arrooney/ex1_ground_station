@@ -36,6 +36,8 @@ DEF := $(addprefix -D,$(DEFINES))
 LIB_SRC := $(addprefix -L,$(LIB_PATH))
 LIB := $(addprefix -l,$(LIB_NAME))
 
+new: clean all
+
 inspect:
 	$(CC) -Wall -E $(INC) $(DEF) main.c -o main.e
 
