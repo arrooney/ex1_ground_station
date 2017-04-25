@@ -37,6 +37,7 @@
 #ifdef AUTOMATION
 #include <unistd.h>
 #include <IOHook.h>
+#include <pforth.h>
 #endif
 
 #include <sayhi.h>
@@ -60,11 +61,9 @@ static void exithandler(void) {
 char * pipe_buffer;
 char holdbuff=0;
 #ifdef AUTOMATION
-static pthread_t terminal_input_thread_handle;
-static pthread_t terminal_output_thread_handle;
+static pthread_t forth_thread_handle;
 
-static void* terminal_input_thread( void* arg );
-static void* terminal_output_thread( void* arg );
+static void* forth_thread_thread( void* arg );
 #endif
 
 int main(int argc, char * argv[])
@@ -76,8 +75,7 @@ int main(int argc, char * argv[])
 		return -1;
 	}
 
-	pthread_create(&terminal_input_thread_handle, NULL, terminal_input_thread, NULL);
-	pthread_create(&terminal_output_thread_handle, NULL, terminal_output_thread, NULL);
+	pthread_create(&forth_thread_handle, NULL, forth_thread, NULL);
 #endif
 	print_logo( );
 	fflush( stdout );
@@ -253,35 +251,33 @@ int main(int argc, char * argv[])
 }
 
 #ifdef AUTOMATION
-static void* terminal_input_thread( void* arg )
+static void* forth_thread( void* arg )
 {
 	(void) arg;
-	char msg;
 	IOHook_Printf_FP printf_fp;
 	IOHook_Getchar_FP getchar_fp;
-	struct CCThreadedQueue* gomshell_input;
-
+	const char *SourceName = NULL;
+	char IfInit = FALSE;
+	char *s;
+	cell_t i;
+	int Result;
+	const char *DicName = "pforth.dic";
+	
 	getchar_fp = IOHook_GetGetchar( );
 	printf_fp = IOHook_GetPrintf( );
-	gomshell_input = IOHook_GetGomshellInputQueue( );
+	printf_fp("Output handler running\n");
 
-	printf_fp("Input handler running\n");
-	for( ;; ) {
-		msg = getchar_fp( );
-		CCThreadedQueue_Insert(gomshell_input, &msg, COS_BLOCK_FOREVER);
-#ifdef VERIFY
-		CCThreadedQueue_Insert(gomshell_input, &msg, COS_BLOCK_FOREVER);
-#endif
-	}
+	/* Disable verbose output at shell prompt.
+	 */
+	pfSetQuiet( TRUE );
+
+	/* Start the Forth Kernal. This will never return.
+	 */
+	Result = pfDoForth( DicName, SourceName, IfInit);	
+
+	printf_fp("Unexpected exit from Forth kernal\n");
 	pthread_exit(NULL);
-}
-
-static void* terminal_output_thread( void* arg )
-{
-	(void) arg;
-	char msg;
-	IOHook_Printf_FP printf_fp;
-	struct CCThreadedQueue* gomshell_output;
+	
 #ifdef OUTPUT_LOG
 	FILE* output_log;
 	time_t ltime;
@@ -294,18 +290,6 @@ static void* terminal_output_thread( void* arg )
 	ltime = time(NULL);
 	fprintf(output_log, "\n\nNew Entry: %s\n", asctime(localtime(&ltime)));
 #endif
-
-	printf_fp = IOHook_GetPrintf( );
-	gomshell_output = IOHook_GetGomshellOutputQueue( );
-
-	printf_fp("Output handler running\n");
-	for( ;; ) {
-		CCThreadedQueue_Remove(gomshell_output, &msg, COS_BLOCK_FOREVER);
-		printf_fp("%c", msg);
-#ifdef OUTPUT_LOG
-		fputc(msg, output_log);
-#endif
-	}
 
 	fclose(output_log);
 	pthread_exit(NULL);

@@ -65,6 +65,35 @@ int main( int argc, char **argv )
 	if( IOHook_Init( ) != 0 ) {
 		return -1;
 	}
+
+	IOHook_Printf_FP printf_fp;
+	IOHook_Getchar_FP getchar_fp;
+	struct CCThreadedQueue* gomshell_output;
+	const char *SourceName = NULL;
+	char IfInit = FALSE;
+	char *s;
+	cell_t i;
+	int Result;
+	const char *DicName = "pforth.dic";
+	
+	getchar_fp = IOHook_GetGetchar( );
+	printf_fp = IOHook_GetPrintf( );
+	printf_fp("Output handler running\n");
+
+	/* Disable verbose output at shell prompt.
+	 */
+	pfSetQuiet( TRUE );
+
+	/* Start the Forth Kernal. This will never return.
+	 */
+	Result = pfDoForth( DicName, SourceName, IfInit);	
+
+	printf_fp("Unexpected exit from Forth kernal\n");
+
+	return -1;
+
+#ifdef NOT_REMOVE_TEMP
+
 #ifdef PF_STATIC_DIC
     const char *DicName = NULL;
 #else /* PF_STATIC_DIC */
@@ -149,6 +178,7 @@ int main( int argc, char **argv )
 
 on_error:
     return Result;
+#endif /* NOT_REMOVE_TEMP */
 }
 
 #endif  /* PF_EMBEDDED */
