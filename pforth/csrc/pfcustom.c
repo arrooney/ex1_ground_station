@@ -48,6 +48,20 @@ static void CTest1( cell_t Val1, cell_t Val2 )
     MSG_NUM_D(", Val2 = ", Val2);
 }
 
+#include <IOHook.h>
+static void gomshellCommand( cell_t string, cell_t length )
+{
+	int i;
+	IOHook_Printf_FP print_fp;
+
+	print_fp = IOHook_GetPrintf( );
+	print_fp("\nSending Gom command:\n\t");
+	for( i = 0; i < length; ++i ) {
+		print_fp("%c", ((char *) string)[i]);
+	}
+	print_fp("\n");
+}
+
 /****************************************************************
 ** Step 2: Create CustomFunctionTable.
 **     Do not change the name of CustomFunctionTable!
@@ -80,7 +94,8 @@ Err LoadCustomFunctionTable( void )
 CFunc0 CustomFunctionTable[] =
 {
     (CFunc0) CTest0,
-    (CFunc0) CTest1
+    (CFunc0) CTest1,
+	(CFunc0) gomshellCommand
 };
 #endif
 
@@ -102,6 +117,8 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "CTEST0", i++, C_RETURNS_VALUE, 1 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "CTEST1", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
 
     return 0;

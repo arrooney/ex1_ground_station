@@ -112,8 +112,6 @@ pffiles:
 $(PFDICAPP): $(PFINCLUDES) $(PFOBJS)
 	$(LINK) -o $@ $(PFOBJS) $(LDADD) $(LIB_LINKS)
 	$(ARCHIVE) rcs -o lib$(LIBPFORTH).a $(PFOBJS)
-
-libtest: $(PFDICAPP)
 	$(LINK) $(CFLAGS) $(CPPFLAGS) $(CSRCDIR)/$(LIBTEST_MAIN) -L. -l$(LIBPFORTH) -o $(LIBTEST) $(LIB_LINKS)
 
 # Build basic dictionary image by running newly built pforth and including "system.fth".
@@ -161,3 +159,4 @@ clean:
 	rm -f $(PFDICDAT) $(FTHDIR)/$(PFDICDAT)
 	rm -f $(PFORTHDIC) $(FTHDIR)/$(PFORTHDIC)
 	rm -f $(PFDICAPP)
+	rm -f $(LIBTEST)
