@@ -20,6 +20,8 @@
 **
 ***************************************************************/
 
+#include <IOHook.h>
+
 #if (defined(PF_NO_STDIO) || defined(PF_EMBEDDED))
     #define NULL  ((void *) 0)
     #define ERR(msg) /* { printf msg; } */
@@ -47,16 +49,22 @@
 #ifdef PF_EMBEDDED
 int main( void )
 {
-    char IfInit = 0;
-    const char *DicName = NULL;
-    const char *SourceName = NULL;
-    pfMessage("\npForth Embedded\n");
-    return pfDoForth( DicName, SourceName, IfInit);
+	if( IOHook_Init( ) != 0 ) {
+		return -1;
+	}
+	char IfInit = 0;
+	const char *DicName = NULL;
+	const char *SourceName = NULL;
+	pfMessage("\npForth Embedded\n");
+	return pfDoForth( DicName, SourceName, IfInit);
 }
 #else
 
 int main( int argc, char **argv )
 {
+	if( IOHook_Init( ) != 0 ) {
+		return -1;
+	}
 #ifdef PF_STATIC_DIC
     const char *DicName = NULL;
 #else /* PF_STATIC_DIC */

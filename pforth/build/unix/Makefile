@@ -20,6 +20,18 @@ PFORTHDIC    = pforth.dic
 PFDICDAT     = pfdicdat.h
 PFORTHAPP    = pforth_standalone
 
+LIBPFORTH := pforth
+LIBTEST := libtest
+LIBTEST_MAIN := main_libtest.c
+
+IOHOOK_PATH := ../../../IOController/IOHook
+EXT_INC_PATH := $(IOHOOK_PATH) ../../../CObject/liba/Class ../../../CObject/liba/util
+IOHOOK_LIB_PATH := $(addsuffix /debug,$(IOHOOK_PATH))
+EXT_LIB_PATH := $(addsuffix /debug,$(EXT_INC_PATH))
+IOHOOK_LIB := IOHook
+EXT_LIBS := m $(IOHOOK_LIB) cutil cclass pthread
+DIC_BUILD_PRELOAD := $ LD_PRELOAD="../../IOController/IOHook/debug/libIOHook.so"
+
 # This is needed to get pForth to build on Snow Leopard and other 64 bit platforms.
 WIDTHOPT=
 
@@ -49,7 +61,7 @@ EMBCCOPTS = -DPF_STATIC_DIC #-DPF_NO_FILEIO
 PFINCLUDES = pf_all.h pf_cglue.h pf_clib.h pf_core.h pf_float.h \
 	pf_guts.h pf_host.h pf_inc1.h pf_io.h pf_mem.h pf_save.h \
 	pf_text.h pf_types.h pf_win32.h pf_words.h pfcompfp.h \
-	pfcompil.h pfdicdat_arm.h pfinnrfp.h pforth.h
+	pfcompil.h pfdicdat_arm.h pfinnrfp.h pforth.h $(IOHOOK_PATH)
 PFBASESOURCE = pf_cglue.c pf_clib.c pf_core.c pf_inner.c \
 	pf_io.c pf_io_none.c pf_main.c pf_mem.c pf_save.c \
 	pf_text.c pf_words.c pfcompil.c pfcustom.c
@@ -57,9 +69,10 @@ PFSOURCE = $(PFBASESOURCE) $(IO_SOURCE)
 
 VPATH = .:$(CSRCDIR):$(CSRCDIR)/posix:$(CSRCDIR)/stdio:$(CSRCDIR)/win32_console:$(CSRCDIR)/win32
 
-XCFLAGS = $(CCOPTS)
+XCFLAGS = $(CCOPTS) $(addprefix -I,$(EXT_INC_PATH))
 XCPPFLAGS = -DPF_SUPPORT_FP -D_GNU_SOURCE
-XLDFLAGS = $(WIDTHOPT) -O0
+XLDFLAGS = $(WIDTHOPT) -O0 -Wl,-rpath=$$(pwd)/$(IOHOOK_LIB_PATH)
+LIB_LINKS := $(addprefix -L,$(EXT_LIB_PATH)) $(addprefix -l,$(EXT_LIBS))
 
 CPPFLAGS = -I. $(XCPPFLAGS)
 CFLAGS = $(XCFLAGS)
@@ -67,6 +80,7 @@ LDFLAGS = $(XLDFLAGS)
 
 COMPILE = $(CC) $(CFLAGS) $(CPPFLAGS)
 LINK = $(CC) $(LDFLAGS)
+ARCHIVE := ar
 
 .SUFFIXES: .c .o .eo
 
@@ -96,22 +110,22 @@ pffiles:
 
 # Build pforth by compiling 'C' source.
 $(PFDICAPP): $(PFINCLUDES) $(PFOBJS)
-	$(LINK) -o $@ $(PFOBJS) $(LDADD) -lm
-	ar rcs -o libpforth.a $(PFOBJS)
+	$(LINK) -o $@ $(PFOBJS) $(LDADD) $(LIB_LINKS)
+	$(ARCHIVE) rcs -o lib$(LIBPFORTH).a $(PFOBJS)
 
 libtest: $(PFDICAPP)
-	$(LINK) $(CFLAGS) $(CPPFLAGS) $(CSRCDIR)/main_libtest.c -L. -lpforth -lm -o libtest
+	$(LINK) $(CFLAGS) $(CPPFLAGS) $(CSRCDIR)/$(LIBTEST_MAIN) -L. -l$(LIBPFORTH) -o $(LIBTEST) $(LIB_LINKS)
 
 # Build basic dictionary image by running newly built pforth and including "system.fth".
 $(PFORTHDIC): $(PFDICAPP)
-	wd=$$(pwd); (cd $(FTHDIR); $${wd}/$(PFDICAPP) -i system.fth)
+	wd=$$(pwd); (cd $(FTHDIR); $(DIC_BUILD_PRELOAD) $${wd}/$(PFDICAPP) -i system.fth)
 	(cd $(FTHDIR); cat pforth.dic; rm -f pforth.dic) > $@
 
 $(PFDICDAT): $(PFORTHDIC) $(PFDICAPP)
 	echo 'include $(FTHDIR)/savedicd.fth SDAD BYE' | ./$(PFDICAPP) -d $(PFORTHDIC)
 
 $(PFORTHAPP): $(PFDICDAT) $(PFEMBOBJS)
-	$(LINK) -o $@ $(PFEMBOBJS) $(LDADD) -lm
+	$(LINK) -o $@ $(PFEMBOBJS) $(LDADD) $(LIB_LINKS)
 	@echo ""
 	@echo "Standalone pForth executable written to $(PFORTHAPP)"
 

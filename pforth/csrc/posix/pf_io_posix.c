@@ -19,6 +19,8 @@
 ** 090220 PLB Fixed broken sdQueryTerminal on Mac. It always returned true.
 ***************************************************************/
 
+#include <IOHook.h>
+
 #include "../pf_all.h"
 
 /* Configure console so that characters are not buffered.
@@ -36,6 +38,9 @@
 static struct termios save_termios;
 static int stdin_is_tty;
 
+static IOHook_Printf_FP printf_fp;
+static IOHook_Getchar_FP getchar_fp;
+
 /* poll() is broken in Mac OS X Tiger OS so use select() instead. */
 #ifndef PF_USE_SELECT
 #define PF_USE_SELECT  (1)
@@ -44,18 +49,19 @@ static int stdin_is_tty;
 /* Default portable terminal I/O. */
 int  sdTerminalOut( char c )
 {
-    return putchar(c);
+	printf_fp("%c", c);
+	return (int) c;
 }
 
 int  sdTerminalEcho( char c )
 {
-    putchar(c);
-    return 0;
+	printf_fp("%c", c);
+	return 0;
 }
 
 int  sdTerminalIn( void )
 {
-    return getchar();
+	return getchar_fp( );
 }
 
 int  sdTerminalFlush( void )
@@ -111,6 +117,10 @@ void sdTerminalInit(void)
 {
     struct termios term;
 
+    IOHook_Init( );
+    printf_fp = IOHook_GetPrintf( );
+    getchar_fp = IOHook_GetGetchar( );
+    
     stdin_is_tty = isatty(STDIN_FILENO);
     if (stdin_is_tty)
     {
