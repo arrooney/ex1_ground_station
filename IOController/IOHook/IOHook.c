@@ -31,7 +31,7 @@
 
 #define IOHOOK_STRING_BUFFER_LENGTH 1024
 #define GOMSHELL_IO_ELEMENT_SIZE sizeof(char)
-#define GOMSHELL_IO_BUFFER_SIZE 1
+#define GOMSHELL_IO_BUFFER_SIZE 1024
 
 /* Function pointers that will be initialized to point to the
  * standard libc implementation of printf and getchar. ie,

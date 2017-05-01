@@ -61,21 +61,22 @@ static void exithandler(void) {
 char * pipe_buffer;
 char holdbuff=0;
 #ifdef AUTOMATION
+#define STARTUP_BUFFER_TIMEOUT 500
 static pthread_t forth_thread_handle;
 
-static void* forth_thread_thread( void* arg );
+static void* forth_thread( void* arg );
 #endif
 
 int main(int argc, char * argv[])
 {
+	int console_cleanup = 0;
+	
 #ifdef AUTOMATION
 	/* Initialize IOHook.
 	 */
 	if( IOHook_Init( ) != 0 ) {
 		return -1;
 	}
-
-	pthread_create(&forth_thread_handle, NULL, forth_thread, NULL);
 #endif
 	print_logo( );
 	fflush( stdout );
@@ -106,7 +107,7 @@ int main(int argc, char * argv[])
 	 * Parser
 	 **/
 	int c;
-	while ((c = getopt(argc, argv, "a:b:c:d:hz:")) != -1) {
+	while ((c = getopt(argc, argv, "a:b:c:d:e:hz:")) != -1) {
 		switch (c) {
 		case 'a':
 			addr = atoi(optarg);
@@ -129,6 +130,8 @@ int main(int argc, char * argv[])
 			strcpy(zmqhost, optarg);
 			use_zmq = 1;
 			break;
+		case 'e':
+			console_cleanup = 1;
 		case '?':
 			return 1;
 		default:
@@ -234,16 +237,23 @@ int main(int argc, char * argv[])
 	/* Console */
 	command_init();
 	console_init();
+	if( console_cleanup ) {
+		console_exit();
+		return 0;
+	}
 	console_set_hostname("csp-term");
 	static pthread_t handle_console;
 	pthread_create(&handle_console, NULL, debug_console, NULL);
+
+#ifdef AUTOMATION
+	pthread_create(&forth_thread_handle, NULL, forth_thread, NULL);
+#endif
 
 	/* Wait here for console to end */
 	pthread_join(handle_console, NULL);
 	pthread_join(handle_server, NULL);
 #ifdef AUTOMATION
-	pthread_join(terminal_input_thread_handle, NULL);
-	pthread_join(terminal_output_thread_handle, NULL);
+	pthread_join(forth_thread_handle, NULL);
 #endif
 
 	return 0;
@@ -257,19 +267,36 @@ static void* forth_thread( void* arg )
 	IOHook_Printf_FP printf_fp;
 	IOHook_Getchar_FP getchar_fp;
 	const char *SourceName = NULL;
-	char IfInit = FALSE;
+	char IfInit = 0;
 	char *s;
-	cell_t i;
+	char msg;
+	int i;
 	int Result;
-	const char *DicName = "pforth.dic";
+	const char *DicName = "pforth/build/unix/pforth.dic";
+	struct CCThreadedQueue* output_buffer;
+	CCTQueueError err;
 	
 	getchar_fp = IOHook_GetGetchar( );
 	printf_fp = IOHook_GetPrintf( );
-	printf_fp("Output handler running\n");
+	output_buffer = IOHook_GetGomshellOutputQueue( );
+
+	/* Empty the gomshell output buffer.
+	 */
+	for( ;; ) {
+		err = CCThreadedQueue_Remove(output_buffer, &msg, STARTUP_BUFFER_TIMEOUT);
+		if( err == CCTQUEUE_OK ) {
+			printf_fp("%c", msg);
+		}
+		else {
+			break;
+		}
+	}
+	
+	printf_fp("Forth thread running\n");
 
 	/* Disable verbose output at shell prompt.
 	 */
-	pfSetQuiet( TRUE );
+	pfSetQuiet(1);
 
 	/* Start the Forth Kernal. This will never return.
 	 */

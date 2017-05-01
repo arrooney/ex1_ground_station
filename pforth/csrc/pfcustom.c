@@ -62,6 +62,12 @@ static void gomshellCommand( cell_t string, cell_t length )
 	print_fp("\n");
 }
 
+#include <stdlib.h>
+static void programExit( )
+{
+	exit(EXIT_SUCCESS);
+}
+
 /****************************************************************
 ** Step 2: Create CustomFunctionTable.
 **     Do not change the name of CustomFunctionTable!
@@ -95,7 +101,8 @@ CFunc0 CustomFunctionTable[] =
 {
     (CFunc0) CTest0,
     (CFunc0) CTest1,
-	(CFunc0) gomshellCommand
+    (CFunc0) gomshellCommand,
+    (CFunc0) programExit
 };
 #endif
 
@@ -119,6 +126,8 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "CTEST1", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "FIN", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
 
     return 0;
