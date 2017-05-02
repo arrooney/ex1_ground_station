@@ -136,7 +136,8 @@ int main( int argc, char **argv )
         goto on_error;
     }
 #endif
-
+    extern int pforth_dic_build;
+    pforth_dic_build = 1;
     Result = pfDoForth( DicName, SourceName, IfInit);
 
 on_error:

@@ -37,6 +37,8 @@
 
 #include <IOHook.h>
 
+int pforth_dic_build = 0;
+
 static struct termios save_termios;
 static int stdin_is_tty;
 
@@ -122,7 +124,9 @@ void sdTerminalInit(void)
     /* Need this here for building pforth.dic. Need to remove it for the gomshell.
      * sadface.
      */
-    IOHook_Init( );
+    if( pforth_dic_build == 1 ) {
+	    IOHook_Init( );
+    }
     printf_fp = IOHook_GetPrintf( );
     getchar_fp = IOHook_GetGetchar( );
     
