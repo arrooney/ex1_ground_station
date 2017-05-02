@@ -38,7 +38,8 @@ def configure(ctx):
                                                   'CObject/liba/Class', 'CObject/liba/util', 'pforth/csrc'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
 	ctx.env.append_unique('LIBS_CSPTERM', ['IOHook', 'pforth', 'm', 'cutil', 'cclass', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
-	ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION', 'OUTPUT_LOG', 'OUTPUT_LOG_NAME="' + os.getcwd() + '/logs/output_log.txt"'])
+	ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION', 'BDEBUG', 'OUTPUT_LOG', 'OUTPUT_LOG_NAME="' + os.getcwd() + '/logs/output_log.txt"', \
+                                                  'PFORTH_DIC_PATH="../pforth/build/unix/pforth.dic"'])
 	ctx.env.append_unique('LIBPATH_CSPTERM', [os.getcwd() + '/Prototypes/libex/debug', \
 						  os.getcwd() + '/CObject/liba/Class/debug', \
 						  os.getcwd() + '/CObject/liba/util/debug', \

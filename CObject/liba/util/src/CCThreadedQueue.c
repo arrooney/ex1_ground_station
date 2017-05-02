@@ -131,10 +131,10 @@ static void CCThreadedQueue_RemoveUnlock( struct CCThreadedQueue* self )
 {
 	CAssertObject(self);
 
-	pthread_mutex_unlock(&self->_.mutex);
-
 	/* Data was popped off the queue. Send the signal that there is room in the queue. */
 	pthread_cond_broadcast(&self->_.insertCondition);
+
+	pthread_mutex_unlock(&self->_.mutex);
 }
 
 static CCTQueueError CCThreadedQueue_InsertLock( struct CCThreadedQueue* self, COS_Timemsec blockTime )
@@ -184,11 +184,11 @@ static CCTQueueError CCThreadedQueue_InsertLock( struct CCThreadedQueue* self, C
 static void CCThreadedQueue_InsertUnlock( struct CCThreadedQueue* self )
 {
 	CAssertObject(self);
-
-	pthread_mutex_unlock(&self->_.mutex);
-
+	
 	/* Data was inserted into the queue. Send the signal that there is data to remove. */
 	pthread_cond_broadcast(&self->_.removeCondition);
+
+	pthread_mutex_unlock(&self->_.mutex);
 }
 
 /************************************************************************/

@@ -35,6 +35,8 @@
 #include <termios.h>
 #include <sys/poll.h>
 
+#include <IOHook.h>
+
 static struct termios save_termios;
 static int stdin_is_tty;
 
@@ -117,6 +119,9 @@ void sdTerminalInit(void)
 {
     struct termios term;
 
+    /* Need this here for building pforth.dic. Need to remove it for the gomshell.
+     * sadface.
+     */
     IOHook_Init( );
     printf_fp = IOHook_GetPrintf( );
     getchar_fp = IOHook_GetGetchar( );

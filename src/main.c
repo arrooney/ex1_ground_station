@@ -55,7 +55,7 @@ static void print_help(void) {
 }
 static void print_logo( );
 static void exithandler(void) {
-	console_exit();
+//	console_exit();
 }
 
 char * pipe_buffer;
@@ -78,7 +78,7 @@ int main(int argc, char * argv[])
 		return -1;
 	}
 #endif
-	print_logo( );
+//	print_logo( );
 	fflush( stdout );
 	usleep( 1000*1000*1 );
 	sayhi();
@@ -220,6 +220,7 @@ int main(int argc, char * argv[])
 	void * task_server(void * parameters);
 	static pthread_t handle_server;
 	pthread_create(&handle_server, NULL, task_server, NULL);
+	pthread_setname_np(handle_server, "server");
 
 
 	void cmd_eps_setup(void);
@@ -236,47 +237,48 @@ int main(int argc, char * argv[])
 
 	/* Console */
 	command_init();
-	console_init();
-	if( console_cleanup ) {
-		console_exit();
-		return 0;
-	}
+	//console_init();
 	console_set_hostname("csp-term");
 	static pthread_t handle_console;
 	pthread_create(&handle_console, NULL, debug_console, NULL);
-
+	pthread_setname_np(handle_console, "gomshell");
+	
 #ifdef AUTOMATION
 	pthread_create(&forth_thread_handle, NULL, forth_thread, NULL);
+	pthread_setname_np(forth_thread_handle, "forth");
 #endif
 
 	/* Wait here for console to end */
-	pthread_join(handle_console, NULL);
-	pthread_join(handle_server, NULL);
 #ifdef AUTOMATION
 	pthread_join(forth_thread_handle, NULL);
 #endif
-
+	pthread_join(handle_console, NULL);
+	pthread_join(handle_server, NULL);
 	return 0;
 
 }
 
-#ifdef AUTOMATION
-static void* forth_thread( void* arg )
+static void gomshell_prime( )
 {
-	(void) arg;
+	/* Prime the gomshell with a test command.
+	 */
+	int i;
+	const char* test_command = "print hi\n";
+	struct CCThreadedQueue* input_buffer;
+	input_buffer = IOHook_GetGomshellInputQueue( );
+	for( i = 0; i < strlen(test_command); ++i ) {
+		CCThreadedQueue_Insert(input_buffer, &test_command[i], COS_BLOCK_FOREVER);
+	}	
+}
+
+static void gomshell_flush( )
+{
 	IOHook_Printf_FP printf_fp;
-	IOHook_Getchar_FP getchar_fp;
-	const char *SourceName = NULL;
-	char IfInit = 0;
-	char *s;
 	char msg;
 	int i;
-	int Result;
-	const char *DicName = "pforth/build/unix/pforth.dic";
 	struct CCThreadedQueue* output_buffer;
 	CCTQueueError err;
 	
-	getchar_fp = IOHook_GetGetchar( );
 	printf_fp = IOHook_GetPrintf( );
 	output_buffer = IOHook_GetGomshellOutputQueue( );
 
@@ -291,8 +293,46 @@ static void* forth_thread( void* arg )
 			break;
 		}
 	}
+
+}
+
+#ifdef AUTOMATION
+static void* forth_thread( void* arg )
+{
+ 	(void) arg;
+	IOHook_Printf_FP printf_fp;
+	const char *SourceName = NULL;
+	char IfInit = 0;
+	char *s;
+	char msg;
+	int i;
+	int Result;
+	const char *DicName = PFORTH_DIC_PATH;
+	struct CCThreadedQueue* output_buffer;
+	CCTQueueError err;
 	
+	printf_fp = IOHook_GetPrintf( );
 	printf_fp("Forth thread running\n");
+
+	/* Flush the gomshell buffer.
+	 */
+	gomshell_flush( );
+
+	/* Prime the gomshell three times.
+	 */
+	gomshell_prime( );
+	usleep(10*1000);
+	gomshell_flush( );
+	
+	gomshell_prime( );
+	usleep(10*1000);
+	gomshell_flush( );
+	
+	gomshell_prime( );
+	usleep(10*1000);
+	gomshell_flush( );
+	
+	fflush(stdout);	      	
 
 	/* Disable verbose output at shell prompt.
 	 */

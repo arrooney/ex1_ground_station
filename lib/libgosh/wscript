@@ -21,7 +21,8 @@ def configure(ctx):
     ctx.load('gcc')
 
     ctx.env.append_unique('FILES_LIBGOSH', ['src/**/*.c'])
-
+    ctx.env.append_unique('CFLAGS_LIBGOSH', ['-O0'])
+    ctx.env.append_unique('LINKFLAGS_LIBGOSH', ['-O0'])
     if not ctx.options.console_disable_history:
         ctx.define_cond('CONSOLE_HISTORY_ENABLE', True)
     ctx.define('CONSOLE_HISTORY_ELEMENTS', ctx.options.console_history_len)
@@ -61,7 +62,7 @@ def build(ctx):
             includes='include',
             export_includes='include',
             defines = ctx.env.DEFINES_LIBGOSH,
-            use=['include', 'csp', 'util'],
+            use=['LIBGOSH', 'include', 'csp', 'util'],
             install_path = install_path,
         )
 
@@ -70,7 +71,7 @@ def build(ctx):
                     source=ctx.path.ant_glob(ctx.env.FILES_GOSHAPP),
                     target = 'gosh',
                     name = 'goshapp',
-                    use = ['gosh_h'],
+                    use = ['LIBGOSH', 'gosh_h'],
             )
 
 

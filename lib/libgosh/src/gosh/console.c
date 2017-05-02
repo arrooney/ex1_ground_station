@@ -24,6 +24,9 @@
 #include <unistd.h>
 #include <termios.h>
 
+#include <IOHook.h>
+IOHook_Printf_FP pfp = NULL;
+
 static struct termios old_stdin, new_stdin;
 static struct termios old_stdout, new_stdout;
 
@@ -249,7 +252,6 @@ static void console_insert(char c) {
 	size++;
 	pos++;
 	buf[size] = '\0';
-
 }
 
 static void console_insert_overwrite(char c) {
@@ -370,10 +372,15 @@ void *debug_console(void *pvParameters) {
 #endif
 
 	char c;
+	struct CCThreadedQueue* gomshell_input;
 
+	gomshell_input = IOHook_GetGomshellInputQueue( );
 	console_reset();
-
+	pfp = IOHook_GetPrintf( );
+	pfp("Gomshell debug output enabled\n");
+	
 	while (1) {
+		//CCThreadedQueue_Remove(gomshell_input, &c, COS_BLOCK_FOREVER);
 		c = getchar();
 
 		switch (c) {

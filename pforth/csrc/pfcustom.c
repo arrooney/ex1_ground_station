@@ -49,15 +49,47 @@ static void CTest1( cell_t Val1, cell_t Val2 )
 }
 
 #include <IOHook.h>
+#include <CCThreadedQueue.h>
 static void gomshellCommand( cell_t string, cell_t length )
 {
 	int i;
 	IOHook_Printf_FP print_fp;
+	struct CCThreadedQueue* gomshell_input;
+	struct CCThreadedQueue* gomshell_output;
+	CCTQueueError err;
+	char* command;
+	char response;
+	char exec_char;
 
 	print_fp = IOHook_GetPrintf( );
+	gomshell_input = IOHook_GetGomshellInputQueue( );
+	gomshell_output = IOHook_GetGomshellOutputQueue( );
+	command = (char*) string;
+	exec_char = '\n';
+	
 	print_fp("\nSending Gom command:\n\t");
 	for( i = 0; i < length; ++i ) {
-		print_fp("%c", ((char *) string)[i]);
+		print_fp("%c", command[i]);
+	}
+	fflush(stdout);
+	
+	for( i = 0; i < length; ++i ) {
+		CCThreadedQueue_Insert(gomshell_input, &command[i], COS_BLOCK_FOREVER);
+	}
+	/* Insert '\n' so that the gomshell executes the command.
+	 */
+	CCThreadedQueue_Insert(gomshell_input, &exec_char, COS_BLOCK_FOREVER);
+
+	usleep(10*1000);
+	
+	for( ;; ) {
+		err = CCThreadedQueue_Remove(gomshell_output, &response, 3000);
+		if( err == CCTQUEUE_OK ) {
+			print_fp("%c", response);
+		}
+		else {
+			break;
+		}
 	}
 	print_fp("\n");
 }
