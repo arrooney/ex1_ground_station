@@ -40,11 +40,14 @@ Several third party libraries need to be compiled from source too. The entire bu
 with two bash lines:
 
 ```bash
+make clean
 ./waf configure
 make all
 ```
 
 The configure option will prime waf for building the gomshell. It needs to be done one time. Extra configurations will have no effect. However, if the waf script is changed, the configuration will need to be run again.
+
+Additionally, I haven't done a very good job with the .gitignore, so several object files and binaries are in the repo. Clean it just to be safe ```make clean``` before buliding.
 
 Afterwords, if you're only interested in building the gomshell source code, run:
 
