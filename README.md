@@ -17,14 +17,24 @@ Contains the source code to interface with the ExAlta-1 satellite. The submodule
 
 ## Folder Structure
 
-.-|
-  |--> build (compiled binary is put here)
-  |--> src (source code for gomshell)
-  |--> lib (gomspace libraries the gomshell requires)
-  |--> IOController -|
-  |                  |--> IOHook (shared library which redfines standard IO functions)
-  |--> pforth (Forth kernal used to read scripts. Gomshell front end)
-  |--> CObject (Libraries required for data structures like queues)
+```
+project
+|   README.md
+|
+|___build (compiled binary is put here)
+|
+|___src (source code for gomshell)
+|
+|___lib (gomspace libraries the gomshell requires)
+|
+|___IOController
+|   |
+|   |___IOHook (shared library which redfines standard IO functions)
+|
+|___pforth (Forth kernal used to read scripts. Gomshell front end)
+|
+|___CObject (Libraries required for data structures like queues)
+```
 
 Everything else may be garbage we haven't deleted yet.
 
@@ -75,7 +85,7 @@ The gomshell source code is an eclipse project. All other libraries do not have 
 
 ## Scripting
 
-The gomshell is a backend of the forth interpreter. To learn how to write forth code, see (this)[http://www.softsynth.com/pforth/pf_tut.php] link. To issue gomshell commands, use the ```GOM``` word:
+The gomshell is a backend of the forth interpreter. To learn how to write forth code, see [this](http://www.softsynth.com/pforth/pf_tut.php) link. To issue gomshell commands, use the ```GOM``` word:
 
 ```forth
 GOM ( string location, string length -- , Text within the string is interpreted by the gomshell )
