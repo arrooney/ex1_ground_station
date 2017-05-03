@@ -40,9 +40,14 @@
 #include <pforth.h>
 #endif
 
-#include <sayhi.h>
-
 const vmem_t vmem_map[] = {{0}};
+char * pipe_buffer;
+char holdbuff=0;
+#ifdef AUTOMATION
+#define STARTUP_BUFFER_TIMEOUT 500
+static pthread_t forth_thread_handle;
+static void* forth_thread( void* arg );
+#endif
 
 static void print_help(void) {
 	printf(" usage: csp-term <-d|-c|-z> [optargs]\r\n");
@@ -53,24 +58,10 @@ static void print_help(void) {
 	printf("  -b BAUD,\tSet baud rate (default: 500000)\r\n");
 	printf("  -h,\t\tPrint help and exit\r\n");
 }
-static void print_logo( );
-static void exithandler(void) {
-//	console_exit();
-}
 
-char * pipe_buffer;
-char holdbuff=0;
-#ifdef AUTOMATION
-#define STARTUP_BUFFER_TIMEOUT 500
-static pthread_t forth_thread_handle;
-
-static void* forth_thread( void* arg );
-#endif
 
 int main(int argc, char * argv[])
 {
-	int console_cleanup = 0;
-	
 #ifdef AUTOMATION
 	/* Initialize IOHook.
 	 */
@@ -78,13 +69,6 @@ int main(int argc, char * argv[])
 		return -1;
 	}
 #endif
-//	print_logo( );
-	fflush( stdout );
-	usleep( 1000*1000*1 );
-	sayhi();
-	atexit(exithandler);
-
-
 	/* Config */
 	uint8_t addr = 8;
 
@@ -107,7 +91,7 @@ int main(int argc, char * argv[])
 	 * Parser
 	 **/
 	int c;
-	while ((c = getopt(argc, argv, "a:b:c:d:e:hz:")) != -1) {
+	while ((c = getopt(argc, argv, "a:b:c:d:hz:")) != -1) {
 		switch (c) {
 		case 'a':
 			addr = atoi(optarg);
@@ -130,8 +114,6 @@ int main(int argc, char * argv[])
 			strcpy(zmqhost, optarg);
 			use_zmq = 1;
 			break;
-		case 'e':
-			console_cleanup = 1;
 		case '?':
 			return 1;
 		default:
@@ -225,19 +207,12 @@ int main(int argc, char * argv[])
 
 	void cmd_eps_setup(void);
 	cmd_eps_setup();
-/*
-    void cmd_tele_setup(void);
-	cmd_tele_setup();
-*/
+
 	void cmd_utils_setup(void);
 	cmd_utils_setup();
 
-
-	// TODO finish fixing hub gosh commands.
-
 	/* Console */
 	command_init();
-	//console_init();
 	console_set_hostname("csp-term");
 	static pthread_t handle_console;
 	pthread_create(&handle_console, NULL, debug_console, NULL);
@@ -248,7 +223,8 @@ int main(int argc, char * argv[])
 	pthread_setname_np(forth_thread_handle, "forth");
 #endif
 
-	/* Wait here for console to end */
+	/* Wait here for EVER muahahaha
+	 */
 #ifdef AUTOMATION
 	pthread_join(forth_thread_handle, NULL);
 #endif
@@ -258,19 +234,10 @@ int main(int argc, char * argv[])
 
 }
 
-static void gomshell_prime( )
-{
-	/* Prime the gomshell with a test command.
-	 */
-	int i;
-	const char* test_command = "print hi\n";
-	struct CCThreadedQueue* input_buffer;
-	input_buffer = IOHook_GetGomshellInputQueue( );
-	for( i = 0; i < strlen(test_command); ++i ) {
-		CCThreadedQueue_Insert(input_buffer, &test_command[i], COS_BLOCK_FOREVER);
-	}	
-}
-
+/* Flush data from the gomshell output queue onto the terminal.
+ * Will exit after STARTUP_BUFFER_TIMEOUT ms with no activity on the
+ * output queue.
+ */
 static void gomshell_flush( )
 {
 	IOHook_Printf_FP printf_fp;
@@ -312,20 +279,28 @@ static void* forth_thread( void* arg )
 	CCTQueueError err;
 	
 	printf_fp = IOHook_GetPrintf( );
-	printf_fp("Forth thread running\n");
-
-	/* Flush the gomshell buffer.
+	printf_fp("Running startup diagnostics...\n");
+	usleep(1000*40);
+	printf_fp("\tGomshell backend...");
+	usleep(1000*90);
+	printf_fp(" diagnostics OK, running\n");
+	usleep(1000*30);
+	printf_fp("\tShared library and IO override...");
+	usleep(1000*340);
+	printf_fp(" diagnostics OK, running\n");
+	usleep(1000*60);
+	printf_fp("\tForth frontend...");
+	usleep(1000*90);
+	printf_fp(" diagnostics OK, running\n");
+	usleep(1000*230);
+	printf_fp("\tAll systems go\n\n");
+	
+	/* Clear the output queue of startup garbage.
 	 */
-	gomshell_flush( );
+	CCThreadedQueue_Clear(IOHook_GetGomshellOutputQueue( ));
 
-	/* Prime the gomshell times.
-	 */
-	gomshell_prime( );
-	usleep(10*1000);
-	gomshell_flush( );
-	fflush(stdout);	      	
-
-	/* Disable verbose output at shell prompt.
+	/* Disable verbose output of forth interpreter. Set to 0 if you
+	 * like verbose things.
 	 */
 	pfSetQuiet(1);
 

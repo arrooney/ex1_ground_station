@@ -97,7 +97,7 @@ For example, the following will invoke the ```eps hk get``` command:
 S" eps hk get" GOM
 ```
 
-The ```S" ``` begins a string, the closing ```"``` ends the string. This puts the strings memory location and length onto the stack. The command is executed with the ```GOM``` word.
+The ```S" ``` begins a string (note the black space after it), the closing ```"``` ends the string. This puts the strings memory location and length onto the stack. The command is executed with the ```GOM``` word.
 
 The following words will list all files in the satellite's SD card file system:
 

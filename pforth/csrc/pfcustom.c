@@ -97,7 +97,7 @@ static void gomshellCommand( cell_t string, cell_t length )
 	/* Read the response from the gomshell's output queue.
 	 */
 	for( i = 0; ; ) {
-		err = CCThreadedQueue_Remove(gomshell_output, &response, GOMSHELL_OUTPUT_TIMEOUT);
+		err = CCThreadedQueue_Remove(gomshell_output, &response, COS_BLOCK_FOREVER);
 		/* Error check response.
 		 */
 		if( err == CCTQUEUE_OK ) {

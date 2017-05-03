@@ -389,13 +389,9 @@ void *debug_console(void *pvParameters) {
 	char c;
 	struct CCThreadedQueue* gomshell_input;
 
-	gomshell_input = IOHook_GetGomshellInputQueue( );
 	console_reset();
-	pfp = IOHook_GetPrintf( );
-	pfp("Gomshell debug output enabled\n");
 	
 	while (1) {
-		//CCThreadedQueue_Remove(gomshell_input, &c, COS_BLOCK_FOREVER);
 		c = getchar();
 
 		switch (c) {
