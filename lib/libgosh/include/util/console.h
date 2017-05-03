@@ -22,6 +22,9 @@
 #define CONSOLE_BUFSIZ 				100
 #endif
 
+const char* console_get_prompt_identifier( );
+size_t console_get_prompt_identifier_length( );
+
 /**
  * Initialize the debugger console thread
  */

@@ -27,6 +27,14 @@
 
 
 #include "pf_all.h"
+#include <IOHook.h>
+#include <CCThreadedQueue.h>
+#ifdef GOMSHELL
+extern const char* console_get_prompt_identifier( );
+extern size_t console_get_prompt_identifier_length( );
+#endif
+
+#define EOR_BUFFER_SIZE 33
 
 static cell_t CTest0( cell_t Val );
 static void CTest1( cell_t Val1, cell_t Val2 );
@@ -48,8 +56,7 @@ static void CTest1( cell_t Val1, cell_t Val2 )
     MSG_NUM_D(", Val2 = ", Val2);
 }
 
-#include <IOHook.h>
-#include <CCThreadedQueue.h>
+#ifdef GOMSHELL
 static void gomshellCommand( cell_t string, cell_t length )
 {
 	int i;
@@ -58,21 +65,24 @@ static void gomshellCommand( cell_t string, cell_t length )
 	struct CCThreadedQueue* gomshell_output;
 	CCTQueueError err;
 	char* command;
+	const char* eor;
 	char response;
 	char exec_char;
+	char eor_match[EOR_BUFFER_SIZE];
+	size_t eor_match_size;
 
 	print_fp = IOHook_GetPrintf( );
 	gomshell_input = IOHook_GetGomshellInputQueue( );
 	gomshell_output = IOHook_GetGomshellOutputQueue( );
 	command = (char*) string;
 	exec_char = '\n';
+	eor = console_get_prompt_identifier( );
+	eor_match_size = console_get_prompt_identifier_length( );
 	
-	print_fp("\nSending Gom command:\n\t");
-/*	for( i = 0; i < length; ++i ) {
-		print_fp("%c", command[i]);
-	}
-	fflush(stdout);
-*/	
+	print_fp("\nGomshell command -- ");
+
+	/* Insert the command into the gomshell's input queue.
+	 */
 	for( i = 0; i < length; ++i ) {
 		CCThreadedQueue_Insert(gomshell_input, &command[i], COS_BLOCK_FOREVER);
 	}
@@ -80,7 +90,9 @@ static void gomshellCommand( cell_t string, cell_t length )
 	 */
 	CCThreadedQueue_Insert(gomshell_input, &exec_char, COS_BLOCK_FOREVER);
 
-	for( ;; ) {
+	/* Read the response from the gomshell's output queue.
+	 */
+	for( i = 0; ; ) {
 		err = CCThreadedQueue_Remove(gomshell_output, &response, 3000);
 		if( err == CCTQUEUE_OK ) {
 			print_fp("%c", response);
@@ -88,9 +100,26 @@ static void gomshellCommand( cell_t string, cell_t length )
 		else {
 			break;
 		}
+
+		if( response == eor[i] ) {
+			++i;
+			if( i == eor_match_size) {
+				break;
+			}
+		}
+		else {
+			i = 0;
+		}
 	}
 	print_fp("\n");	
 }
+
+#else
+static void gomshellCommand( cell_t string, cell_t length )
+{
+	return;
+}
+#endif
 
 #include <stdlib.h>
 static void programExit( )

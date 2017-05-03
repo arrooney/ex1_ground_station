@@ -96,7 +96,12 @@ PFEMBOBJS  = $(PFSOURCE:.c=.eo)
 .PHONY: all clean test
 .PHONY: help pffiles pfdicapp pfdicdat pforthapp
 
-all: $(PFORTHAPP)
+all: $(PFORTHAPP) gomshell_lib
+
+gomshell_lib:
+	rm pfcustom.o
+	$(COMPILE) -c -DGOMSHELL -o pfcustom.o ../../csrc/pfcustom.c
+	$(ARCHIVE) rcs -o lib$(LIBPFORTH).a $(PFOBJS)
 
 pffiles:
 	@echo "INCLUDE FILES -----------------"
@@ -111,8 +116,8 @@ pffiles:
 # Build pforth by compiling 'C' source.
 $(PFDICAPP): $(PFINCLUDES) $(PFOBJS)
 	$(LINK) -o $@ $(PFOBJS) $(LDADD) $(LIB_LINKS)
-	$(ARCHIVE) rcs -o lib$(LIBPFORTH).a $(PFOBJS)
-	$(LINK) $(CFLAGS) $(CPPFLAGS) $(CSRCDIR)/$(LIBTEST_MAIN) -L. -l$(LIBPFORTH) -o $(LIBTEST) $(LIB_LINKS)
+#	$(ARCHIVE) rcs -o lib$(LIBPFORTH).a $(PFOBJS)
+#	$(LINK) $(CFLAGS) $(CPPFLAGS) $(CSRCDIR)/$(LIBTEST_MAIN) -L. -l$(LIBPFORTH) -o $(LIBTEST) $(LIB_LINKS)
 
 # Build basic dictionary image by running newly built pforth and including "system.fth".
 $(PFORTHDIC): $(PFDICAPP)

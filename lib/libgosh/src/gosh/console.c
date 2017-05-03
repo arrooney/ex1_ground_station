@@ -48,11 +48,16 @@ static struct termios old_stdout, new_stdout;
 #define CONSOLE_ESCAPE		1
 #define CONSOLE_PRE_ESCAPE	2
 
+#define PROMPT_DEF "\033[1;30m # \033[0m"
+#define COL_START_DEF "\033[1;32m"
+#define COL_END_DEF "\033[0m"
+
 static char * hostname = NULL;
-static const char prompt[] = "\033[1;30m # \033[0m";
-static const char col_start[] = "\033[1;32m";
-static const char col_end[] = "\033[0m";
+static const char prompt[] = PROMPT_DEF;
+static const char col_start[] = COL_START_DEF;
+static const char col_end[] = COL_END_DEF;
 static const char clear[] = "\033[H\033[2J";
+static const char* prompt_identifier = PROMPT_DEF COL_END_DEF;
 
 static int escape = CONSOLE_NORMAL;
 
@@ -73,6 +78,16 @@ static const char backspace_char = '\b';
 static const char space_char 	= ' ';
 static const char cr_char 		= '\r';
 static const char nl_char 		= '\n';
+
+const char* console_get_prompt_identifier( )
+{
+	return prompt_identifier;
+}
+
+size_t console_get_prompt_identifier_length( )
+{
+	return strlen(prompt_identifier);
+}
 
 static void console_write(const char *str, int length) {
 	int i;
