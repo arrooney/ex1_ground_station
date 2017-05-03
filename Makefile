@@ -4,11 +4,9 @@
 #############################################
 # Stop editting  compile time settings here #
 
-clean: gom_clean forth_clean
+clean: gom_clean forth_clean cobject_clean
 
-all: forth_build gom_build
-
-
+all: cobject_build forth_build gom_build
 
 forth_clean:
 	make -C pforth/build/unix clean
@@ -16,6 +14,11 @@ forth_clean:
 forth_build:
 	make -C pforth/build/unix all
 
+cobject_clean:
+	make -C CObject/main clean
+
+cobject_build:
+	make -C CObject/main all
 
 
 gom_config:

@@ -1,11 +1,7 @@
-# AlbertaSat
+# ExAlta-1 Gomshell
 ---
 
-Contains the gomespace source code for a ground station. The submodules within here include the nanomind repository and AlbertaSat's OCP repository.
-
-## Setting up Your Computer
-
-* sudo apt-get install libzmq3-dev libelf-dev libncurses-dev
+Contains the source code to interface with the ExAlta-1 satellite. The submodules within here include the nanomind repository and AlbertaSat's OCP 
 
 ## Setting up a Newly Cloned Repository
 
@@ -19,91 +15,85 @@ Contains the gomespace source code for a ground station. The submodules within h
 * git checkout origin/nanomind-master-2
 * cd ../..
 
+## Folder Structure
+
+.-|
+  |--> build (compiled binary is put here)
+  |--> src (source code for gomshell)
+  |--> lib (gomspace libraries the gomshell requires)
+  |--> IOController -|
+  |                  |--> IOHook (shared library which redfines standard IO functions)
+  |--> pforth (Forth kernal used to read scripts. Gomshell front end)
+  |--> CObject (Libraries required for data structures like queues)
+
+Everything else may be garbage we haven't deleted yet.
+
 ## Building an Running
 
-* ./waf configure && ./waf build
-    * Note, the configure command is only need once after you clone or make wscript changes
-* ./waf clean
-* sudo ./gomshell
-    * Needs super user access to do IO over a serial port
+The gomshell requires the following libraries are installed on your computer:
+
+```bash
+sudo apt-get install libzmq3-dev libelf-dev libncurses-dev
+```
+
+Several third party libraries need to be compiled from source too. The entire build process is automated
+with two bash lines:
+
+```bash
+./waf configure
+make all
+```
+
+The configure option will prime waf for building the gomshell. It needs to be done one time. Extra configurations will have no effect. However, if the waf script is changed, the configuration will need to be run again.
+
+Afterwords, if you're only interested in building the gomshell source code, run:
+
+```bash
+./waf build
+```
+
+To clean the code, run:
+
+```bash
+./waf clean
+```
+
+To run the code, run:
+
+```bash
+sudo ./gomshell
+```
+
+This runs a shell script that invokes the gomshell. super user access is required to do IO over the serial port to the antenna or umbillical cord of the satellite.
 
 ## Editing Source
 
-The entire repo is an eclipse project. The source can be edited from eclipse. Note, due to the submodules used, the eclipse indexer finds three CSP libraries. Only refer to the CSP library in this repo. Anything within the albertasat-gomspace directory and beyond is CSP code for a different project.
+The gomshell source code is an eclipse project. All other libraries do not have an a project within an IDE. Set one up, or use a standard text editor like emacs.
 
-#Safemode and RAM Image Script
----
+## Scripting
 
-In the directory ```./scripts``` is a script for putting the satellite into safemode and uploading a new RAM image. There is a makefile in the ```/scripts``` directory that can be used to configure this script. Open the makefile with a text editor. There are two symbols which can be used for configuration.
+The gomshell is a backend of the forth interpreter. To learn how to write forth code, see (this)[http://www.softsynth.com/pforth/pf_tut.php] link. To issue gomshell commands, use the ```GOM``` word:
 
-```bash
-# Enables debug printing while running. 
-RAM_DEBUG := true
-# The script only puts the nanomind into safemode. It does not upload a new image.
-RAM_SAFEMODE_ONLY := true
+```forth
+GOM ( string location, string length -- , Text within the string is interpreted by the gomshell )
 ```
 
-By uncommenting the symbols, the functionality is removed. **However**, the code must be compiled a second time for the changes to take effect.
+For example, the following will invoke the ```eps hk get``` command:
 
-```bash
-cd scripts
-make
+```forth
+S" eps hk get" GOM
 ```
 
-The source file ```./scripts/ram.c``` contains instructions on how to run and use the file. Open it with a text editor to read the usage documentation. To run this script, the data must be piped to the gomshell. This is done like so:
+The ```S" ``` begins a string, the closing ```"``` ends the string. This puts the strings memory location and length onto the stack. The command is executed with the ```GOM``` word.
 
-```bash
-./scripts/ram.o ../new_image.bin | ./gomshell
+The following words will list all files in the satellite's SD card file system:
+
+```forth
+S" ftp ls /sd/" GOM
 ```
 
-On some computers, the gomshell cannot be stopped when started like this. There is a script in the root of this repository that will
-kill the gomshell if this happens. First, open a new terminal and go to this repository, then run:
+A script is run using the INCLUDE word:
 
-```bash
-./killgom.sh
+```forth
+INCLUDE my_script.fth
 ```
-
-The gomshell will be killed and your terminal be returned to you.
- 
-
-#Piping data to gomshell
-
-For future automation, we need to pipe data to the gomshell. The easiest way is with unix pipes. Take the following example program:
-
-```C
-#include <stdio.h>
-#include <unistd.h>
-
-int main( int argc, char** argv )
-{
-	for( ;; ) {
-		fputs("k", stdout);
-		fflush(stdout);
-		usleep(1000*1000);
-	}
-	
-	return 0;
-}
-```
-
-Running this will print the letter "k" to the console every one second, for example:
-
-```bash
-gcc -Wall main.c -o main
-./main
-kkkkkkkkkk...
-```
-
-Using unix pipes, we can send this output to the gomshell instead:
-
-```bash
-./main | ./gomshell
-```
-
-Now, everyone one second, the gomeshell gets the letter "k". By significantly improving the functionality of this program, we can automate the process of sending data to the satellite. Note, this is a unidirectional shell with data flow like this:
-
-* console -> main stdin
-* main stdout -> gomshell
-* gomshell stdout -> console 
-
-When the gomshell prints to stdout, the data is sent to the terminal, not to the main program's stdin.
