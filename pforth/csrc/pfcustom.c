@@ -32,6 +32,7 @@
 #ifdef GOMSHELL
 extern const char* console_get_prompt_identifier( );
 extern size_t console_get_prompt_identifier_length( );
+#define GOMSHELL_OUTPUT_TIMEOUT 15*1000
 #endif
 
 #define EOR_BUFFER_SIZE 33
@@ -65,10 +66,9 @@ static void gomshellCommand( cell_t string, cell_t length )
 	struct CCThreadedQueue* gomshell_output;
 	CCTQueueError err;
 	char* command;
-	const char* eor;
+	const char* eor; /* eor: end of response. */
 	char response;
 	char exec_char;
-	char eor_match[EOR_BUFFER_SIZE];
 	size_t eor_match_size;
 
 	print_fp = IOHook_GetPrintf( );
@@ -80,6 +80,10 @@ static void gomshellCommand( cell_t string, cell_t length )
 	eor_match_size = console_get_prompt_identifier_length( );
 	
 	print_fp("\nGomshell command -- ");
+
+	/* Clear output queue to remove old data.
+	 */
+	CCThreadedQueue_Clear(gomshell_output);
 
 	/* Insert the command into the gomshell's input queue.
 	 */
@@ -93,14 +97,24 @@ static void gomshellCommand( cell_t string, cell_t length )
 	/* Read the response from the gomshell's output queue.
 	 */
 	for( i = 0; ; ) {
-		err = CCThreadedQueue_Remove(gomshell_output, &response, 3000);
+		err = CCThreadedQueue_Remove(gomshell_output, &response, GOMSHELL_OUTPUT_TIMEOUT);
+		/* Error check response.
+		 */
 		if( err == CCTQUEUE_OK ) {
 			print_fp("%c", response);
+		}
+		else if( err == CCTQUEUE_ERR_TIMEOUT ) {
+			print_fp("gomshell - timeout waiting for input\n");
+			break;
 		}
 		else {
 			break;
 		}
 
+		/* Check for multiple character end of response identifier
+		 * This is the gomshell prompt:
+		 *	csp-term #
+		 */
 		if( response == eor[i] ) {
 			++i;
 			if( i == eor_match_size) {
