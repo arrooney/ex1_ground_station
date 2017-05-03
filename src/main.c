@@ -318,20 +318,11 @@ static void* forth_thread( void* arg )
 	 */
 	gomshell_flush( );
 
-	/* Prime the gomshell three times.
+	/* Prime the gomshell times.
 	 */
 	gomshell_prime( );
 	usleep(10*1000);
 	gomshell_flush( );
-	
-	gomshell_prime( );
-	usleep(10*1000);
-	gomshell_flush( );
-	
-	gomshell_prime( );
-	usleep(10*1000);
-	gomshell_flush( );
-	
 	fflush(stdout);	      	
 
 	/* Disable verbose output at shell prompt.

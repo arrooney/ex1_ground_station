@@ -137,6 +137,9 @@ int main( int argc, char **argv )
     }
 #endif
     extern int pforth_dic_build;
+
+    /* See the pf_io source file for the reason this is used. 
+     */
     pforth_dic_build = 1;
     Result = pfDoForth( DicName, SourceName, IfInit);
 

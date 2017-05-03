@@ -68,11 +68,11 @@ static void gomshellCommand( cell_t string, cell_t length )
 	exec_char = '\n';
 	
 	print_fp("\nSending Gom command:\n\t");
-	for( i = 0; i < length; ++i ) {
+/*	for( i = 0; i < length; ++i ) {
 		print_fp("%c", command[i]);
 	}
 	fflush(stdout);
-	
+*/	
 	for( i = 0; i < length; ++i ) {
 		CCThreadedQueue_Insert(gomshell_input, &command[i], COS_BLOCK_FOREVER);
 	}
@@ -80,8 +80,6 @@ static void gomshellCommand( cell_t string, cell_t length )
 	 */
 	CCThreadedQueue_Insert(gomshell_input, &exec_char, COS_BLOCK_FOREVER);
 
-	usleep(10*1000);
-	
 	for( ;; ) {
 		err = CCThreadedQueue_Remove(gomshell_output, &response, 3000);
 		if( err == CCTQUEUE_OK ) {
@@ -91,7 +89,7 @@ static void gomshellCommand( cell_t string, cell_t length )
 			break;
 		}
 	}
-	print_fp("\n");
+	print_fp("\n");	
 }
 
 #include <stdlib.h>
