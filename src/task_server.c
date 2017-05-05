@@ -17,7 +17,7 @@
 #include <csp/csp.h>
 #include <util/log.h>
 #include <csp-term.h>
-
+#include <IOHook.h>
 
 #define RED     "\x1b[31m"
 #define GREEN   "\x1b[32m"
@@ -38,6 +38,10 @@ void * task_server(void * parameters) {
 	uint8_t * mssg;
 	uint8_t callsign[6] = {};
 	uint16_t vbatt;
+	IOHook_Printf_FP printf_fp;
+
+	/* Get print to terminal function pointer. */
+	printf_fp = IOHook_GetPrintf( );
 
 	/* Create socket */
 	csp_socket_t * sock = csp_socket(0);
@@ -91,37 +95,37 @@ void * task_server(void * parameters) {
 
 					switch(packet->id.src){
 					case 1:
-						printf(LGREEN "Nanomind " C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,mssg);
+						printf_fp(LGREEN "Nanomind " C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,mssg);
 						break;
 					case 2:
-						printf("Nanohub # %s\n",mssg);
+						printf_fp("Nanohub # %s\n",mssg);
 						break;
 					case 3:
-						printf("Nanopower # %s\n",mssg);
+						printf_fp("Nanopower # %s\n",mssg);
 						break;
 					case 5:
-						printf("Nanocomm # %s\n",mssg);
+						printf_fp("Nanocomm # %s\n",mssg);
 						break;
 					default:
-						printf("Node:%d # %s\n",packet->id.src,mssg);
+						printf_fp("Node:%d # %s\n",packet->id.src,mssg);
 						}
 					free(mssg);
 					csp_close(conn);
 					break;
 				case WOD_BEACON_PORT:
-					printf("Got beacon. \n");
+					printf_fp("Got beacon. \n");
 					vbatt = (packet->data[7] << 8) + packet->data[6];
                     for(int i=0;i<6;i++)
                     {
                         callsign[i] = packet->data[131+3+i];
                     }
-	                printf("Callsign: %s \n", callsign);
-					printf("VBatt: %d \n", vbatt);
+	                printf_fp("Callsign: %s \n", callsign);
+					printf_fp("VBatt: %d \n", vbatt);
 					csp_close(conn);
 					break;
 				case CALLSIGN_PORT:
-					printf("Got callsign. \n");
-					printf("%s \n", packet->data);
+					printf_fp("Got callsign. \n");
+					printf_fp("%s \n", packet->data);
 					csp_close(conn);
 					break;
 				default: {

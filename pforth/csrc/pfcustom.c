@@ -30,6 +30,7 @@
 #include <IOHook.h>
 #include <CCThreadedQueue.h>
 #ifdef GOMSHELL
+#include <command/command.h>
 extern const char* console_get_prompt_identifier( );
 extern size_t console_get_prompt_identifier_length( );
 #define GOMSHELL_OUTPUT_TIMEOUT 15*1000
@@ -128,12 +129,47 @@ static void gomshellCommand( cell_t string, cell_t length )
 	print_fp("\n");	
 }
 
+static void ftpDownload( cell_t file_name_cell, cell_t file_name_size )
+{
+	extern int cmd_ftp_download_file(struct command_context *);
+	struct command_context command;
+	char* argv[2];
+	char* file_name;
+
+	/* Copy name of file to be downloaded into a
+	 * NULL terminated string.
+	 */
+	file_name = malloc(file_name_size+1);
+	strncpy(file_name, (char*) file_name_cell, file_name_size);
+	file_name[file_name_size] = '\0';
+
+	/* Setup command context for Gomshell to download
+	 * the file.
+	 */
+	command.argv = argv;
+	command.argv[0] = "download_file";
+	command.argv[1] = file_name;
+	command.argc = 2;
+
+	/* Do gomshell command that will download the file.
+	 */
+	int result = cmd_ftp_download_file(&command);
+}
+
 #else
 static void gomshellCommand( cell_t string, cell_t length )
 {
 	return;
 }
+
+static void ftpDownload( cell_t file_name )
+{
+
+}
+
 #endif
+
+
 
 #include <stdlib.h>
 static void programExit( )

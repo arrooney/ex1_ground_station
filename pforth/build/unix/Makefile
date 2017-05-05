@@ -100,7 +100,7 @@ all: $(PFORTHAPP) gomshell_lib
 
 gomshell_lib:
 	rm pfcustom.o
-	$(COMPILE) -c -DGOMSHELL -o pfcustom.o ../../csrc/pfcustom.c
+	$(COMPILE) -I../../../lib/libgosh/include -I../../../build/include -c -DGOMSHELL -o pfcustom.o ../../csrc/pfcustom.c
 	$(ARCHIVE) rcs -o lib$(LIBPFORTH).a $(PFOBJS)
 
 pffiles:
