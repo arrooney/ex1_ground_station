@@ -8,6 +8,7 @@ clean: gom_clean forth_clean cobject_clean
 
 all: cobject_build forth_build gom_build
 
+
 forth_clean:
 	make -C pforth/build/unix clean
 

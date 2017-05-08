@@ -22,6 +22,7 @@
 #define PF_CHAR_XON    (0x11)
 #define PF_CHAR_XOFF   (0x13)
 
+int  sdTerminalPrint( const char* format, ... );
 int  sdTerminalOut( char c );
 int  sdTerminalEcho( char c );
 int  sdTerminalFlush( void );

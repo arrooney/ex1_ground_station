@@ -34,6 +34,7 @@
 #endif
 #include <termios.h>
 #include <sys/poll.h>
+#include <stdarg.h>
 
 #include <IOHook.h>
 
@@ -55,6 +56,18 @@ int  sdTerminalOut( char c )
 {
 	printf_fp("%c", c);
 	return (int) c;
+}
+
+int sdTerminalPrint( const char* format, ... )
+{
+	int bytes;
+	va_list args;
+	
+	va_start(args, format);
+	bytes = vprintf(format, args);
+	va_end(args);
+
+	return bytes;
 }
 
 int  sdTerminalEcho( char c )

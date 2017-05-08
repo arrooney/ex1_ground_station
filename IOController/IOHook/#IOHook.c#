@@ -144,11 +144,6 @@ static int goawaycompiler_printf( const char* format, ... )
 	return bytes;
 }
 
-int vprintf( const char* format, va_list args )
-{
-	return goawaycompiler_vprintf(format, args);
-}
-
 int printf( const char* format, ... )
 {
 	va_list args;

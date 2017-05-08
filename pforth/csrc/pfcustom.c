@@ -28,84 +28,63 @@
 
 #include "pf_all.h"
 #include <IOHook.h>
-#include <CCThreadedQueue.h>
+#include <stdlib.h>
 #ifdef GOMSHELL
+#include <CCThreadedQueue.h>
 #include <command/command.h>
 extern const char* console_get_prompt_identifier( );
 extern size_t console_get_prompt_identifier_length( );
-#define GOMSHELL_OUTPUT_TIMEOUT 15*1000
 #endif
+#define GOMSHELL_OUTPUT_TIMEOUT 15*1000
 
-#define EOR_BUFFER_SIZE 33
+#define GOMSHELL_OK		0
+#define GOMSHELL_ERR_MEM	-1
+#define GOMSHELL_ERR_FTP	-2
 
 static cell_t CTest0( cell_t Val );
 static void CTest1( cell_t Val1, cell_t Val2 );
 
-/****************************************************************
-** Step 1: Put your own special glue routines here
-**     or link them in from another file or library.
-****************************************************************/
-static cell_t CTest0( cell_t Val )
-{
-    MSG_NUM_D("CTest0: Val = ", Val);
-    return Val+1;
-}
-
-static void CTest1( cell_t Val1, cell_t Val2 )
-{
-
-    MSG("CTest1: Val1 = "); ffDot(Val1);
-    MSG_NUM_D(", Val2 = ", Val2);
-}
-
+/****************************************************************/
+/* Helper functions for gomshell words.				*/
+/****************************************************************/
 #ifdef GOMSHELL
-static void gomshellCommand( cell_t string, cell_t length )
+static void gomshellErrorOK( )
 {
-	int i;
-	IOHook_Printf_FP print_fp;
-	struct CCThreadedQueue* gomshell_input;
-	struct CCThreadedQueue* gomshell_output;
-	CCTQueueError err;
-	char* command;
-	const char* eor; /* eor: end of response. */
-	char response;
-	char exec_char;
-	size_t eor_match_size;
+	PUSH_DATA_STACK(GOMSHELL_OK);
+}
 
-	print_fp = IOHook_GetPrintf( );
-	gomshell_input = IOHook_GetGomshellInputQueue( );
-	gomshell_output = IOHook_GetGomshellOutputQueue( );
-	command = (char*) string;
-	exec_char = '\n';
+static void gomshellErrorMem( )
+{
+	PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
+}
+
+static void gomshellErrorFTP( )
+{
+	PUSH_DATA_STACK(GOMSHELL_ERR_FTP);
+}
+
+static void gomshellFlushOutput( )
+{
+	CCTQueueError err;
+	struct CCThreadedQueue* gomshell_output;
+	const char* eor; /* eor: end of response. */
+	size_t eor_match_size;
+	int i;
+	char response;
+	
 	eor = console_get_prompt_identifier( );
 	eor_match_size = console_get_prompt_identifier_length( );
-	
-	print_fp("\nGomshell command -- ");
+	gomshell_output = IOHook_GetGomshellOutputQueue( );
 
-	/* Clear output queue to remove old data.
-	 */
-	CCThreadedQueue_Clear(gomshell_output);
-
-	/* Insert the command into the gomshell's input queue.
-	 */
-	for( i = 0; i < length; ++i ) {
-		CCThreadedQueue_Insert(gomshell_input, &command[i], COS_BLOCK_FOREVER);
-	}
-	/* Insert '\n' so that the gomshell executes the command.
-	 */
-	CCThreadedQueue_Insert(gomshell_input, &exec_char, COS_BLOCK_FOREVER);
-
-	/* Read the response from the gomshell's output queue.
-	 */
 	for( i = 0; ; ) {
 		err = CCThreadedQueue_Remove(gomshell_output, &response, COS_BLOCK_FOREVER);
 		/* Error check response.
 		 */
 		if( err == CCTQUEUE_OK ) {
-			print_fp("%c", response);
+			sdTerminalOut(response);
 		}
 		else if( err == CCTQUEUE_ERR_TIMEOUT ) {
-			print_fp("gomshell - timeout waiting for input\n");
+			sdTerminalPrint("gomshell - timeout waiting for input\n");
 			break;
 		}
 		else {
@@ -126,20 +105,77 @@ static void gomshellCommand( cell_t string, cell_t length )
 			i = 0;
 		}
 	}
-	print_fp("\n");	
+	sdTerminalOut('\n');
 }
 
-static void ftpDownload( cell_t file_name_cell, cell_t file_name_size )
+static void gomshellManErrorCodes( )
+{
+	sdTerminalPrint("\nGomshell error code meanings:\n"
+			"\t %d -- No error / success\n"
+			"\t%d -- Failure to allocate memory\n"
+			"\t%d -- Failure to complete an FTP command\n",
+			GOMSHELL_OK, GOMSHELL_ERR_MEM, GOMSHELL_ERR_FTP);			
+}
+
+/****************************************************************
+** Step 1: Put your own special glue routines here
+**     or link them in from another file or library.
+****************************************************************/
+static void gomshellCommand( cell_t string, cell_t length )
+{
+	struct CCThreadedQueue* gomshell_input;
+	struct CCThreadedQueue* gomshell_output;
+	char* command;
+	char exec_char;
+	int i;
+
+	gomshell_output = IOHook_GetGomshellOutputQueue( );
+	gomshell_input = IOHook_GetGomshellInputQueue( );
+	command = (char*) string;
+	exec_char = '\n';
+       
+	/* Clear output queue to remove old data.
+	 */
+	CCThreadedQueue_Clear(gomshell_output);
+
+	/* Insert the command into the gomshell's input queue.
+	 */
+	sdTerminalPrint("\nGomshell command -- ");
+	for( i = 0; i < length; ++i ) {
+		CCThreadedQueue_Insert(gomshell_input, &command[i], COS_BLOCK_FOREVER);
+	}
+	/* Insert '\n' so that the gomshell executes the command.
+	 */
+	CCThreadedQueue_Insert(gomshell_input, &exec_char, COS_BLOCK_FOREVER);
+
+	/* Read the response from the gomshell's output queue.
+	 */
+	gomshellFlushOutput( );
+}
+
+static void gomshellPrintErrorCodes( )
+{
+	gomshellManErrorCodes( );
+}
+
+static void gomshellFtpDownload( cell_t file_name_cell, cell_t file_name_size )
 {
 	extern int cmd_ftp_download_file(struct command_context *);
 	struct command_context command;
 	char* argv[2];
 	char* file_name;
 
+	/* Give user a message.
+	 */
+	sdTerminalPrint("\nGomshell ftp download --\n");
+	
 	/* Copy name of file to be downloaded into a
 	 * NULL terminated string.
 	 */
 	file_name = malloc(file_name_size+1);
+	if( file_name == NULL ) {
+		PUSH_DATA_STACK(-1);
+	}
 	strncpy(file_name, (char*) file_name_cell, file_name_size);
 	file_name[file_name_size] = '\0';
 
@@ -154,28 +190,70 @@ static void ftpDownload( cell_t file_name_cell, cell_t file_name_size )
 	/* Do gomshell command that will download the file.
 	 */
 	int result = cmd_ftp_download_file(&command);
+	if( result != CMD_ERROR_NONE ) {
+		/* Failed to download.
+		 */
+		PUSH_DATA_STACK(GOMSHELL_ERR_FTP);
+	}
+	else {
+		/* Success.
+		 */
+		PUSH_DATA_STACK(GOMSHELL_OK);
+	}
+
+	free(file_name);
 }
-
-#else
-static void gomshellCommand( cell_t string, cell_t length )
-{
-	return;
-}
-
-static void ftpDownload( cell_t file_name )
-{
-
-}
-
 #endif
 
-
-
-#include <stdlib.h>
 static void programExit( )
 {
 	exit(EXIT_SUCCESS);
 }
+
+static cell_t CTest0( cell_t Val )
+{
+    MSG_NUM_D("CTest0: Val = ", Val);
+    return Val+1;
+}
+
+static void CTest1( cell_t Val1, cell_t Val2 )
+{
+
+    MSG("CTest1: Val1 = "); ffDot(Val1);
+    MSG_NUM_D(", Val2 = ", Val2);
+}
+
+#ifndef GOMSHELL
+static void gomshellCommand( cell_t arg1, cell_t arg2 )
+{
+	return;
+}
+
+static void gomshellPrintErrorCodes( )
+{
+	return;
+}
+
+static void gomshellFtpDownload( cell_t arg1, cell_t arg2 )
+{
+	return;
+}
+
+static void gomshellErrorOK( )
+{
+	return;
+}
+
+static void gomshellErrorMem( )
+{
+	return;
+}
+
+static void gomshellErrorFTP( )
+{
+	return;
+}
+#endif       
 
 /****************************************************************
 ** Step 2: Create CustomFunctionTable.
@@ -211,7 +289,12 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) CTest0,
     (CFunc0) CTest1,
     (CFunc0) gomshellCommand,
-    (CFunc0) programExit
+    (CFunc0) programExit,
+    (CFunc0) gomshellPrintErrorCodes,
+    (CFunc0) gomshellFtpDownload,
+    (CFunc0) gomshellErrorOK,
+    (CFunc0) gomshellErrorMem,
+    (CFunc0) gomshellErrorFTP
 };
 #endif
 
@@ -227,8 +310,8 @@ Err CompileCustomFunctions( void )
     Err err;
     int i = 0;
 /* Compile Forth words that call your custom functions.
-** Make sure order of functions matches that in LoadCustomFunctionTable().
-** Parameters are: Name in UPPER CASE, Function, Index, Mode, NumParams
+   Make sure order of functions matches that in LoadCustomFunctionTable().
+   Parameters are: Name in UPPER CASE, Function, Index, Mode, NumParams
 */
     err = CreateGlueToC( "CTEST0", i++, C_RETURNS_VALUE, 1 );
     if( err < 0 ) return err;
@@ -238,7 +321,17 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "FIN", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
-
+    err = CreateGlueToC( "GOM.HELP", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.FTP.DOWNLOAD", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.ERR.OK", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.ERR.MEM", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.ERR.FTP", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    
     return 0;
 }
 #else
