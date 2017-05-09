@@ -40,9 +40,13 @@ extern size_t console_get_prompt_identifier_length( );
 #define GOMSHELL_OK		0
 #define GOMSHELL_ERR_MEM	-1
 #define GOMSHELL_ERR_FTP	-2
+#define GOMSHELL_ERR_SYNTAX	-3
 
 #define GOMSHELL_OCP_COMMAND_START "exec 'COMMAND(\""
 #define GOMSHELL_OCP_COMMAND_START_LENGTH strlen(GOMSHELL_OCP_COMMAND_START)
+
+#define GOMSHELL_OCP_COMMAND_ARG "\", \""
+#define GOMSHELL_OCP_COMMAND_ARG_LENGTH strlen(GOMSHELL_OCP_COMMAND_ARG)
 
 #define GOMSHELL_OCP_COMMAND_END "\");'"
 #define GOMSHELL_OCP_COMMAND_END_LENGTH strlen(GOMSHELL_OCP_COMMAND_END)
@@ -67,6 +71,11 @@ static void gomshellErrorMem( )
 static void gomshellErrorFTP( )
 {
 	PUSH_DATA_STACK(GOMSHELL_ERR_FTP);
+}
+
+static void gomshellErrorSyntax( )
+{
+	PUSH_DATA_STACK(GOMSHELL_ERR_SYNTAX);
 }
 
 static void gomshellFlushOutput( )
@@ -226,18 +235,58 @@ static void gomshellOCPCommand( cell_t command, cell_t command_length )
 		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
 		return;
 	}
+	PUSH_DATA_STACK(GOMSHELL_OK);
 
 	strncpy(command_string, command_start, command_start_length);
 	strncpy(command_string + command_start_length, command, command_length);
 	strncpy(command_string + command_start_length + command_length, command_end, command_end_length);
 	
-/*	sdTerminalPrint("\nOCP Command -- %.*s", total_length, command_string);*/
 	gomshellCommand((cell_t) command_string, (cell_t) total_length);
 }
 
-static void gomshellOCPLongCommand( cell_t arg1, cell_t arg2, cell_t arg3, cell_t arg4 )
+static void gomshellOCPLongCommand( cell_t token, cell_t token_length)
 {
-	return;
+	char* command_string;
+	char* command_token;
+	size_t command_length;
+	char* arg_token;
+	size_t arg_length;
+	char* command_start = GOMSHELL_OCP_COMMAND_START;
+	size_t command_start_length = GOMSHELL_OCP_COMMAND_START_LENGTH;
+	char* command_arg_delim = GOMSHELL_OCP_COMMAND_ARG;
+	size_t command_arg_delim_length = GOMSHELL_OCP_COMMAND_ARG_LENGTH;
+	char* command_end = GOMSHELL_OCP_COMMAND_END;
+	size_t command_end_length = GOMSHELL_OCP_COMMAND_END_LENGTH;
+	size_t total_length = command_start_length + token_length-1 + command_arg_delim_length + command_end_length;
+	size_t i;
+
+	command_string = malloc(total_length);
+	if( command_string == NULL ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
+		return;
+	}
+
+	for( i = 0; i < token_length; ++i ) {
+		if( ((char*) token)[i] == '|' ) {
+			arg_length = token_length - i;
+			command_length = i;
+			command_token = (char*) token;
+			arg_token = ((char*) token) + command_length + 1;
+			break;
+		}
+	}
+	if( ((char*) token)[i] != '|' ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_SYNTAX);
+	}
+	PUSH_DATA_STACK(GOMSHELL_OK);		
+
+/*	strncpy(command_string, command_start, command_start_length);
+	strncpy(command_string + command_start_length, (char*) command, command_length);
+	strncpy(command_string + command_start_length + command_length, (char*) command_arg_delim, command_arg_delim_length);
+	strncpy(command_string + command_start_length + command_length + command_arg_delim_length, command_arg, command_arg_length);
+	strncpy(command_string + command_start_length + command_length + command_arg_delim_length + command_arg_length, command_end, command_end_length);
+	
+	gomshellCommand((cell_t) command_string, (cell_t) total_length);*/
 }
 
 #endif
@@ -300,7 +349,12 @@ static void gomshellOCPLongCommand( cell_t arg1, cell_t arg2, cell_t arg3, cell_
 {
 	return;
 }
-	
+
+static void gomshellErrorSyntax( )
+{
+	return;
+}
+
 #endif       
 
 /****************************************************************
@@ -344,7 +398,8 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellErrorMem,
     (CFunc0) gomshellErrorFTP,
     (CFunc0) gomshellOCPCommand,
-    (CFunc0) gomshellOCPLongCommand
+    (CFunc0) gomshellOCPLongCommand,
+    (CFunc0) gomshellErrorSyntax
 };
 #endif
 
@@ -383,7 +438,9 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.COMMAND", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
-    err = CreateGlueToC( "GOM.LCOMMAND", i++, C_RETURNS_VOID, 4 );
+    err = CreateGlueToC( "GOM.LCOMMAND", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.ERR.SYNTAX", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     
     return 0;
