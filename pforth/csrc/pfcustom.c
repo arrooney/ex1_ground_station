@@ -41,6 +41,12 @@ extern size_t console_get_prompt_identifier_length( );
 #define GOMSHELL_ERR_MEM	-1
 #define GOMSHELL_ERR_FTP	-2
 
+#define GOMSHELL_OCP_COMMAND_START "exec 'COMMAND(\""
+#define GOMSHELL_OCP_COMMAND_START_LENGTH strlen(GOMSHELL_OCP_COMMAND_START)
+
+#define GOMSHELL_OCP_COMMAND_END "\");'"
+#define GOMSHELL_OCP_COMMAND_END_LENGTH strlen(GOMSHELL_OCP_COMMAND_END)
+
 static cell_t CTest0( cell_t Val );
 static void CTest1( cell_t Val1, cell_t Val2 );
 
@@ -174,7 +180,8 @@ static void gomshellFtpDownload( cell_t file_name_cell, cell_t file_name_size )
 	 */
 	file_name = malloc(file_name_size+1);
 	if( file_name == NULL ) {
-		PUSH_DATA_STACK(-1);
+		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
+		return;
 	}
 	strncpy(file_name, (char*) file_name_cell, file_name_size);
 	file_name[file_name_size] = '\0';
@@ -203,6 +210,36 @@ static void gomshellFtpDownload( cell_t file_name_cell, cell_t file_name_size )
 
 	free(file_name);
 }
+
+static void gomshellOCPCommand( cell_t command, cell_t command_length )
+{
+	char* command_string;
+	char* command_start = GOMSHELL_OCP_COMMAND_START;
+	size_t command_start_length = GOMSHELL_OCP_COMMAND_START_LENGTH;
+	char* command_end = GOMSHELL_OCP_COMMAND_END;
+	size_t command_end_length = GOMSHELL_OCP_COMMAND_END_LENGTH;
+	size_t total_length = command_start_length + command_length + command_end_length;
+	size_t i;
+
+	command_string = malloc(total_length);
+	if( command_string == NULL ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
+		return;
+	}
+
+	strncpy(command_string, command_start, command_start_length);
+	strncpy(command_string + command_start_length, command, command_length);
+	strncpy(command_string + command_start_length + command_length, command_end, command_end_length);
+	
+/*	sdTerminalPrint("\nOCP Command -- %.*s", total_length, command_string);*/
+	gomshellCommand((cell_t) command_string, (cell_t) total_length);
+}
+
+static void gomshellOCPLongCommand( cell_t arg1, cell_t arg2, cell_t arg3, cell_t arg4 )
+{
+	return;
+}
+
 #endif
 
 static void programExit( )
@@ -253,6 +290,17 @@ static void gomshellErrorFTP( )
 {
 	return;
 }
+
+static void gomshellOCPCommand( cell_t arg1, cell_t arg2 )
+{
+	return;
+}
+
+static void gomshellOCPLongCommand( cell_t arg1, cell_t arg2, cell_t arg3, cell_t arg4 )
+{
+	return;
+}
+	
 #endif       
 
 /****************************************************************
@@ -294,7 +342,9 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellFtpDownload,
     (CFunc0) gomshellErrorOK,
     (CFunc0) gomshellErrorMem,
-    (CFunc0) gomshellErrorFTP
+    (CFunc0) gomshellErrorFTP,
+    (CFunc0) gomshellOCPCommand,
+    (CFunc0) gomshellOCPLongCommand
 };
 #endif
 
@@ -330,6 +380,10 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "GOM.ERR.MEM", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.ERR.FTP", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.COMMAND", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.LCOMMAND", i++, C_RETURNS_VOID, 4 );
     if( err < 0 ) return err;
     
     return 0;
