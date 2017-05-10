@@ -45,6 +45,8 @@ extern size_t console_get_prompt_identifier_length( );
 #define GOMSHELL_OCP_COMMAND_START "exec 'COMMAND(\""
 #define GOMSHELL_OCP_COMMAND_START_LENGTH strlen(GOMSHELL_OCP_COMMAND_START)
 
+#define GOMSHELL_OCP_COMMAND_ARG_DELIM '|'
+
 #define GOMSHELL_OCP_COMMAND_ARG "\", \""
 #define GOMSHELL_OCP_COMMAND_ARG_LENGTH strlen(GOMSHELL_OCP_COMMAND_ARG)
 
@@ -220,73 +222,102 @@ static void gomshellFtpDownload( cell_t file_name_cell, cell_t file_name_size )
 	free(file_name);
 }
 
-static void gomshellOCPCommand( cell_t command, cell_t command_length )
+static void gomshellOCPCommand( cell_t token, cell_t token_length)
 {
-	char* command_string;
-	char* command_start = GOMSHELL_OCP_COMMAND_START;
-	size_t command_start_length = GOMSHELL_OCP_COMMAND_START_LENGTH;
-	char* command_end = GOMSHELL_OCP_COMMAND_END;
-	size_t command_end_length = GOMSHELL_OCP_COMMAND_END_LENGTH;
-	size_t total_length = command_start_length + command_length + command_end_length;
 	size_t i;
+	size_t ocp_arg_delim_index;
+	size_t ocp_copy_offset;
+	size_t ocp_command_length;
+	char* ocp_command;
+	size_t ocp_command_name_length;
+	char* ocp_command_name;
+	size_t ocp_command_arg_length;
+	char* ocp_command_arg;
+	
+	/* Search the token for the option argument deliminator.
+	 */
+	ocp_arg_delim_index = 0;
+	for( i = 0; i < token_length; ++i ) {
+		if( ((char*) token)[i] == GOMSHELL_OCP_COMMAND_ARG_DELIM) {
+			ocp_arg_delim_index = i;
+			break;
+		}
+	}
 
-	command_string = malloc(total_length);
-	if( command_string == NULL ) {
+	/* Calculate total length of OCP command string.
+	 */
+	if( ocp_arg_delim_index > 0 ) {
+		ocp_command_name_length = ocp_arg_delim_index;
+		ocp_command_name = (char*) token;
+
+		ocp_command_arg_length = token_length - ocp_arg_delim_index - 1;
+		ocp_command_arg = ((char*) token) + ocp_arg_delim_index + 1;
+		
+		ocp_command_length =
+			GOMSHELL_OCP_COMMAND_START_LENGTH +	/* Command start deliminator. */
+			ocp_command_name_length +		/* Command name. */
+			GOMSHELL_OCP_COMMAND_ARG_LENGTH +	/* Deliminator between argument name and command name. */
+			ocp_command_arg_length +		/* Argument name. */
+			GOMSHELL_OCP_COMMAND_END_LENGTH;	/* Command end deliminator. */
+	}
+	else {
+		ocp_command_name_length = token_length;
+		ocp_command_name = (char*) token;
+		
+		ocp_command_length =
+			GOMSHELL_OCP_COMMAND_START_LENGTH +	/* Command start deliminator. */
+			token_length +				/* command name. */
+			GOMSHELL_OCP_COMMAND_END_LENGTH;	/* Command end deliminator. */
+	}
+	
+	/* Allocate memory for OCP command string.
+	 */
+	ocp_command = malloc(ocp_command_length);
+	if( ocp_command == NULL ) {
 		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
 		return;
 	}
 	PUSH_DATA_STACK(GOMSHELL_OK);
 
-	strncpy(command_string, command_start, command_start_length);
-	strncpy(command_string + command_start_length, command, command_length);
-	strncpy(command_string + command_start_length + command_length, command_end, command_end_length);
+	/* Begin forming the ocp command string.
+	 * This contains the beginning of command deliminator, followed by the command name.
+	 */
+	ocp_copy_offset = 0;
+	strncpy(ocp_command + ocp_copy_offset,
+		GOMSHELL_OCP_COMMAND_START,
+		GOMSHELL_OCP_COMMAND_START_LENGTH);
+	ocp_copy_offset += GOMSHELL_OCP_COMMAND_START_LENGTH;
 	
-	gomshellCommand((cell_t) command_string, (cell_t) total_length);
-}
+	strncpy(ocp_command + ocp_copy_offset,
+		ocp_command_name,
+		ocp_command_name_length);
+	ocp_copy_offset += ocp_command_name_length;
 
-static void gomshellOCPLongCommand( cell_t token, cell_t token_length)
-{
-	char* command_string;
-	char* command_token;
-	size_t command_length;
-	char* arg_token;
-	size_t arg_length;
-	char* command_start = GOMSHELL_OCP_COMMAND_START;
-	size_t command_start_length = GOMSHELL_OCP_COMMAND_START_LENGTH;
-	char* command_arg_delim = GOMSHELL_OCP_COMMAND_ARG;
-	size_t command_arg_delim_length = GOMSHELL_OCP_COMMAND_ARG_LENGTH;
-	char* command_end = GOMSHELL_OCP_COMMAND_END;
-	size_t command_end_length = GOMSHELL_OCP_COMMAND_END_LENGTH;
-	size_t total_length = command_start_length + token_length-1 + command_arg_delim_length + command_end_length;
-	size_t i;
-
-	command_string = malloc(total_length);
-	if( command_string == NULL ) {
-		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
-		return;
+	if( ocp_arg_delim_index > 0 ) {
+		/* Add the optional argument deliminator and option argument name
+		 * to ocp command string.
+		 */
+		strncpy(ocp_command + ocp_copy_offset,
+			GOMSHELL_OCP_COMMAND_ARG,
+			GOMSHELL_OCP_COMMAND_ARG_LENGTH);
+		ocp_copy_offset += GOMSHELL_OCP_COMMAND_ARG_LENGTH;
+		
+		strncpy(ocp_command + ocp_copy_offset,
+			ocp_command_arg,
+			ocp_command_arg_length);
+		ocp_copy_offset += ocp_command_arg_length;
 	}
+		
+	strncpy(ocp_command + ocp_copy_offset,
+		GOMSHELL_OCP_COMMAND_END,
+		GOMSHELL_OCP_COMMAND_END_LENGTH);
+	ocp_copy_offset += GOMSHELL_OCP_COMMAND_END_LENGTH;
 
-	for( i = 0; i < token_length; ++i ) {
-		if( ((char*) token)[i] == '|' ) {
-			arg_length = token_length - i;
-			command_length = i;
-			command_token = (char*) token;
-			arg_token = ((char*) token) + command_length + 1;
-			break;
-		}
-	}
-	if( ((char*) token)[i] != '|' ) {
-		PUSH_DATA_STACK(GOMSHELL_ERR_SYNTAX);
-	}
-	PUSH_DATA_STACK(GOMSHELL_OK);		
-
-/*	strncpy(command_string, command_start, command_start_length);
-	strncpy(command_string + command_start_length, (char*) command, command_length);
-	strncpy(command_string + command_start_length + command_length, (char*) command_arg_delim, command_arg_delim_length);
-	strncpy(command_string + command_start_length + command_length + command_arg_delim_length, command_arg, command_arg_length);
-	strncpy(command_string + command_start_length + command_length + command_arg_delim_length + command_arg_length, command_end, command_end_length);
-	
-	gomshellCommand((cell_t) command_string, (cell_t) total_length);*/
+	/* Send the string to the gomshell for execution. 
+	 * Note, at this point, ocpy_copy_offset and ocp_command_length are the same.
+	 */
+	gomshellCommand((cell_t) ocp_command, (cell_t) ocp_command_length);
+	free(ocp_command);
 }
 
 #endif
@@ -345,11 +376,6 @@ static void gomshellOCPCommand( cell_t arg1, cell_t arg2 )
 	return;
 }
 
-static void gomshellOCPLongCommand( cell_t arg1, cell_t arg2, cell_t arg3, cell_t arg4 )
-{
-	return;
-}
-
 static void gomshellErrorSyntax( )
 {
 	return;
@@ -398,7 +424,6 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellErrorMem,
     (CFunc0) gomshellErrorFTP,
     (CFunc0) gomshellOCPCommand,
-    (CFunc0) gomshellOCPLongCommand,
     (CFunc0) gomshellErrorSyntax
 };
 #endif
@@ -437,8 +462,6 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "GOM.ERR.FTP", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.COMMAND", i++, C_RETURNS_VOID, 2 );
-    if( err < 0 ) return err;
-    err = CreateGlueToC( "GOM.LCOMMAND", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.ERR.SYNTAX", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
