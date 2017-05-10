@@ -37,10 +37,21 @@ extern size_t console_get_prompt_identifier_length( );
 #endif
 #define GOMSHELL_OUTPUT_TIMEOUT 15*1000
 
+/* Result codes for some gomshell functions
+ */
 #define GOMSHELL_OK		0
 #define GOMSHELL_ERR_MEM	-1
 #define GOMSHELL_ERR_FTP	-2
 #define GOMSHELL_ERR_SYNTAX	-3
+
+/* Different ring buffer identifiers.
+ */
+#define GOMSHELL_RING_WOD 	0
+#define GOMSHELL_RING_DFGM_RAW	1
+#define GOMSHELL_RING_DFGM_S0	2
+#define GOMSHELL_RING_DFGM_S1	3
+#define GOMSHELL_RING_DFGM_HK	4
+#define GOMSHELL_RING_ATHENA	5
 
 #define GOMSHELL_OCP_COMMAND_START "exec 'COMMAND(\""
 #define GOMSHELL_OCP_COMMAND_START_LENGTH strlen(GOMSHELL_OCP_COMMAND_START)
@@ -320,6 +331,87 @@ static void gomshellOCPCommand( cell_t token, cell_t token_length)
 	free(ocp_command);
 }
 
+static void gomshellFtpUpload( cell_t file_name, cell_t file_name_length )
+{
+	return;
+}
+
+static void gomshellRingFetch( )
+{
+	/* Need to switch nanomind print output
+	 * to a queue that this function can capture
+	 */
+	
+	/* Need to issue the ocp command 'downlink'
+	 */
+
+	/* Wait for six terminal prompts 'Nanomind # '
+	 */
+
+	/* Wait for two '\n'
+	 */
+
+	/* If the previous line is 'Athena stream empty' then
+	 * we're done. Otherwise, read in one more line.
+	 */
+
+	/* Record the names of the tail files in a buffer
+	 */
+	
+	/* Switch nanomind print output back to console.
+	 */
+}
+
+static void gomshellRingDownload( cell_t ring_name )
+{
+	/* Use ring_name to index the tail files buffer
+	 */
+
+	/* Download this file.
+	 */
+
+	/* If download is successful, remove it from nanomind's
+	 * memory.
+	 */
+
+	/* Add this file to list of successfully downloaded files
+	 */
+	
+	/* Increment tail file in buffer.
+	 */
+	return;
+}
+
+static void gomshellRingWod( )
+{
+	PUSH_DATA_STACK(GOMSHELL_RING_WOD);
+}
+
+static void gomshellRingDFGMRaw( )
+{
+	PUSH_DATA_STACK(GOMSHELL_RING_DFGM_RAW);
+}
+
+static void gomshellRingDFGMS0( )
+{
+	PUSH_DATA_STACK(GOMSHELL_RING_DFGM_S0);
+}
+
+static void gomshellRingDFGMS1( )
+{
+	PUSH_DATA_STACK(GOMSHELL_RING_DFGM_S1);
+}
+
+static void gomshellRingDFGMHK( )
+{
+	PUSH_DATA_STACK(GOMSHELL_RING_DFGM_HK);
+}
+
+static void gomshellRingAthena( )
+{
+	PUSH_DATA_STACK(GOMSHELL_RING_ATHENA);
+}
+
 #endif
 
 static void programExit( )
@@ -381,6 +473,46 @@ static void gomshellErrorSyntax( )
 	return;
 }
 
+static void gomshellFtpUpload( cell_t file_name, cell_t file_name_length )
+{
+	return;
+}
+
+static void gomshellRingDownload( cell_t ring_name )
+{
+	
+}
+
+static void gomshellRingWod( )
+{
+	return;
+}
+
+static void gomshellRingDFGMRaw( )
+{
+	return;
+}
+
+static void gomshellRingDFGMS0( )
+{
+	return;
+}
+
+static void gomshellRingDFGMS1( )
+{
+	return;
+}
+
+static void gomshellRingDFGMHK( )
+{
+	return;
+}
+
+static void gomshellRingAthena( )
+{
+	return;
+}
+
 #endif       
 
 /****************************************************************
@@ -424,7 +556,15 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellErrorMem,
     (CFunc0) gomshellErrorFTP,
     (CFunc0) gomshellOCPCommand,
-    (CFunc0) gomshellErrorSyntax
+    (CFunc0) gomshellErrorSyntax,
+    (CFunc0) gomshellRingDownload,
+    (CFunc0) gomshellRingWod,
+    (CFunc0) gomshellRingDFGMRaw,
+    (CFunc0) gomshellRingDFGMS0,
+    (CFunc0) gomshellRingDFGMS1,
+    (CFunc0) gomshellRingDFGMHK,
+    (CFunc0) gomshellRingAthena,
+    (CFunc0) gomshellFtpUpload
 };
 #endif
 
@@ -465,7 +605,23 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.ERR.SYNTAX", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
-    
+    err = CreateGlueToC( "GOM.RING.DOWNLOAD", i++, C_RETURNS_VOID, 1 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.RING.WOD", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.RING.DFGM-RAW", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.RING.DFGM-S0", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.RING.DFGM-S1", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.RING.DFGM-HK", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.RING.ATHENA", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.FTP.UPLOAD", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+        
     return 0;
 }
 #else

@@ -88,7 +88,7 @@ The gomshell source code is an eclipse project. All other libraries do not have 
 The gomshell is a backend of the forth interpreter. To learn how to write forth code, see [this](http://www.softsynth.com/pforth/pf_tut.php) link. To issue gomshell commands, use the ```GOM``` word:
 
 ```forth
-GOM ( string location, string length -- , Text within the string is interpreted by the gomshell )
+GOM ( addr, n -- The next 'n' characters at 'addr' are interpretted as a gomshell command )
 ```
 
 For example, the following will invoke the ```eps hk get``` command:
@@ -109,4 +109,46 @@ A script is run using the INCLUDE word:
 
 ```forth
 INCLUDE my_script.fth
+```
+
+## Forth Words
+
+```forth
+GOM ( addr, n -- , The next 'n' characters at 'addr' are interpretted as a gomshell command )
+GOM.COMMAND ( addr, n -- n, The next 'n' characters at 'addr' are interpretted as an OCP command.
+	      	      	   The '|' character is used to seperate a command name and it's argument.
+			   For example: S" dfgm power|on" GOM.COMMAND
+			   Puts an error code on the stack that can be compared against using
+			   GOM.ERR. words )
+
+GOM.HELP ( -- , Print all error codes and description to terminal )
+GOM.ERR.OK ( -- n, Put the return code for 'no error' on the stack )
+GOM.ERR.MEM ( -- n, Put the return code for memory error on the stack )
+GOM.ERR.FTP ( -- n, Put the return code for ftp failure on the stack )
+GOM.ERR.SYNTAX ( -- n, Put the return code for bad syntax on the stack )
+
+GOM.FTP.DOWNLOAD ( addr, n -- n, The next 'n' characters at 'addr' are interpretted as
+		   	       	 a file name to be downloaded.
+			       	 Puts an error code on the stack that can be compared against using
+			   	 GOM.ERR. words )
+
+GOM.FTP.UPLOAD( addr, n -- n, The next 'n' characters at 'addr' are interpretted as
+			      a file to be uploaded. The file will be given the same
+			      name on the satellite's memory
+			      Puts an error code on the stack that can be compared against using
+			      GOM.ERR. words )
+
+GOM.RING.FETCH ( -- , Fetch the names of the files in the tail of all ring buffers )
+GOM.RING.DOWNLOAD ( n -- n, Downloads the tail file of the ring buffer specified by 'n'. Use
+		     	    the GOM.RING. words to specify the ring buffer.
+  			    Puts an error code on the stack that can be compared against using
+			    GOM.ERR. words )
+GOM.RING.DFGM-RAW
+GOM.RING.DFGM-S0
+GOM.RING.DFGM-S1
+GOM.RING.DFGM-HK
+GOM.RING.WOD
+GOM.RING.ATHENA
+
+GOM.MNLP.DOWNLOAD
 ```
