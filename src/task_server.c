@@ -18,6 +18,8 @@
 #include <util/log.h>
 #include <csp-term.h>
 #include <IOHook.h>
+#include <CCThreadedQueue.h>
+#include <CCArrayQueue.h>
 
 #define RED     "\x1b[31m"
 #define GREEN   "\x1b[32m"
@@ -32,6 +34,83 @@
 #define WOD_BEACON_PORT 32
 #define CALLSIGN_PORT 33
 
+#define CSP_PRINT_BUFFER_LENGTH 512
+#define CSP_PRINT_ELEMENT_SIZE  sizeof(char)
+#define CSP_PRINT_TO_TERMINAL 1
+#define CSP_PRINT_TO_QUEUE 2
+#define CSP_PRINT_END_OF_MSG ((char) 4)
+
+static struct CCThreadedQueue csp_print_queue;
+static struct CCArrayQueue csp_print_queue_backend;
+static char csp_print_copy_buffer[CSP_PRINT_BUFFER_LENGTH];
+static pthread_mutex_t csp_print_switch_lock;
+static int csp_print_switch;
+
+char CSPPrintGetEOT( )
+{
+	return CSP_PRINT_END_OF_MSG;
+}
+
+struct CCThreadedQueue* CSPPrintGetQueue( )
+{
+	return &csp_print_queue;
+}
+
+void CSPPrintSetToTerminal( )
+{
+	pthread_mutex_lock(&csp_print_switch_lock);
+	csp_print_switch = CSP_PRINT_TO_TERMINAL;
+	pthread_mutex_unlock(&csp_print_switch_lock);
+}
+
+void CSPPrintSetToQueue( )
+{
+	pthread_mutex_lock(&csp_print_switch_lock);
+	csp_print_switch = CSP_PRINT_TO_QUEUE;
+	pthread_mutex_unlock(&csp_print_switch_lock);
+}
+
+static CBool CSPPrintIsSetToQueue( )
+{
+	int print_location;
+	
+	pthread_mutex_lock(&csp_print_switch_lock);
+	print_location = csp_print_switch;
+	pthread_mutex_unlock(&csp_print_switch_lock);
+
+	if( print_location == CSP_PRINT_TO_QUEUE ) {
+		return CTRUE;
+	}
+	else {
+		return CFALSE;
+	}
+}
+
+static void CSPPrintSwitchInit( )
+{
+	pthread_mutex_init(&csp_print_switch_lock, NULL);
+	csp_print_switch = CSP_PRINT_TO_TERMINAL;
+}
+
+static int CSPPrintToQueue( const char* format, ... )
+{
+	int bytes_copied, i;
+	va_list args;
+	CCTQueueError err;
+
+	va_start(args, format);
+	bytes_copied = vsnprintf(csp_print_copy_buffer, CSP_PRINT_BUFFER_LENGTH, format, args);
+	va_end(args);
+	
+	for( i = 0; i < bytes_copied; ++i ) {
+		err = CCThreadedQueue_Insert(&csp_print_queue, &csp_print_copy_buffer[i], COS_BLOCK_FOREVER);
+		if( err != CCTQUEUE_OK ) {
+			break;
+		}
+	}
+	
+	return i;
+}
 
 void * task_server(void * parameters) {
 
@@ -40,6 +119,16 @@ void * task_server(void * parameters) {
 	uint16_t vbatt;
 	IOHook_Printf_FP printf_fp;
 
+	/* Initialize print queue. 
+	 */
+	CCArrayQueue(&csp_print_queue_backend, CSP_PRINT_ELEMENT_SIZE, CSP_PRINT_BUFFER_LENGTH);
+	CCThreadedQueue(&csp_print_queue, &csp_print_queue_backend.ciqueue);
+
+	/* Initialize print location switch
+	 */
+	CSPPrintSwitchInit( );
+	CSPPrintSetToTerminal( );
+	
 	/* Get print to terminal function pointer. */
 	printf_fp = IOHook_GetPrintf( );
 
@@ -95,7 +184,12 @@ void * task_server(void * parameters) {
 
 					switch(packet->id.src){
 					case 1:
-						printf_fp(LGREEN "Nanomind " C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,mssg);
+						if( CSPPrintIsSetToQueue( ) == CTRUE ) {
+							CSPPrintToQueue("%s%c", mssg, CSP_PRINT_END_OF_MSG);
+						}
+						else {
+							printf_fp(LGREEN "Nanomind " C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,mssg);
+						}
 						break;
 					case 2:
 						printf_fp("Nanohub # %s\n",mssg);

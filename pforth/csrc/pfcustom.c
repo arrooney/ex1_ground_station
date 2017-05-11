@@ -32,10 +32,15 @@
 #ifdef GOMSHELL
 #include <CCThreadedQueue.h>
 #include <command/command.h>
+#include <CCArrayList.h>
+#include <CCListIterator.h>
 extern const char* console_get_prompt_identifier( );
 extern size_t console_get_prompt_identifier_length( );
 #endif
 #define GOMSHELL_OUTPUT_TIMEOUT 15*1000
+#define GOMSHELL_TOTAL_RINGS 6
+#define GOMSHELL_RING_STRING_LENGTH 3*60
+#define GOMSHELL_RING_NAME_LENGTH 12
 
 /* Result codes for some gomshell functions
  */
@@ -43,6 +48,7 @@ extern size_t console_get_prompt_identifier_length( );
 #define GOMSHELL_ERR_MEM	-1
 #define GOMSHELL_ERR_FTP	-2
 #define GOMSHELL_ERR_SYNTAX	-3
+#define GOMSHELL_ERR_COM	-4
 
 /* Different ring buffer identifiers.
  */
@@ -63,6 +69,10 @@ extern size_t console_get_prompt_identifier_length( );
 
 #define GOMSHELL_OCP_COMMAND_END "\");'"
 #define GOMSHELL_OCP_COMMAND_END_LENGTH strlen(GOMSHELL_OCP_COMMAND_END)
+
+#ifdef GOMSHELL
+static struct CCArrayList ring_names[GOMSHELL_TOTAL_RINGS];
+#endif
 
 static cell_t CTest0( cell_t Val );
 static void CTest1( cell_t Val1, cell_t Val2 );
@@ -89,6 +99,57 @@ static void gomshellErrorFTP( )
 static void gomshellErrorSyntax( )
 {
 	PUSH_DATA_STACK(GOMSHELL_ERR_SYNTAX);
+}
+
+static void gomshellErrorCom( )
+{
+	PUSH_DATA_STACK(GOMSHELL_ERR_COM);
+}
+
+static void gomshellPrintRingName( struct CIList* ring_name )
+{
+	struct CCListIterator iter;
+	char msg;
+	
+	CCListIterator(&iter, ring_name);
+	while( CIIterator_HasNext(&iter.ciiterator) ) {
+		CIIterator_Next(&iter.ciiterator, &msg);
+		sdTerminalOut(msg);
+	}
+	sdTerminalOut('\n');
+	CDestroy(&iter);
+}
+
+static CBool gomshellExtractRingTails( struct CIList* ring_string, struct CIList* ring_name )
+{
+	struct CCListIterator iter;
+	char msg;
+	const char* id = ".bin";
+	const size_t id_length = strlen(id);
+	size_t i;
+
+	CCListIterator(&iter, ring_string);
+	i = 0;
+
+	while( CIIterator_HasNext(&iter.ciiterator) ) {
+		CIIterator_Next(&iter.ciiterator, &msg);
+		if( msg == id[i++] ) {
+			if( i == id_length ) {
+				CIList_Clear(ring_name);
+				for( i = 0; i < GOMSHELL_RING_NAME_LENGTH; ++ i ) {
+					CIIterator_Previous(&iter.ciiterator, &msg);
+					CIList_AddAt(ring_name, &msg, GOMSHELL_RING_NAME_LENGTH-1-i);
+				}
+				CDestroy(&iter);
+				return CTRUE;
+			}
+		}
+		else {
+			i = 0;
+		}
+	}
+	CDestroy(&iter);
+	return CFALSE;
 }
 
 static void gomshellFlushOutput( )
@@ -142,7 +203,9 @@ static void gomshellManErrorCodes( )
 			"\t %d -- No error / success\n"
 			"\t%d -- Failure to allocate memory\n"
 			"\t%d -- Failure to complete an FTP command\n",
-			GOMSHELL_OK, GOMSHELL_ERR_MEM, GOMSHELL_ERR_FTP);			
+			"\t%d -- Incorrect syntax\n",
+			"\t%d -- Unkown communication failure with ExAlta-1\n",
+			GOMSHELL_OK, GOMSHELL_ERR_MEM, GOMSHELL_ERR_FTP, GOMSHELL_ERR_SYNTAX, GOMSHELL_ERR_COM);			
 }
 
 /****************************************************************
@@ -338,28 +401,73 @@ static void gomshellFtpUpload( cell_t file_name, cell_t file_name_length )
 
 static void gomshellRingFetch( )
 {
+	const char* ocp_ring_fetch = "downlink";
+	const size_t ocp_ring_fetch_length = strlen(ocp_ring_fetch);
+	cell_t forth_err;
+	char csp_eot;
+	char msg;
+	int i;
+	struct CCThreadedQueue* csp_queue;
+	CCTQueueError queue_err;
+	struct CCArrayList ring_string;
+	static CBool ring_names_init = CFALSE;
+
+	if( !ring_names_init ) {
+		for( i = 0; i < GOMSHELL_TOTAL_RINGS; ++i ) {
+			CCArrayList(&ring_names[i], sizeof(char), GOMSHELL_RING_NAME_LENGTH);
+		}
+		ring_names_init = CTRUE;
+	}
+	
+	/* Initialize buffer to hold ring string.
+	 */
+	CCArrayList(&ring_string, sizeof(char), GOMSHELL_RING_STRING_LENGTH);
+	
 	/* Need to switch nanomind print output
 	 * to a queue that this function can capture
 	 */
+	extern void CSPPrintSetToQueue( );
+	CSPPrintSetToQueue( );
 	
 	/* Need to issue the ocp command 'downlink'
 	 */
+	gomshellOCPCommand((cell_t) ocp_ring_fetch, (cell_t) ocp_ring_fetch_length);
+	forth_err = POP_DATA_STACK;
+	if( forth_err != GOMSHELL_OK ) {
+		PUSH_DATA_STACK(forth_err);
+		return;
+	}
 
-	/* Wait for six terminal prompts 'Nanomind # '
+	/* Wait for six eot identifiers.
 	 */
+	extern char CSPPrintGetEOT( );
+	csp_eot = CSPPrintGetEOT( );
+	extern struct CCThreadedQueue* CSPPrintGetQueue( );
+	csp_queue = CSPPrintGetQueue( );
+	for( i = 0; i < GOMSHELL_TOTAL_RINGS; ++i ) {
+		CIList_Clear(&ring_string.cilist);
+		do {
+			queue_err = CCThreadedQueue_Remove(csp_queue, &msg, GOMSHELL_OUTPUT_TIMEOUT);
+			if( queue_err != CCTQUEUE_OK ) {
+				PUSH_DATA_STACK(GOMSHELL_ERR_COM);
+				return;
+			}
+			CIList_Add(&ring_string.cilist, &msg);
+		} while( msg != csp_eot );
 
-	/* Wait for two '\n'
-	 */
+		/* Record the name of the tail file in a buffer
+		 */
+		if( gomshellExtractRingTails(&ring_string.cilist, &(ring_names[i]).cilist) ) {
+			gomshellPrintRingName(&(ring_names[i]).cilist);
+		}
+	}
 
-	/* If the previous line is 'Athena stream empty' then
-	 * we're done. Otherwise, read in one more line.
-	 */
-
-	/* Record the names of the tail files in a buffer
-	 */
-	
 	/* Switch nanomind print output back to console.
 	 */
+	extern void CSPPrintSetToTerminal( );
+	CSPPrintSetToTerminal( );
+
+	PUSH_DATA_STACK(GOMSHELL_OK);
 }
 
 static void gomshellRingDownload( cell_t ring_name )
@@ -473,6 +581,11 @@ static void gomshellErrorSyntax( )
 	return;
 }
 
+static void gomshellErrorCom( )
+{
+	return;
+}
+
 static void gomshellFtpUpload( cell_t file_name, cell_t file_name_length )
 {
 	return;
@@ -512,6 +625,11 @@ static void gomshellRingAthena( )
 {
 	return;
 }
+
+static void gomshellRingFetch( )
+{
+	return;
+}	
 
 #endif       
 
@@ -564,7 +682,9 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellRingDFGMS1,
     (CFunc0) gomshellRingDFGMHK,
     (CFunc0) gomshellRingAthena,
-    (CFunc0) gomshellFtpUpload
+    (CFunc0) gomshellFtpUpload,
+    (CFunc0) gomshellErrorCom,
+    (CFunc0) gomshellRingFetch
 };
 #endif
 
@@ -579,6 +699,7 @@ Err CompileCustomFunctions( void )
 {
     Err err;
     int i = 0;
+    
 /* Compile Forth words that call your custom functions.
    Make sure order of functions matches that in LoadCustomFunctionTable().
    Parameters are: Name in UPPER CASE, Function, Index, Mode, NumParams
@@ -620,6 +741,10 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "GOM.RING.ATHENA", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.FTP.UPLOAD", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.ERR.COM", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.RING.FETCH", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
         
     return 0;
