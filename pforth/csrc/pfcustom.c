@@ -51,12 +51,13 @@ extern size_t console_get_prompt_identifier_length( );
 #define GOMSHELL_ERR_COM	-4
 
 /* Different ring buffer identifiers.
+ * Do not change. These are NOT arbitrary.
  */
-#define GOMSHELL_RING_WOD 	0
-#define GOMSHELL_RING_DFGM_RAW	1
-#define GOMSHELL_RING_DFGM_S0	2
-#define GOMSHELL_RING_DFGM_S1	3
-#define GOMSHELL_RING_DFGM_HK	4
+#define GOMSHELL_RING_WOD 	4
+#define GOMSHELL_RING_DFGM_RAW	2
+#define GOMSHELL_RING_DFGM_S0	0
+#define GOMSHELL_RING_DFGM_S1	1
+#define GOMSHELL_RING_DFGM_HK	3
 #define GOMSHELL_RING_ATHENA	5
 
 #define GOMSHELL_OCP_COMMAND_START "exec 'COMMAND(\""
