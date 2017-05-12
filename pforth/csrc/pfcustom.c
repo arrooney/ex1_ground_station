@@ -72,7 +72,8 @@ extern size_t console_get_prompt_identifier_length( );
 #define GOMSHELL_OCP_COMMAND_END_LENGTH strlen(GOMSHELL_OCP_COMMAND_END)
 
 #ifdef GOMSHELL
-static struct CCArrayList ring_names[GOMSHELL_TOTAL_RINGS];
+static struct CCArrayList ring_names_backend[GOMSHELL_TOTAL_RINGS];
+static struct CCArrayList ring_names;
 #endif
 
 static cell_t CTest0( cell_t Val );
@@ -204,7 +205,7 @@ static void gomshellManErrorCodes( )
 			"\t %d -- No error / success\n"
 			"\t%d -- Failure to allocate memory\n"
 			"\t%d -- Failure to complete an FTP command\n",
-			"\t%d -- Incorrect syntax\n",
+			"\t%d -- User error (out of bounds parameter or syntax)\n",
 			"\t%d -- Unkown communication failure with ExAlta-1\n",
 			GOMSHELL_OK, GOMSHELL_ERR_MEM, GOMSHELL_ERR_FTP, GOMSHELL_ERR_SYNTAX, GOMSHELL_ERR_COM);			
 }
@@ -414,8 +415,12 @@ static void gomshellRingFetch( )
 	static CBool ring_names_init = CFALSE;
 
 	if( !ring_names_init ) {
+ 		CCArrayList(&ring_names, sizeof(struct CIList*), GOMSHELL_TOTAL_RINGS);
 		for( i = 0; i < GOMSHELL_TOTAL_RINGS; ++i ) {
-			CCArrayList(&ring_names[i], sizeof(char), GOMSHELL_RING_NAME_LENGTH);
+			CCArrayList(&ring_names_backend[i], sizeof(char), GOMSHELL_RING_NAME_LENGTH);
+
+			struct CIList* list_location = &(ring_names_backend[i]).cilist;
+			CIList_Add(&ring_names.cilist, &list_location);
 		}
 		ring_names_init = CTRUE;
 	}
@@ -451,6 +456,7 @@ static void gomshellRingFetch( )
 			queue_err = CCThreadedQueue_Remove(csp_queue, &msg, GOMSHELL_OUTPUT_TIMEOUT);
 			if( queue_err != CCTQUEUE_OK ) {
 				PUSH_DATA_STACK(GOMSHELL_ERR_COM);
+				CDestroy(&ring_string);
 				return;
 			}
 			CIList_Add(&ring_string.cilist, &msg);
@@ -458,8 +464,10 @@ static void gomshellRingFetch( )
 
 		/* Record the name of the tail file in a buffer
 		 */
-		if( gomshellExtractRingTails(&ring_string.cilist, &(ring_names[i]).cilist) ) {
-			gomshellPrintRingName(&(ring_names[i]).cilist);
+		struct CIList* name;
+		CIList_Get(&ring_names.cilist, &name, i);
+		if( gomshellExtractRingTails(&ring_string.cilist, name) ) {
+			gomshellPrintRingName(name);
 		}
 	}
 
@@ -468,21 +476,57 @@ static void gomshellRingFetch( )
 	extern void CSPPrintSetToTerminal( );
 	CSPPrintSetToTerminal( );
 
+	CDestroy(&ring_string);
 	PUSH_DATA_STACK(GOMSHELL_OK);
 }
 
-static void gomshellRingDownload( cell_t ring_name )
+static void gomshellRingDownload( cell_t ring_index )
 {
+	struct CIList* list_name;
+	char* array_name;
+	const char* sd_dir = "/sd/";
+	size_t sd_dir_length = strlen(sd_dir);
+	CIListError err;
+	cell_t forth_err;
+	size_t i;
+	
 	/* Use ring_name to index the tail files buffer
 	 */
+	err = CIList_Get(&ring_names.cilist, &list_name, ring_index);
+	if( err != CILIST_OK ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_SYNTAX);
+		return;
+	}
 
+	/* Copy name into a standard string array.
+	 */
+	array_name = malloc(sizeof(char) * (CIList_MaxSize(list_name) + sd_dir_length));
+	if( array_name == NULL ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
+		return;
+	}	
+	for( i = 0; i < sd_dir_length; ++i ) {
+		array_name[i] = sd_dir[i];
+	}
+	for( ;  i < sd_dir_length + CIList_MaxSize(list_name); ++i ) {
+		CIList_Get(list_name, &array_name[i], i - sd_dir_length);
+	}
+
+	sdTerminalPrint("Downloading: %.*s\n", CIList_MaxSize(list_name) + sd_dir_length, array_name);
+	
 	/* Download this file.
 	 */
-
+	gomshellFtpDownload((cell_t) array_name, CIList_MaxSize(list_name) + sd_dir_length);
+	forth_err = POP_DATA_STACK;
+	if( forth_err != GOMSHELL_OK ) {
+		PUSH_DATA_STACK(forth_err);
+		return;
+	}
+	
 	/* If download is successful, remove it from nanomind's
 	 * memory.
 	 */
-
+	
 	/* Add this file to list of successfully downloaded files
 	 */
 	
@@ -725,7 +769,7 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.COMMAND", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
-    err = CreateGlueToC( "GOM.ERR.SYNTAX", i++, C_RETURNS_VOID, 0 );
+    err = CreateGlueToC( "GOM.ERR.USER", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.RING.DOWNLOAD", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
