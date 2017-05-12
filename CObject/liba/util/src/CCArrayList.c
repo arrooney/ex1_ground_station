@@ -210,13 +210,15 @@ static CIListError CIList_AddAt_Def( struct CIList* self_, void* element, size_t
 	 */
 	memcpy(&self->_.list_base[index * self->_.element_size], element, self->_.element_size);
 
+	/* Increase current size.
+	 */
+	if( CCArrayList_GetMaskBit(self, index) == CCARRAY_LIST_MASK_ELEMENT_EMPTY ) {
+		++self->_.current_size;	
+	}
+
 	/* Set the list mask to indicate this location is not empty.
 	 */
 	CCArrayList_SetMaskBit(self, index, CCARRAY_LIST_MASK_ELEMENT_FULL);
-
-	/* Increase current size.
-	 */
-	++self->_.current_size;
 	
 	return CILIST_OK;
 }

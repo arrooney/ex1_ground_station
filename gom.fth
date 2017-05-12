@@ -14,7 +14,17 @@
 
 : REBOOT S" reboot 1" GOM ;
 
-: RING-TEST
+: RING.DOWNLOAD
 	GOM.RING.FETCH
-	GOM.RING.DFGM-RAW GOM.RING.DOWNLOAD
-;	
+	GOM.ERR.OK = NOT IF
+		." Error fetching tails"
+		QUIT
+	THEN
+
+	1 DO
+		GOM.RING.WOD GOM.RING.DOWNLOAD
+		GOM.ERR.OK = NOT IF
+			." Error downloading at index: " I . CR
+		THEN
+	LOOP	
+;

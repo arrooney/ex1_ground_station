@@ -42,6 +42,10 @@ extern size_t console_get_prompt_identifier_length( );
 #define GOMSHELL_RING_STRING_LENGTH 3*60
 #define GOMSHELL_RING_NAME_LENGTH 12
 
+#define LOGGER_TOTAL_SEQUENCE_BYTES 3
+#define LOGGER_SEQUENCE_START 0
+#define LOGGER_SEQUENCE_BASE 16
+
 /* Result codes for some gomshell functions
  */
 #define GOMSHELL_OK		0
@@ -106,6 +110,105 @@ static void gomshellErrorSyntax( )
 static void gomshellErrorCom( )
 {
 	PUSH_DATA_STACK(GOMSHELL_ERR_COM);
+}
+
+static unsigned int pf_powerof( unsigned int base, unsigned int exp )
+{
+  unsigned int i;
+  unsigned int num = 1;
+  for( i = 0; i < exp; ++i ) {
+    num = num * base;
+  }
+  return num;
+}
+
+static void pf_uitoa( unsigned int num, char* str, size_t len, int base )
+{
+  size_t i;
+  unsigned int rem;
+  char ascii_num;
+
+  /* Zero fill string. */
+  for( i = 0; i < len; ++i ) {
+    str[i] = '0';
+  }
+
+  /* Check for zero. */
+  if( num == 0 ) {
+    return;
+  }
+
+  for( i = 0; i < len; ++i ) {
+    rem = num % base;
+    ascii_num = (rem > 9) ? ((rem-10) + 'a') : (rem + '0');
+    str[len-i-1] = ascii_num;
+    num = (num - rem) / base;
+  }
+}
+
+static unsigned int pf_atoui( const char* str, size_t len, int base )
+{
+  size_t i;
+  unsigned int num = 0;
+  unsigned int inter_num = 0;
+
+
+  for( i = 0; i < len; ++i ) {
+    /* Convert ascii byte to int. */
+    if( str[i] >= '0' && str[i] <= '9' ) {
+      inter_num = str[i] - '0';
+    }
+    else if( str[i] >= 'a' && str[i] <= 'z' ) {
+      inter_num = str[i] - 'a' + 10;
+    }
+    else if( str[i] >= 'A' && str[i] <= 'Z' ) {
+      inter_num = str[i] - 'A' + 10;
+    }
+    else {
+      return 0;
+    }
+
+    /* accumulate. */
+    num += inter_num * pf_powerof(base, len - i - 1);
+  }
+
+  return num;
+}
+
+static void pf_next_name( char* );
+static void gomshellRingIncrementName( struct CIList* list_name )
+{
+	char array_name[GOMSHELL_RING_NAME_LENGTH];
+	size_t i;
+
+	for( i = 0; i < CIList_Size(list_name); ++i ) {
+		CIList_Get(list_name, &array_name[i], i);
+	}
+	pf_next_name(array_name);
+	for( i = 0; i < CIList_Size(list_name); ++i ) {
+		CIList_AddAt(list_name, &array_name[i], i);
+	}
+}
+
+static void pf_next_name( char* name )
+{
+	unsigned int next_seq = 0;
+	unsigned int next_tem = 0;
+
+	/* Increment temporal and sequence number, then roll over if necessary. */
+	next_seq = (pf_atoui(name + LOGGER_SEQUENCE_START, LOGGER_TOTAL_SEQUENCE_BYTES, LOGGER_SEQUENCE_BASE) + 1);
+	next_tem = (((name[4]-'0')*1000) + ((name[5]-'0')*100) + ((name[6]-'0')*10) + (name[7]-'0') + 1);
+
+
+	pf_uitoa(next_seq, name + LOGGER_SEQUENCE_START, LOGGER_TOTAL_SEQUENCE_BYTES, LOGGER_SEQUENCE_BASE);
+
+	name[7] = (char) ((next_tem % 10) + '0') & 0xFF;
+	next_tem = (next_tem - (next_tem % 10)) / 10; /* basically a base ten logical shift right. */
+	name[6] = (char) ((next_tem % 10) + '0') & 0xFF;
+	next_tem = (next_tem - (next_tem % 10)) / 10;
+	name[5] = (char) ((next_tem % 10) + '0') & 0xFF;
+	next_tem = (next_tem - (next_tem % 10)) / 10;
+	name[4] = (char) ((next_tem % 10) + '0') & 0xFF;
 }
 
 static void gomshellPrintRingName( struct CIList* ring_name )
@@ -547,7 +650,7 @@ static void gomshellRingDownload( cell_t ring_index )
 
 	/* Copy name into a standard string array.
 	 */
-	array_name = malloc(sizeof(char) * (CIList_MaxSize(list_name) + sd_dir_length));
+	array_name = malloc(sizeof(char) * (CIList_Size(list_name) + sd_dir_length));
 	if( array_name == NULL ) {
 		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
 		return;
@@ -555,20 +658,21 @@ static void gomshellRingDownload( cell_t ring_index )
 	for( i = 0; i < sd_dir_length; ++i ) {
 		array_name[i] = sd_dir[i];
 	}
-	for( ;  i < sd_dir_length + CIList_MaxSize(list_name); ++i ) {
+	for( ;  i < sd_dir_length + CIList_Size(list_name); ++i ) {
 		CIList_Get(list_name, &array_name[i], i - sd_dir_length);
 	}
 	
 	/* Download this file.
 	 */
-	sdTerminalPrint("Downloading: %.*s\n", CIList_MaxSize(list_name) + sd_dir_length, array_name);
-	gomshellFtpDownload((cell_t) array_name, CIList_MaxSize(list_name) + sd_dir_length);
+	sdTerminalPrint("Downloading: %.*s\n", CIList_Size(list_name) + sd_dir_length, array_name);
+	gomshellFtpDownload((cell_t) array_name, CIList_Size(list_name) + sd_dir_length);
 	forth_err = POP_DATA_STACK;
 
 	if( forth_err == GOMSHELL_OK ) {
 		/* Download is successful, remove it from nanomind's
 		 * memory.
 		 */
+		gomshellFtpRemove((cell_t) array_name, (cell_t) CIList_Size(list_name) + sd_dir_length);
 		PUSH_DATA_STACK(GOMSHELL_OK);
 	}
 	else {
@@ -579,6 +683,7 @@ static void gomshellRingDownload( cell_t ring_index )
 	
 	/* Increment tail file in buffer.
 	 */
+	gomshellRingIncrementName(list_name);
 	return;
 }
 
