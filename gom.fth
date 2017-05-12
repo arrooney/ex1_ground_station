@@ -15,16 +15,27 @@
 : REBOOT S" reboot 1" GOM ;
 
 : RING.DOWNLOAD
+	SWAP 0 DO
+		DUP GOM.RING.DOWNLOAD
+		GOM.ERR.OK = NOT IF
+			." Error downloading at index: " I . CR
+			." Stack trace: " .S CR
+		THEN
+	LOOP
+	." Done"
+;
+
+: DFGM.DOWNLOAD
+	GOM.RING.DFGM-RAW RING.DOWNLOAD
+;
+
+: DFGM.DOWNLOAD+
 	GOM.RING.FETCH
 	GOM.ERR.OK = NOT IF
 		." Error fetching tails"
 		QUIT
 	THEN
 
-	1 DO
-		GOM.RING.WOD GOM.RING.DOWNLOAD
-		GOM.ERR.OK = NOT IF
-			." Error downloading at index: " I . CR
-		THEN
-	LOOP	
-;
+	DFGM.DOWNLOAD
+;		
+

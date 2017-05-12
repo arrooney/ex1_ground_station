@@ -513,7 +513,7 @@ static void gomshellFtpRemove( cell_t file_name_cell, cell_t file_name_cell_leng
 
 	/* Give user a message.
 	 */
-	sdTerminalPrint("\nGomshell ftp remove --\n");
+	sdTerminalPrint("\nGomshell ftp remove -- ");
 	
 	/* Copy name of file to be removed into a
 	 * NULL terminated string.
@@ -525,7 +525,8 @@ static void gomshellFtpRemove( cell_t file_name_cell, cell_t file_name_cell_leng
 	}
 	strncpy(file_name, (char*) file_name_cell, file_name_cell_length);
 	file_name[file_name_cell_length] = '\0';
-
+	sdTerminalPrint("%s\n", file_name);
+	
 	/* Setup command context for Gomshell to remove
 	 * the file.
 	 */
@@ -671,9 +672,10 @@ static void gomshellRingDownload( cell_t ring_index )
 	if( forth_err == GOMSHELL_OK ) {
 		/* Download is successful, remove it from nanomind's
 		 * memory.
+		 * Note, this function puts an error code on the stack. Let that be returning
+		 * error code.
 		 */
 		gomshellFtpRemove((cell_t) array_name, (cell_t) CIList_Size(list_name) + sd_dir_length);
-		PUSH_DATA_STACK(GOMSHELL_OK);
 	}
 	else {
 		/* Failed to download. Push error onto stack.
