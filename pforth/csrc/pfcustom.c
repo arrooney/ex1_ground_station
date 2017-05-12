@@ -401,6 +401,53 @@ static void gomshellFtpUpload( cell_t file_name, cell_t file_name_length )
 	return;
 }
 
+static void gomshellFtpRemove( cell_t file_name_cell, cell_t file_name_cell_length )
+{
+	extern int cmd_ftp_remove(struct command_context *);
+	struct command_context command;
+	char* argv[2];
+	char* file_name;
+
+	/* Give user a message.
+	 */
+	sdTerminalPrint("\nGomshell ftp remove --\n");
+	
+	/* Copy name of file to be removed into a
+	 * NULL terminated string.
+	 */
+	file_name = malloc(file_name_cell_length+1);
+	if( file_name == NULL ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
+		return;
+	}
+	strncpy(file_name, (char*) file_name_cell, file_name_cell_length);
+	file_name[file_name_cell_length] = '\0';
+
+	/* Setup command context for Gomshell to remove
+	 * the file.
+	 */
+	command.argv = argv;
+	command.argv[0] = "remove_file";
+	command.argv[1] = file_name;
+	command.argc = 2;
+
+	/* Do gomshell command that will remove the file.
+	 */
+	int result = cmd_ftp_remove(&command);
+	if( result != CMD_ERROR_NONE ) {
+		/* Failed to remove.
+		 */
+		PUSH_DATA_STACK(GOMSHELL_ERR_FTP);
+	}
+	else {
+		/* Success.
+		 */
+		PUSH_DATA_STACK(GOMSHELL_OK);
+	}
+
+	free(file_name);
+}
+
 static void gomshellRingFetch( )
 {
 	const char* ocp_ring_fetch = "downlink";
@@ -511,24 +558,24 @@ static void gomshellRingDownload( cell_t ring_index )
 	for( ;  i < sd_dir_length + CIList_MaxSize(list_name); ++i ) {
 		CIList_Get(list_name, &array_name[i], i - sd_dir_length);
 	}
-
-	sdTerminalPrint("Downloading: %.*s\n", CIList_MaxSize(list_name) + sd_dir_length, array_name);
 	
 	/* Download this file.
 	 */
+	sdTerminalPrint("Downloading: %.*s\n", CIList_MaxSize(list_name) + sd_dir_length, array_name);
 	gomshellFtpDownload((cell_t) array_name, CIList_MaxSize(list_name) + sd_dir_length);
 	forth_err = POP_DATA_STACK;
-	if( forth_err != GOMSHELL_OK ) {
-		PUSH_DATA_STACK(forth_err);
-		return;
+
+	if( forth_err == GOMSHELL_OK ) {
+		/* Download is successful, remove it from nanomind's
+		 * memory.
+		 */
+		PUSH_DATA_STACK(GOMSHELL_OK);
 	}
-	
-	/* If download is successful, remove it from nanomind's
-	 * memory.
-	 */
-	
-	/* Add this file to list of successfully downloaded files
-	 */
+	else {
+		/* Failed to download. Push error onto stack.
+		 */
+		PUSH_DATA_STACK(forth_err);
+	}
 	
 	/* Increment tail file in buffer.
 	 */
@@ -636,6 +683,11 @@ static void gomshellFtpUpload( cell_t file_name, cell_t file_name_length )
 	return;
 }
 
+static void gomshellFtpRemove( cell_t file_name, cell_t file_name_length )
+{
+	return;
+}
+
 static void gomshellRingDownload( cell_t ring_name )
 {
 	
@@ -729,7 +781,9 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellRingAthena,
     (CFunc0) gomshellFtpUpload,
     (CFunc0) gomshellErrorCom,
-    (CFunc0) gomshellRingFetch
+    (CFunc0) gomshellRingFetch,
+    (CFunc0) gomshellFtpRemove,
+    (CFunc0) gomshellFtpUpload
 };
 #endif
 
@@ -790,6 +844,10 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "GOM.ERR.COM", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.RING.FETCH", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.FTP.REMOVE", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.FTP.UPLOAD", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
         
     return 0;
