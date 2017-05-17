@@ -37,14 +37,15 @@ def configure(ctx):
                                                   'albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include', \
                                                   'CObject/liba/Class', 'CObject/liba/util', 'pforth/csrc'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
-	ctx.env.append_unique('LIBS_CSPTERM', ['IOHook', 'pforth', 'm', 'cutil', 'cclass', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
+	ctx.env.append_unique('LIBS_CSPTERM', ['IOHook', 'pforth', 'm', 'cutil', 'cclass', 'slre', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
 	ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION', 'BDEBUG', 'OUTPUT_LOG', 'OUTPUT_LOG_NAME="' + os.getcwd() + '/logs/output_log.txt"', \
                                                   'PFORTH_DIC_PATH="pforth/build/unix/pforth.dic"'])
 	ctx.env.append_unique('LIBPATH_CSPTERM', [os.getcwd() + '/Prototypes/libex/debug', \
 						  os.getcwd() + '/CObject/liba/Class/debug', \
 						  os.getcwd() + '/CObject/liba/util/debug', \
 						  os.getcwd() + '/IOController/IOHook/debug', \
-                                                  os.getcwd() + '/pforth/build/unix'])
+                                                  os.getcwd() + '/pforth/build/unix', \
+                                                  os.getcwd() + '/slre/debug'])
         ctx.env.append_unique('LINKFLAGS_CSPTERM', ['-Wl,-rpath=' + os.getcwd() + '/IOController/IOHook/debug', '-O0'])
 	ctx.env.append_unique('CFLAGS_CSPTERM', ['-O0'])
 	
@@ -54,6 +55,7 @@ def configure(ctx):
 	ctx.check_cc(lib = 'cutil', use = 'CSPTERM')
 	ctx.check_cc(lib = 'IOHook', use = 'CSPTERM')
         ctx.check_cc(lib = 'pforth', use = 'CSPTERM')
+        ctx.check_cc(lib = 'slre', use = 'CSPTERM')
 
 	# Options for CSP
 	ctx.options.with_os = 'posix'
@@ -115,7 +117,7 @@ def build(ctx):
 		stdlibpath = ['-LCObject/liba/Class/debug/', '-LCObject/liba/util/debug', '-LIOController/IOHook/debug', '-Lpforth/build/unix'],
 		defines = ctx.env.DEFINES_NANOMIND,
 		target='csp-term', 
-		use=['CSPTERM', 'csp', 'param', 'util', 'gosh', 'ftp', 'log', 'cclass', 'cutil', 'IOHook', 'pforth'],
+		use=['CSPTERM', 'csp', 'param', 'util', 'gosh', 'ftp', 'log', 'slre', 'cclass', 'cutil', 'IOHook', 'pforth'],
 		lib=ctx.env.LIBS_CSPTERM + ctx.env.LIBS
 		)
 

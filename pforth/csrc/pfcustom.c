@@ -34,9 +34,13 @@
 #include <command/command.h>
 #include <CCArrayList.h>
 #include <CCListIterator.h>
+#include <slre.h>
 extern const char* console_get_prompt_identifier( );
 extern size_t console_get_prompt_identifier_length( );
 #endif
+
+#define MAX_BOOT_BYTES 512
+
 #define GOMSHELL_OUTPUT_TIMEOUT 15*1000
 #define GOMSHELL_TOTAL_RINGS 6
 #define GOMSHELL_RING_STRING_LENGTH 3*60
@@ -302,6 +306,23 @@ static void gomshellFlushOutput( )
 	sdTerminalOut('\n');
 }
 
+void gomshellRingInit( )
+{
+	static CBool ring_names_init = CFALSE;
+	int i;
+
+	if( !ring_names_init ) {
+ 		CCArrayList(&ring_names, sizeof(struct CIList*), GOMSHELL_TOTAL_RINGS);
+		for( i = 0; i < GOMSHELL_TOTAL_RINGS; ++i ) {
+			CCArrayList(&ring_names_backend[i], sizeof(char), GOMSHELL_RING_NAME_LENGTH);
+
+			struct CIList* list_location = &(ring_names_backend[i]).cilist;
+			CIList_Add(&ring_names.cilist, &list_location);
+		}
+		ring_names_init = CTRUE;
+	}
+}
+
 static void gomshellManErrorCodes( )
 {
 	sdTerminalPrint("\nGomshell error code meanings:\n"
@@ -317,7 +338,8 @@ static void gomshellManErrorCodes( )
 ** Step 1: Put your own special glue routines here
 **     or link them in from another file or library.
 ****************************************************************/
-static void gomshellCommand( cell_t string, cell_t length )
+
+static void gomshellCommandRun( cell_t string, cell_t length )
 {
 	struct CCThreadedQueue* gomshell_input;
 	struct CCThreadedQueue* gomshell_output;
@@ -343,7 +365,12 @@ static void gomshellCommand( cell_t string, cell_t length )
 	/* Insert '\n' so that the gomshell executes the command.
 	 */
 	CCThreadedQueue_Insert(gomshell_input, &exec_char, COS_BLOCK_FOREVER);
+}
 
+static void gomshellCommand( cell_t string, cell_t length )
+{
+	gomshellCommandRun(string, length);
+	
 	/* Read the response from the gomshell's output queue.
 	 */
 	gomshellFlushOutput( );
@@ -563,18 +590,8 @@ static void gomshellRingFetch( )
 	struct CCThreadedQueue* csp_queue;
 	CCTQueueError queue_err;
 	struct CCArrayList ring_string;
-	static CBool ring_names_init = CFALSE;
 
-	if( !ring_names_init ) {
- 		CCArrayList(&ring_names, sizeof(struct CIList*), GOMSHELL_TOTAL_RINGS);
-		for( i = 0; i < GOMSHELL_TOTAL_RINGS; ++i ) {
-			CCArrayList(&ring_names_backend[i], sizeof(char), GOMSHELL_RING_NAME_LENGTH);
-
-			struct CIList* list_location = &(ring_names_backend[i]).cilist;
-			CIList_Add(&ring_names.cilist, &list_location);
-		}
-		ring_names_init = CTRUE;
-	}
+	gomshellRingInit( );
 	
 	/* Initialize buffer to hold ring string.
 	 */
@@ -640,6 +657,8 @@ static void gomshellRingDownload( cell_t ring_index )
 	CIListError err;
 	cell_t forth_err;
 	size_t i;
+
+	gomshellRingInit( );
 	
 	/* Use ring_name to index the tail files buffer
 	 */
@@ -719,6 +738,109 @@ static void gomshellRingAthena( )
 	PUSH_DATA_STACK(GOMSHELL_RING_ATHENA);
 }
 
+static void gomshellMnlpDownload( cell_t num_files )      
+{
+	struct mnlp_file
+	{
+		char name[GOMSHELL_RING_NAME_LENGTH];
+		CBool is_downloaded;
+	};
+	
+	const char* ls_boot = "ftp ls /boot/";
+	const size_t ls_boot_len = strlen(ls_boot);
+	CCTQueueError err;
+	struct CCThreadedQueue* gomshell_output;
+	const char* eor; /* eor: end of response. */
+	size_t eor_match_size;
+	int i, j;
+	char response[MAX_BOOT_BYTES];
+	size_t response_length;
+	const char* regexp = "([M|m][0-9][0-9][0-9][0-9][0-9][0-9][H|S|E|D|h|s|e|d].bin)";
+	struct slre_cap match;
+	size_t total_files;
+	struct mnlp_file mnlp_files[MAX_BOOT_BYTES/GOMSHELL_RING_NAME_LENGTH+1];
+	size_t mnlp_files_length = MAX_BOOT_BYTES/GOMSHELL_RING_NAME_LENGTH+1;
+	
+	/* Capture output of listing contents in /boot/.
+	 */
+	gomshellCommandRun((cell_t) ls_boot, ls_boot_len);
+	eor = console_get_prompt_identifier( );
+	eor_match_size = console_get_prompt_identifier_length( );
+	gomshell_output = IOHook_GetGomshellOutputQueue( );
+
+	for( i = 0, j = 0; j < MAX_BOOT_BYTES; ) {
+		err = CCThreadedQueue_Remove(gomshell_output, &response[j++], COS_BLOCK_FOREVER);
+		/* Error check response.
+		 */
+		if( err == CCTQUEUE_OK ) {
+			sdTerminalOut(response);
+		}
+		else {
+			sdTerminalPrint("gomshell - error waiting for input\n");
+			PUSH_DATA_STACK(GOMSHELL_ERR_FTP);
+			return;
+		}
+		
+		/* Check for multiple character end of response identifier
+		 * This is the gomshell prompt:
+		 *	csp-term #
+		 */
+		if( response[j-1] == eor[i] ) {
+			++i;
+			if( i == eor_match_size) {
+				break;
+			}
+		}
+		else {
+			i = 0;
+		}
+	}
+	response_length = j;
+	
+	/* Using regexp, extract all MnLP file names.
+	 */
+	for( total_files = 0, j = 0, i = 1;
+	     j < response_length && i > 0 && total_files < mnlp_files_length;
+	     ++total_files )
+	{
+		i = slre_match(regexp, response + j, response_length - j, &match, 1, 0);
+		if( i < 0 ) {
+			break;
+		}
+		sdTerminalPrint("Found file: [%.*s]\n", match.len, match.ptr);
+		strncpy(mnlp_files[total_files].name, match.ptr, GOMSHELL_RING_NAME_LENGTH);
+		mnlp_files[total_files].is_downloaded = CFALSE;
+		j += i;
+	}
+
+	/* Switch to backend 1.
+	 */
+
+	/* Download num_files worth of MnLP data from /sd/
+	 * Log all files the failed to download.
+	 */
+
+	/* Switch to backend 2.
+	 */
+
+	/* Loop through all captures files from /boot/
+	 */
+
+	/* If the files was downloaded successfully, remove it 
+	 * from /sd/ THEN /boot/ (this order is important! why?
+	 * Because we capture files from /boot/. If the file does
+	 * not exist in /boot/ but exists in /sd/, then it will 
+	 * never get removed.
+	 */
+
+	/* If the file did not download successfully, download
+	 * it from /boot/.
+	 */
+
+	/* If successful, remove it from /sd/ THEN /boot/.
+	 */
+}
+
 #endif
 
 static void programExit( )
@@ -740,6 +862,11 @@ static void CTest1( cell_t Val1, cell_t Val2 )
 }
 
 #ifndef GOMSHELL
+static void gomshellMnlpDownload( cell_t num_files )
+{
+	return;
+}
+
 static void gomshellCommand( cell_t arg1, cell_t arg2 )
 {
 	return;
@@ -890,7 +1017,8 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellErrorCom,
     (CFunc0) gomshellRingFetch,
     (CFunc0) gomshellFtpRemove,
-    (CFunc0) gomshellFtpUpload
+    (CFunc0) gomshellFtpUpload,
+    (CFunc0) gomshellMnlpDownload
 };
 #endif
 
@@ -955,6 +1083,8 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "GOM.FTP.REMOVE", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.FTP.UPLOAD", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.MNLP.DOWNLOAD", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
         
     return 0;

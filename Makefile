@@ -4,9 +4,10 @@
 #############################################
 # Stop editting  compile time settings here #
 
-clean: gom_clean cforth ccobj
 
-all: cobj forth gom_build
+clean: gom_clean cslre cforth ccobj
+
+all: cobj forth bslre gom_build
 
 
 cforth:
@@ -20,6 +21,11 @@ ccobj:
 
 cobj:
 	make -C CObject/main all
+cslre:
+	make -C slre/ clean
+
+bslre:
+	make -C slre/ all
 
 
 gom_config:
