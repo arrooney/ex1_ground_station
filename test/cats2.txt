@@ -3,6 +3,6 @@ s" obc adcs 3 1 'test/mode_run.txt'" GOM
 key
 s" eps hk" GOM
 key
-s" obc adcs 5 5 'test/power_all.txt'" GOM
+s" obc adcs 5 4 'test/power_all.txt'" GOM
 key
 s" obc adcs 5 5 'test/power_all_off.txt'" GOM

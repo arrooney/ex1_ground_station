@@ -1,4 +1,4 @@
 key
-s" obc adcs 3 1 '../test/mode_run.txt'" GOM
+s" obc adcs 3 1 'test/mode_run.txt'" GOM
 key
 s" eps hk" GOM

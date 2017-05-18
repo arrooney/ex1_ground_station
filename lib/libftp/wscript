@@ -25,6 +25,7 @@ def options(ctx):
 def configure(ctx):
     ctx.load('gcc')
 
+    ctx.env.append_unique('USES_FTP', 'FTP')
     ctx.env.append_unique('USES_FTP', 'csp')
     ctx.env.append_unique('USES_FTP', 'util')
     ctx.env.append_unique('USES_FTP', 'gosh')
@@ -65,6 +66,8 @@ def configure(ctx):
     ctx.define('LIBFTP_VERSION', VERSION)
 
     ctx.write_config_header('include/conf_ftp.h', top=True, remove=True)
+    
+    ctx.env.append_unique('CFLAGS_FTP', ['-O0'])
 
 
 def build(ctx):
@@ -77,6 +80,7 @@ def build(ctx):
             includes='include',
             export_includes=['include'],
             defines = ctx.env.DEFINES_FTP,
-            use=ctx.env.USES_FTP,
+            cflags = ['-O0'],
+            use=ctx.env.USES_FTP
         )
 

@@ -9,6 +9,9 @@ clean: gom_clean cslre cforth ccobj
 
 all: cobj forth bslre gom_build
 
+configure: cobj bslre
+	./waf configure
+
 
 cforth:
 	make -C pforth/build/unix clean
