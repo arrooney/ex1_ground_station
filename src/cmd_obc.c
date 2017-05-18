@@ -178,7 +178,7 @@ int cmd_obc_reset_boot_count(struct command_context *ctx) {
 }
 
 int cmd_obc_adcs(struct command_context *ctx) {
-if(ctx->argc!=3){
+if(ctx->argc!=4){
 		return CMD_ERROR_SYNTAX;
 	}
 
@@ -191,7 +191,7 @@ if(ctx->argc!=3){
     uint8_t reply[2];
     if(number < 128 && length > 0)
     {
-	    fid = fopen("adcs_command.txt","r");
+	    fid = fopen(ctx->argv[3],"r");
 	    fread(&file_length,1,1,fid);
         fread(&file_number,1,1,fid);
 	    if(file_length != length || file_number != number)
@@ -291,7 +291,7 @@ command_t __sub_command obc_subcommands[] = {
 		.handler = cmd_obc_reset_boot_count,
 	},{
 		.name = "adcs",
-		.help = "Asks NanoMind to communicate with ADCS. Takes command/telem number and length of send struct",
+		.help = "Asks NanoMind to communicate with ADCS. Takes command/telem number, length of send struct, and filename of command file.",
 		.handler = cmd_obc_adcs,
 	},{
 		.name = "dfgm",
