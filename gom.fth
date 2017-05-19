@@ -1,3 +1,6 @@
+
+include gom2.fth
+
 \ ******************************************************************************\
 \ Helper words									\
 \ ******************************************************************************\
@@ -7,6 +10,11 @@
 	IF
 		CR ." gom error: " DUP . CR
 	THEN
+;
+
+: WDT ( -- , resets the EPS and COM watchdogs )
+	S" eps resetwdt" GOM
+	S" ax100_rst_wdt" GOM
 ;
 
 
@@ -34,6 +42,16 @@
 		THEN
 	LOOP
 	." Done"
+;
+
+: RING.FETCH ( -- , run once per pass to populate ring tails for downloading in all rings )
+	GOM.RING.FETCH DUP
+	GOM.ERR.OK = NOT IF
+		." Error fetching tails"
+	ELSE
+		DROP
+		." Fetch successful"
+	THEN
 ;
 
 
@@ -99,6 +117,34 @@
 \ ******************************************************************************\
 : OBC.REBOOT ( -- , Soft reboot OBC in real time )
 	S" reboot 1" GOM
+;
+
+: RTC.UPDATE ( -- , pulls unix time from groundstation server clock and updates OBC RTC )
+	S" obc ts 1" GOM
+;
+
+: OBC.HK.DOWNLOAD ( -- , downloads the 4 obc hk files from /boot/. Requires interaction )
+	S" ftp backend 2" GOM
+	WAIT
+	S" ftp download_file /boot/state_log.bin" GOM
+	WAIT
+	S" ftp download_file /boot/tc_log.bin" GOM
+	WAIT
+	S" ftp download_file /boot/bootcause.bin" GOM
+	WAIT
+	S" ftp download_file /boot/state_log.bin" GOM
+;
+
+: OBC.HK.CLEAN ( -- , deletes the 4 obc hk files from /boot/. Requires interaction )
+	S" ftp backend 2" GOM
+	WAIT
+	S" ftp rm /boot/state_log.bin" GOM
+	WAIT
+	S" ftp rm /boot/tc_log.bin" GOM
+	WAIT
+	S" ftp rm /boot/bootcause.bin" GOM
+	WAIT
+	S" ftp rm /boot/state_log.bin" GOM
 ;
 
 
