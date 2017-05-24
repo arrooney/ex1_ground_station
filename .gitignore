@@ -10,4 +10,5 @@ build/*
 *.lzo
 *.txt
 *.TXT
-
+**/debug/**/*
+**/debug/*
