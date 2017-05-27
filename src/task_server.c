@@ -21,6 +21,8 @@
 #include <CCThreadedQueue.h>
 #include <CCArrayQueue.h>
 
+#include <nanopower2.h>
+
 #define RED     "\x1b[31m"
 #define GREEN   "\x1b[32m"
 #define LGREEN   "\x1b[32;1m"
@@ -45,6 +47,8 @@ static struct CCArrayQueue csp_print_queue_backend;
 static char csp_print_copy_buffer[CSP_PRINT_BUFFER_LENGTH];
 static pthread_mutex_t csp_print_switch_lock;
 static int csp_print_switch;
+
+eps_hk_t beacon_data;
 
 char CSPPrintGetEOT( )
 {
@@ -209,12 +213,19 @@ void * task_server(void * parameters) {
 				case WOD_BEACON_PORT:
 					printf_fp("Got beacon. \n");
 					vbatt = (packet->data[7] << 8) + packet->data[6];
-                    for(int i=0;i<6;i++)
-                    {
-                        callsign[i] = packet->data[131+3+i];
-                    }
-	                printf_fp("Callsign: %s \n", callsign);
-					printf_fp("VBatt: %d \n", vbatt);
+                    			for(int i=0;i<6;i++)
+                    			{
+                        			callsign[i] = packet->data[131+3+i];
+                    			}
+	                		printf_fp("Callsign: %s \n", callsign);
+					//printf_fp("VBatt: %d \n", vbatt);
+					memcpy(&beacon_data, packet->data, 131);
+					eps_hk_print(&beacon_data);
+					printf_fp("Beacon puke\n");			
+					for(int i=0;i<packet->length;i++)
+					{
+						printf_fp("%X ", packet->data[i]);
+					}
 					csp_close(conn);
 					break;
 				case CALLSIGN_PORT:
