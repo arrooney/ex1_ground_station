@@ -49,6 +49,7 @@ static pthread_mutex_t csp_print_switch_lock;
 static int csp_print_switch;
 
 eps_hk_t beacon_data;
+FILE* beacon_dump;
 
 char CSPPrintGetEOT( )
 {
@@ -220,12 +221,18 @@ void * task_server(void * parameters) {
 	                		printf_fp("Callsign: %s \n", callsign);
 					//printf_fp("VBatt: %d \n", vbatt);
 					memcpy(&beacon_data, packet->data, 131);
-					eps_hk_print(&beacon_data);
-					printf_fp("Beacon puke\n");			
+					//eps_hk_print(&beacon_data);
+					//fflush(stdout);
+					//printf_fp("Beacon puke\n");
+					beacon_dump = fopen("beacon.csv","a");			
 					for(int i=0;i<packet->length;i++)
 					{
-						printf_fp("%X ", packet->data[i]);
+						fprintf(beacon_dump, "%X", packet->data[i]);
+						fprintf(beacon_dump, ",");
 					}
+					fprintf(beacon_dump, "\n");
+					fflush(beacon_dump);
+					fclose(beacon_dump);
 					csp_close(conn);
 					break;
 				case CALLSIGN_PORT:
