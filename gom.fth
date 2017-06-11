@@ -16,17 +16,112 @@ include dispatch.fth
 : WDT ( -- , resets the EPS and COM watchdogs )
 	S" eps resetwdt" GOM
 	S" ax100_rst_wdt" GOM
+	S" eps hk" GOM
+;
+
+: DOWN ( -- , downloads the file of the night from SD card only )
+	S" ftp download_file /sd/16BR0363.bin" GOM
+;
+
+: DOWN&RM ( -- , downloads the file and then deletes after with user input)
+	S" ftp download_file /sd/16BR0363.bin" GOM
+	WAIT
+	S" ftp rm /sd/16BR0363.bin" GOM
+;
+
+
+: WOD ( -- , downloads a WOD file as specified below )
+	S" ftp download_file /sd/001w0001.BIN" GOM
+;
+
+: PING ( -- , send a ping to the nanomind )
+	S" ping 1 1200 10" GOM
+;
+
+: RM ( -- , remove the file of the night. )
+	S" ftp rm /sd/009R0009.bin" GOM
+;
+
+: ADCS.RESET ( -- , resets the adcs. Wait 15 seconds for it to boot. )
+	S" obc adcs 1 1 reset.txt" GOM
+;
+
+: ADCS.CRC ( -- , polls telemetry 241 )
+	S" obc adcs 241 6 null.txt" GOM
+;
+
+: ADCS.FORMAT.FS ( -- , delete all files in the ADCS sd card! )
+	S" obc adcs 119 0 null.txt" GOM
+;
+
+: ADCS.CSS ( -- , gets the raw coarse sun sensor values from the ADCS )
+	S" obc adcs 166 6 null.txt" GOM
+;
+
+: ADCS.SAVE.CONFIG ( -- , writes config from ram to boot file )
+	S" obc adcs 100 0 null.txt" GOM
+;
+
+: ADCS.SET.NADIR ( -- , uploads nadir camera settings )
+	S" obc adcs 85 57 nadir_e1.txt" GOM
+;
+
+: ADCS.GPS.STATUS ( -- , gets GPS status from ADCS )
+	S" obc adcs 168 6 null.txt" GOM
+;
+
+: ADCS.GPS.TIME ( -- , gets GPS time from ADCS )
+	S" obc adcs 169 6 null.txt" GOM
+;
+
+: ADCS.GPS.XYZ ( -- , gets GPS spatials from ADCS )
+	S" obc adcs 170 6 null.txt" GOM
+	WAIT
+	S" obc adcs 171 6 null.txt" GOM
+	WAIT
+	S" obc adcs 172 6 null.txt" GOM
+;
+
+: EPS.GPS.ON ( -- , turns on the GPS power output )
+	S" eps output 4 1 0" GOM
+;
+
+: EPS.GPS.OFF ( -- , turns off the GPS power output )
+	S" eps output 4 0 0" GOM
+;
+
+: UDOS.START ( -- , Start the dosimeter logger )
+	S" udos|start" GOM.COMMAND
+	CHECK-ERR
+;
+
+: UDOS.STOP ( -- , Stop the dosimeter logger )
+	S" udos|stop" GOM.COMMAND
+	CHECK-ERR
+;
+
+: HUB.KNIFE ( -- , Attempts deployment of knives. knife, channel, delay, duration )
+	S" hub knife 0 2 300 400" GOM
+;
+
+: HUB.KNIFE.GET ( -- , Gets knife info from hub )
+	S" hub knife 99" GOM
+;
+
+: RADIO.SILENCE ( -- , Sets the tx_inhibit rparam to the value of seconds. )
+	S" rparam init 5 0" GOM
+	S" rparam set tx_inhibit 60" GOM
 ;
 
 
 \ ******************************************************************************\
 \ FTP words									\
 \ ******************************************************************************\
-: LS-SD ( -- , list real time contents of SD card. WARNING this takes a long time to print )
+: LS-SD ( -- , list real time contents of SD card. WARNING this takes a long time to print )	
 	S" ftp ls /sd/" GOM
 ;
 
-: LS-BOOT ( -- , list real time contents of flash )
+: LS-BOOT ( -- , list real time contents of flash )	
 	S" ftp ls /boot/" GOM
 ;
 
@@ -75,18 +170,23 @@ include dispatch.fth
 \ ******************************************************************************\
 \ DFGM words									\
 \ ******************************************************************************\
-: DFGM-DIAG ( -- n , Print real time diagnostics about dfgm. Puts error code on stack )
+: DFGM.DIAG ( -- n , Print real time diagnostics about dfgm. Puts error code on stack )
 	S" dfgm diag" GOM.COMMAND DUP
 	CHECK-ERR
 ;
 
-: DFGM-ON ( -- n , Turn on dfgm in real time. Puts error code on stack )
+: DFGM.ON ( -- n , Turn on dfgm in real time. Puts error code on stack )
 	S" dfgm power|on" GOM.COMMAND
 	CHECK-ERR
 ;
 
-: DFGM-OFF ( -- n , Turn off dfgm in real time. Puts error code on stack )
+: DFGM.OFF ( -- n , Turn off dfgm in real time. Puts error code on stack )
 	S" dfgm power|off" GOM.COMMAND
+	CHECK-ERR
+;
+
+: DFGM.MODE.RAW ( -- , Enable raw capture for DFGM )
+	S" dfgm stream|raw" GOM.COMMAND
 	CHECK-ERR
 ;
 
@@ -123,6 +223,11 @@ include dispatch.fth
 : RTC.UPDATE ( -- , pulls unix time from groundstation server clock and updates OBC RTC )
 	S" obc ts 1" GOM
 ;
+
+: RTC.FETCH ( -- , polls unix time from the nanomind RTC. )
+	S" obc ts 0" GOM
+;
+
 
 : OBC.HK.DOWNLOAD ( -- , downloads the 4 obc hk files from /boot/. Requires interaction )
 	S" ftp backend 2" GOM

@@ -27,7 +27,7 @@
 
 #include <ftp/ftp_client.h>
 
-#define FTP_TIMEOUT 10000
+#define FTP_TIMEOUT 10000 
 #define FTP_MKFS_TIMEOUT 10*60*1000
 
 /* Chunk status markers */
@@ -451,6 +451,9 @@ int ftp_status_reply(void) {
 			csp_buffer_free(packet);
 			return -1;
 		}
+
+		fflush(fp);
+		fsync(fileno(fp)); // Gomspace thinks not flushing data to the disk is fun.
 
 		if (ftell(fp) != ftp_packet->data.chunk) {
 			if (fseek(fp_map, ftp_packet->data.chunk, SEEK_SET) != 0) {
