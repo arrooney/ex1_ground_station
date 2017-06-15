@@ -600,8 +600,18 @@ static void gomshellRingFetch( )
 	/* Need to switch nanomind print output
 	 * to a queue that this function can capture
 	 */
+	extern void CSPPrintSetToTerminal( );
 	extern void CSPPrintSetToQueue( );
 	CSPPrintSetToQueue( );
+
+	/* Get the print queue used to buffer data from csp_printf( ).
+	 * Clear the queue of any transient garbage that may have
+	 * came from previous errors.
+	 */
+	extern struct CCThreadedQueue* CSPPrintGetQueue( );
+	csp_queue = CSPPrintGetQueue( );
+	CCThreadedQueue_Clear(csp_queue);
+
 	
 	/* Need to issue the ocp command 'downlink'
 	 */
@@ -616,8 +626,6 @@ static void gomshellRingFetch( )
 	 */
 	extern char CSPPrintGetEOT( );
 	csp_eot = CSPPrintGetEOT( );
-	extern struct CCThreadedQueue* CSPPrintGetQueue( );
-	csp_queue = CSPPrintGetQueue( );
 	for( i = 0; i < GOMSHELL_TOTAL_RINGS; ++i ) {
 		CIList_Clear(&ring_string.cilist);
 		do {
@@ -625,6 +633,9 @@ static void gomshellRingFetch( )
 			if( queue_err != CCTQUEUE_OK ) {
 				PUSH_DATA_STACK(GOMSHELL_ERR_COM);
 				CDestroy(&ring_string);
+				/* Switch nanomind print output back to console.
+				 */
+				CSPPrintSetToTerminal( );
 				return;
 			}
 			CIList_Add(&ring_string.cilist, &msg);
@@ -641,7 +652,6 @@ static void gomshellRingFetch( )
 
 	/* Switch nanomind print output back to console.
 	 */
-	extern void CSPPrintSetToTerminal( );
 	CSPPrintSetToTerminal( );
 
 	CDestroy(&ring_string);
