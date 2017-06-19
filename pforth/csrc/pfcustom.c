@@ -695,16 +695,15 @@ static void gomshellRingDownload( cell_t ring_index )
 		 * error code.
 		 */
 		gomshellFtpRemove((cell_t) array_name, (cell_t) CIList_Size(list_name) + sd_dir_length);
+		/* Increment tail file in buffer.
+	 	*/
+		gomshellRingIncrementName(list_name);
 	}
 	else {
 		/* Failed to download. Push error onto stack.
 		 */
 		PUSH_DATA_STACK(forth_err);
 	}
-	
-	/* Increment tail file in buffer.
-	 */
-	gomshellRingIncrementName(list_name);
 	return;
 }
 

@@ -20,23 +20,43 @@ include dispatch.fth
 ;
 
 : DOWN ( -- , downloads the file of the night from SD card only )
-	S" ftp download_file /sd/16BR0363.bin" GOM
+	S" ftp download_file /sd/170R0368.bin" GOM
+;
+
+: BRENDAN
+	S" /sd/MT-RLog.txt" GOM.FTP.DOWNLOAD WAIT
+	S" /sd/MT-ALog.txt" GOM.FTP.DOWNLOAD WAIT
+	S" /sd/MT-BLog.txt" GOM.FTP.DOWNLOAD WAIT
+	S" /sd/MT-HLog.txt" GOM.FTP.DOWNLOAD WAIT
 ;
 
 : DOWN&RM ( -- , downloads the file and then deletes after with user input)
-	S" ftp download_file /sd/16BR0363.bin" GOM
+	S" ftp download_file /sd/020W0272.bin" GOM
 	WAIT
-	S" ftp rm /sd/16BR0363.bin" GOM
-;
-
-
-: WOD ( -- , downloads a WOD file as specified below )
-	S" ftp download_file /sd/001w0001.BIN" GOM
+	KEY
+	[CHAR] d = IF
+		." Removing" CR
+		S" ftp rm /sd/020W0272.bin" GOM
+	THEN
 ;
 
 : PING ( -- , send a ping to the nanomind )
 	S" ping 1 1200 10" GOM
 ;
+
+
+: PING.COM ( -- , send a ping to the nanocom )
+	S" ping 5 1200 10" GOM
+;
+
+
+: PING.EPS ( -- , send a ping to the nanopower )
+	S" ping 2 1200 10" GOM
+;
+
+: PING.HUB ( -- , send a ping to the nanohub )
+        S" ping 3 1200 10" GOM
+; 
 
 : RM ( -- , remove the file of the night. )
 	S" ftp rm /sd/009R0009.bin" GOM
