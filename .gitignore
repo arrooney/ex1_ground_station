@@ -1,4 +1,5 @@
 *.BIN
+*.csv
 build/*
 .waf-1.6.9*
 .lock-waf*
