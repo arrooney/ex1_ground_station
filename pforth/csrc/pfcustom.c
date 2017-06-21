@@ -41,7 +41,7 @@ extern size_t console_get_prompt_identifier_length( );
 
 #define MAX_BOOT_BYTES 512
 
-#define GOMSHELL_OUTPUT_TIMEOUT 15*1000
+#define GOMSHELL_OUTPUT_TIMEOUT 40*1000
 #define GOMSHELL_TOTAL_RINGS 6
 #define GOMSHELL_RING_STRING_LENGTH 3*60
 #define GOMSHELL_RING_NAME_LENGTH 12
@@ -631,6 +631,7 @@ static void gomshellRingFetch( )
 		do {
 			queue_err = CCThreadedQueue_Remove(csp_queue, &msg, GOMSHELL_OUTPUT_TIMEOUT);
 			if( queue_err != CCTQUEUE_OK ) {
+				sdTerminalPrint("Dequeue error: %d\n", queue_err);
 				PUSH_DATA_STACK(GOMSHELL_ERR_COM);
 				CDestroy(&ring_string);
 				/* Switch nanomind print output back to console.
