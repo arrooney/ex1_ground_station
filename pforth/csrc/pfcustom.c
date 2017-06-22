@@ -41,7 +41,7 @@ extern size_t console_get_prompt_identifier_length( );
 
 #define MAX_BOOT_BYTES 512
 
-#define GOMSHELL_OUTPUT_TIMEOUT 40*1000
+#define GOMSHELL_OUTPUT_TIMEOUT 25*1000
 #define GOMSHELL_TOTAL_RINGS 6
 #define GOMSHELL_RING_STRING_LENGTH 3*60
 #define GOMSHELL_RING_NAME_LENGTH 12
