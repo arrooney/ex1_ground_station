@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <termios.h>
+#include <time.h>
 
 #include <IOHook.h>
 IOHook_Printf_FP pfp = NULL;
@@ -51,6 +52,8 @@ static struct termios old_stdout, new_stdout;
 #define PROMPT_DEF "\033[1;30m # \033[0m"
 #define COL_START_DEF "\033[1;32m"
 #define COL_END_DEF "\033[0m"
+
+char time_string[128];
 
 static char * hostname = NULL;
 static const char prompt[] = PROMPT_DEF;
@@ -99,6 +102,8 @@ static void console_write(const char *str, int length) {
 
 static void console_prompt(void) {
 	console_write(col_start, strlen(col_start));
+	sprintf(time_string, "%d ", time(NULL));
+	console_write(time_string, strlen(time_string));
 	console_write(hostname, strlen(hostname));
 	console_write(prompt, strlen(prompt));
 	console_write(col_end, strlen(col_end));

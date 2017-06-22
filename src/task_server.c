@@ -11,6 +11,7 @@
 #include <unistd.h>
 #include <netinet/in.h>
 #include <pthread.h>
+#include <time.h>
 
 #include <param/param.h>
 #include <ftp/ftp_server.h>
@@ -193,26 +194,26 @@ void * task_server(void * parameters) {
 							CSPPrintToQueue("%s%c", mssg, CSP_PRINT_END_OF_MSG);
 						}
 						else {
-							printf_fp(LGREEN "Nanomind " C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,mssg);
+							printf_fp(LGREEN "%d Nanomind " C_RESET GREY "#" C_RESET GREEN" %s\n\r" C_RESET,time(NULL),mssg);
 						}
 						break;
 					case 2:
-						printf_fp("Nanohub # %s\n",mssg);
+						printf_fp("%d Nanohub # %s\n",time(NULL),mssg);
 						break;
 					case 3:
-						printf_fp("Nanopower # %s\n",mssg);
+						printf_fp("%d Nanopower # %s\n",time(NULL),mssg);
 						break;
 					case 5:
-						printf_fp("Nanocomm # %s\n",mssg);
+						printf_fp("%d Nanocomm # %s\n",time(NULL),mssg);
 						break;
 					default:
-						printf_fp("Node:%d # %s\n",packet->id.src,mssg);
+						printf_fp("%d Node:%d # %s\n",time(NULL),packet->id.src,mssg);
 						}
 					free(mssg);
 					csp_close(conn);
 					break;
 				case WOD_BEACON_PORT:
-					printf_fp("Got beacon. \n");
+					printf_fp("%d Got beacon. \n", time(NULL));
 					vbatt = (packet->data[7] << 8) + packet->data[6];
                     			for(int i=0;i<6;i++)
                     			{
