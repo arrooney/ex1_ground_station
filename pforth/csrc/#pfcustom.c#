@@ -1190,7 +1190,7 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.ERR.COM", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
-    err = CreateGlueToC( "GOM.RING.FETCH", i++, C_RETURNS_VOID, 0 );
+    err = CreateGlueToC( "GOM.RING.FETCH-ALL-TAILS", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.FTP.REMOVE", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
@@ -1198,7 +1198,7 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.MNLP.DOWNLOAD", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
-    err = CreateGlueToC( "GOM.RING.FETCH-ONE", i++, C_RETURNS_VOID, 1 );
+    err = CreateGlueToC( "GOM.RING.FETCH", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
 
         
