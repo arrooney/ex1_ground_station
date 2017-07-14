@@ -160,8 +160,19 @@ include dispatch.fth
 	." Done"
 ;
 
-: RING.FETCH ( -- , run once per pass to populate ring tails for downloading in all rings )
-	GOM.RING.FETCH DUP
+: RING.MOVE ( n1, n2, n3, n4 -- , n1 = number of times to increment or decrement
+    				  n2 = ring buffer to change
+    				  n3 = -1 will change tail, 1 will change head
+				  n4 = -1 will decrement, 1 will increment )
+    3 PICK
+    0 DO
+	3DUP GOM.RING.MOVE DROP
+    LOOP
+    DROP DROP DROP DROP
+;    
+
+: RING.FETCH ( -- , Fetch the tail of every ring buffer )
+	GOM.RING.FETCH-ALL-TAILS DUP
 	GOM.ERR.OK = NOT IF
 		." Error fetching tails"
 	ELSE
@@ -174,10 +185,29 @@ include dispatch.fth
 \ ******************************************************************************\
 \ WOD words									\
 \ ******************************************************************************\
+: WOD.FETCH ( -- , Fetch head and tail of wod ring buffer )
+    GOM.RING.WOD GOM.RING.FETCH
+;    
+
 : WOD.DOWNLOAD ( n -- , Download n WOD files )
         GOM.RING.WOD RING.DOWNLOAD
 ;
 
+: WOD.TAIL-INC ( n -- , Increment tail n times )
+    GOM.RING.WOD -1 1 RING.MOVE
+;
+
+: WOD.TAIL-DEC ( n -- , Decrement tail n times )
+    GOM.RING.WOD -1 -1 RING.MOVE
+;
+
+: WOD.HEAD-INC ( n -- , Increment head n times )
+    GOM.RING.WOD 1 1 RING.MOVE
+;
+
+: WOD.HEAD-INC ( n -- , Decrement head n times )
+    GOM.RING.WOD 1 -1 RING.MOVE
+;
 
 \ ******************************************************************************\
 \ EPS words									\
@@ -214,16 +244,44 @@ include dispatch.fth
 	GOM.RING.DFGM-RAW RING.DOWNLOAD
 ;
 
+: DFGM.RAW.FETCH ( -- , Fetch head and tail of DFGM raw ring buffer )
+    GOM.RING.DFGM-RAW GOM.RING.FETCH
+;
+
+: DFGM.RAW.TAIL-INC ( n -- , Increment tail n times )
+    GOM.RING.DFGM-RAW -1 1 RING.MOVE
+;
+
+: DFGM.RAW.TAIL-DEC ( n -- , Increment tail n times )
+    GOM.RING.DFGM-RAW -1 -1 RING.MOVE
+;
+
+: DFGM.RAW.HEAD-INC ( n -- , Increment tail n times )
+    GOM.RING.DFGM-RAW 1 1 RING.MOVE
+;
+
+: DFGM.RAW.HEAD-DEC ( n -- , Increment tail n times )
+    GOM.RING.DFGM-RAW 1 -1 RING.MOVE
+;    
+
 : DFGM.S0.DOWNLOAD ( n --, Download n stream 0 DFGM files )
   	GOM.RING.DFGM-S0 RING.DOWNLOAD
+;
+
+: DFGM.S0.FETCH ( -- , Fetch head and tail of DFGM S0 ring buffer )
+    GOM.RING.DFGM-RAW GOM.RING.FETCH
 ;
 
 : DFGM.S1.DOWNLOAD ( n --, Download n stream 1 DFGM files )
   	GOM.RING.DFGM-S1 RING.DOWNLOAD
 ;
 
+: DFGM.S1.FETCH ( -- , Fetch head and tail of DFGM S1 ring buffer )
+    GOM.RING.DFGM-RAW GOM.RING.FETCH
+;
+
 : DFGM.DOWNLOAD+ ( n -- n , Fetch ring tails then download n DFGM files. Puts error code of fetch on the stack )
-	GOM.RING.FETCH DUP
+    	GOM.RING.FETCH-ALL-TAILS DUP
 	GOM.ERR.OK = NOT IF
 		." Error fetching tails"
 	ELSE
@@ -231,7 +289,6 @@ include dispatch.fth
 		DFGM.RAW.DOWNLOAD
 	THEN
 ;		
-
 
 \ ******************************************************************************\
 \ OBC words									\

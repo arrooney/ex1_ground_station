@@ -198,12 +198,50 @@ static void gomshellRingIncrementName( struct CIList* list_name )
 	}
 }
 
+static void pf_previous_name( char* );
+static void gomshellRingDecrementName( struct CIList* list_name )
+{
+	char array_name[GOMSHELL_RING_NAME_LENGTH];
+	size_t i;
+
+	for( i = 0; i < CIList_Size(list_name); ++i ) {
+		CIList_Get(list_name, &array_name[i], i);
+	}
+	pf_previous_name(array_name);
+	for( i = 0; i < CIList_Size(list_name); ++i ) {
+		CIList_AddAt(list_name, &array_name[i], i);
+	}
+}
+
+static void pf_previous_name( char* name )
+{
+	unsigned int prev_seq = 0;
+	unsigned int prev_tem = 0;
+
+	/* Decrement temporal and sequence number. 
+	 */
+	prev_seq = (pf_atoui(name + LOGGER_SEQUENCE_START, LOGGER_TOTAL_SEQUENCE_BYTES, LOGGER_SEQUENCE_BASE) - 1);
+	prev_tem = (((name[4]-'0')*1000) + ((name[5]-'0')*100) + ((name[6]-'0')*10) + (name[7]-'0') - 1);
+
+
+	pf_uitoa(prev_seq, name + LOGGER_SEQUENCE_START, LOGGER_TOTAL_SEQUENCE_BYTES, LOGGER_SEQUENCE_BASE);
+
+	name[7] = (char) ((prev_tem % 10) + '0') & 0xFF;
+	prev_tem = (prev_tem - (prev_tem % 10)) / 10; /* basically a base ten logical shift right. */
+	name[6] = (char) ((prev_tem % 10) + '0') & 0xFF;
+	prev_tem = (prev_tem - (prev_tem % 10)) / 10;
+	name[5] = (char) ((prev_tem % 10) + '0') & 0xFF;
+	prev_tem = (prev_tem - (prev_tem % 10)) / 10;
+	name[4] = (char) ((prev_tem % 10) + '0') & 0xFF;
+
+}
+
 static void pf_next_name( char* name )
 {
 	unsigned int next_seq = 0;
 	unsigned int next_tem = 0;
 
-	/* Increment temporal and sequence number, then roll over if necessary. */
+	/* Increment temporal and sequence number. */
 	next_seq = (pf_atoui(name + LOGGER_SEQUENCE_START, LOGGER_TOTAL_SEQUENCE_BYTES, LOGGER_SEQUENCE_BASE) + 1);
 	next_tem = (((name[4]-'0')*1000) + ((name[5]-'0')*100) + ((name[6]-'0')*10) + (name[7]-'0') + 1);
 
@@ -600,6 +638,56 @@ static void gomshellFtpRemove( cell_t file_name_cell, cell_t file_name_cell_leng
 	free(file_name);
 }
 
+static void gomshellRingMove( cell_t id, cell_t position, cell_t direction )
+{
+	struct CIList* file_name;
+	CIListError err;
+
+	/* Initialize ring buffers.
+	 */
+	gomshellRingInit( );
+	
+	/* Use id to index the ring files buffer
+	 */
+	if( position == 1 ) {
+		err = CIList_Get(&ring_heads.cilist, &file_name, id);
+	}
+	else if( position == -1 ) {
+		err = CIList_Get(&ring_tails.cilist, &file_name, id);
+	}
+	else {
+		PUSH_DATA_STACK(GOMSHELL_ERR_SYNTAX);
+		return;
+	}
+
+	/* Error check.
+	 */
+	if( err != CILIST_OK ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_SYNTAX);
+		return;
+	}
+	
+	/* Increment or decrement file in buffer.
+	 */
+	if( direction == 1 ) {
+		gomshellRingIncrementName(file_name);
+	}
+	else if( direction == -1 ) {
+		gomshellRingDecrementName(file_name);
+	}
+	else {
+		PUSH_DATA_STACK(GOMSHELL_ERR_SYNTAX);
+		return;
+	}
+
+	sdTerminalPrint("\nNew name: ");
+	gomshellPrintRingName(file_name);
+
+	PUSH_DATA_STACK(GOMSHELL_OK);
+	return;
+
+}
+
 static void gomshellFetchRingByID( cell_t id )
 {
 	cell_t forth_err;
@@ -644,16 +732,16 @@ static void gomshellFetchRingByID( cell_t id )
 		return;
 	}
 
-	bytes_read = fread(tail_file_name, sizeof(char), GOMSHELL_RING_NAME_LENGTH+1, meta_file);
+	bytes_read = fread(head_file_name, sizeof(char), GOMSHELL_RING_NAME_LENGTH+1, meta_file);
 	if( bytes_read != GOMSHELL_RING_NAME_LENGTH+1 ) {
 		fclose(meta_file);
-		sdTerminalPrint("error: fread tail");
+		sdTerminalPrint("error: fread head");
 		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
 	}
-	bytes_read = fread(head_file_name, sizeof(char), GOMSHELL_RING_NAME_LENGTH+1, meta_file);
+	bytes_read = fread(tail_file_name, sizeof(char), GOMSHELL_RING_NAME_LENGTH+1, meta_file);
 	fclose(meta_file);
 	if( bytes_read != GOMSHELL_RING_NAME_LENGTH+1 ) {
-		sdTerminalPrint("error: fread head");
+		sdTerminalPrint("error: fread tail");
 		PUSH_DATA_STACK(GOMSHELL_ERR_MEM);
 	}
 	
@@ -669,7 +757,9 @@ static void gomshellFetchRingByID( cell_t id )
 
 	/* Print to user the names.
 	 */
+	sdTerminalPrint("tail: ");
 	gomshellPrintRingName(tail_list);
+	sdTerminalPrint("head: ");
 	gomshellPrintRingName(head_list);
 
 	PUSH_DATA_STACK(GOMSHELL_OK);
@@ -1073,6 +1163,10 @@ static void gomshellFetchRingByID( cell_t id )
 	return;
 }
 
+static void gomshellRingMove( cell_t id, cell_t position, cell_t direction )
+{
+}
+	
 #endif       
 
 /****************************************************************
@@ -1130,7 +1224,8 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellFtpRemove,
     (CFunc0) gomshellFtpUpload,
     (CFunc0) gomshellMnlpDownload,
-    (CFunc0) gomshellFetchRingByID
+    (CFunc0) gomshellFetchRingByID,
+    (CFunc0) gomshellRingMove
 };
 #endif
 
@@ -1190,7 +1285,7 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.ERR.COM", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
-    err = CreateGlueToC( "GOM.RING.FETCH", i++, C_RETURNS_VOID, 0 );
+    err = CreateGlueToC( "GOM.RING.FETCH-ALL-TAILS", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.FTP.REMOVE", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
@@ -1198,9 +1293,10 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.MNLP.DOWNLOAD", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
-    err = CreateGlueToC( "GOM.RING.FETCH-ONE", i++, C_RETURNS_VOID, 1 );
+    err = CreateGlueToC( "GOM.RING.FETCH", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
-
+    err = CreateGlueToC( "GOM.RING.MOVE", i++, C_RETURNS_VOID, 3 );
+    if( err < 0 ) return err;
         
     return 0;
 }
