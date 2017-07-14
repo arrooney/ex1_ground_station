@@ -189,7 +189,21 @@ if(ctx->argc!=4){
 	uint8_t file_length = 0;
     uint8_t file_number = 0;
     uint8_t reply[2];
-    if(number < 128 && length > 0)
+    if(number == 2)
+    {
+	memset(buf, 0, 200);
+	buf[0] = number;
+
+	timestamp_t t;
+	t.tv_sec = time(NULL);
+	t.tv_nsec = 0;
+
+	memcpy(&buf[1], &t, 4);
+	buf[5] = 0;
+	buf[6] = 0;
+	
+    }
+    else if(number < 128 && length > 0)
     {
 	    fid = fopen(ctx->argv[3],"r");
 	    fread(&file_length,1,1,fid);
@@ -207,7 +221,7 @@ if(ctx->argc!=4){
         memset(buf, 0, 200);
         buf[0] = number;
     }
-	else if(number >= 128)
+    else if(number >= 128)
     {
         memset(buf, 0, 200);
         buf[0] = number;

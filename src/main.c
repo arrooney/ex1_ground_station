@@ -126,7 +126,8 @@ int main(int argc, char * argv[])
 	 */
 	csp_set_hostname("csp-term");
 	csp_set_model("CSP Term");
-	csp_buffer_init(400, 512);
+	//csp_buffer_init(400, 512);
+	csp_buffer_init(2048, 512);
 	csp_init(addr);
 	csp_rdp_set_opt(6, 30000, 16000, 1, 8000, 3);
 

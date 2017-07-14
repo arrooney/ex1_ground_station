@@ -20,7 +20,7 @@ include dispatch.fth
 ;
 
 : DOWN ( -- , downloads the file of the night from SD card only )
-	S" ftp download_file /sd/170R0368.bin" GOM
+	S" ftp download_file /boot/adcs.bin" GOM
 ;
 
 : BRENDAN
@@ -38,6 +38,10 @@ include dispatch.fth
 		." Removing" CR
 		S" ftp rm /sd/020W0272.bin" GOM
 	THEN
+;
+
+: RM ( -- , remove the file of the night. )
+	S" ftp rm /boot/tc_log.bin" GOM
 ;
 
 : PING ( -- , send a ping to the nanomind )
@@ -58,15 +62,34 @@ include dispatch.fth
         S" ping 3 1200 10" GOM
 ; 
 
-: RM ( -- , remove the file of the night. )
-	S" ftp rm /sd/009R0009.bin" GOM
-;
-
 : ADCS.RESET ( -- , resets the adcs. Wait 15 seconds for it to boot. )
 	S" obc adcs 1 1 reset.txt" GOM
 ;
 
-: ADCS.CRC ( -- , polls telemetry 241 )
+: ADCS.RM ( -- , deletes the adcs.bin file from /boot/ )
+	S" ftp rm /boot/adcs.bin" GOM
+;
+
+: ADCS.HARDRESET ( -- , turns off and on power to ADCS. Wait 15 seconds for boot. )
+	S" eps output 0 0 0" GOM
+	S" eps output 3 0 0" GOM
+	WAIT
+	S" eps hk" GOM
+	WAIT
+	S" eps output 3 1 0" GOM
+	S" eps output 0 1 0" GOM
+	WAIT
+	S" eps hk" GOM
+	WAIT
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+;
+
+: ADCS.GET.RTC ( -- , gets the clock from the ADCS OBC RTC )
+	S" obc adcs 143 6 null.txt" GOM
+;
+
+: ADCS.CRC ( -- , polls telemetry 241 to reset the file download to nanomind )
 	S" obc adcs 241 6 null.txt" GOM
 ;
 
@@ -76,6 +99,22 @@ include dispatch.fth
 
 : ADCS.CSS ( -- , gets the raw coarse sun sensor values from the ADCS )
 	S" obc adcs 166 6 null.txt" GOM
+	WAIT
+	S" obc adcs 167 6 null.txt" GOM
+;
+
+: ADCS.MAG ( -- , gets the calibrated magnetometer xyz, and then the SGP predicted values. )
+	S" obc adcs 149 6 null.txt" GOM
+	WAIT
+	S" obc adcs 157 6 null.txt" GOM
+;
+
+: ADCS.DEPLOY ( -- , attempts mag deployment with timeout in txt file. )
+	S" obc adcs 6 1 deploy_mag_20.txt" GOM
+;
+
+: ADCS.SET.RTC ( -- , updates the clock with computer time)
+	S" obc adcs 2 6 null.txt" GOM
 ;
 
 : ADCS.SAVE.CONFIG ( -- , writes config from ram to boot file )
@@ -83,7 +122,31 @@ include dispatch.fth
 ;
 
 : ADCS.SET.NADIR ( -- , uploads nadir camera settings )
-	S" obc adcs 85 57 nadir_e1.txt" GOM
+	S" obc adcs 85 57 nadir_eauto.txt" GOM
+;
+
+: ADCS.SET.TORQ ( -- , uploads magnetotorquer settings )
+	S" obc adcs 81 13 torq_config_v2.1_nosignal.txt" GOM
+;
+
+: ADCS.SET.WHEEL ( -- , uploads wheel settings )
+	S" obc adcs 82 13 wheel_config.txt" GOM
+;
+
+: ADCS.SET.MAG ( -- , uploads mag settings )
+	S" obc adcs 86 30 mag_config_v3.txt" GOM
+;
+
+: ADCS.SET.CSS ( -- , uploads CSS settings )
+	S" obc adcs 83 14 css_config.txt" GOM
+;
+
+: ADCS.SET.RATESENSOR ( -- , uploads rate sensor settings )
+	S" obc adcs 87 6 rot_sens_config.txt" GOM
+;
+
+: ADCS.SET.TLE ( -- , uploads TLE to adcs )
+	S" obc adcs 64 64 tle_adcs_jul1.txt" GOM
 ;
 
 : ADCS.GPS.STATUS ( -- , gets GPS status from ADCS )
@@ -101,6 +164,24 @@ include dispatch.fth
 	WAIT
 	S" obc adcs 172 6 null.txt" GOM
 ;
+
+: ADCS.TAKE.PHOTO ( -- , take photo. Currently nadir camera. )
+	S" obc adcs 110 10 take_photo_nadir.txt" GOM
+	WAIT
+	s" obc adcs 230 16 null.txt" GOM
+	WAIT
+;
+
+: ADCS.DETUMBLE ( -- , puts ADCS into the detumble control mode. Use after setting up log only. )
+	S" obc adcs 18 4 detumble_30min.txt" GOM
+	WAIT
+;
+
+: ADCS.MAG.TEMP ( -- , gets the a few housekeeping values, including mag temp. )
+	S" obc adcs 175 6 null.txt" GOM
+	WAIT
+;
+
 
 : EPS.GPS.ON ( -- , turns on the GPS power output )
 	S" eps output 4 1 0" GOM
@@ -268,6 +349,7 @@ include dispatch.fth
   	GOM.RING.DFGM-S0 RING.DOWNLOAD
 ;
 
+
 : DFGM.S0.FETCH ( -- , Fetch head and tail of DFGM S0 ring buffer )
     GOM.RING.DFGM-RAW GOM.RING.FETCH
 ;
@@ -288,6 +370,14 @@ include dispatch.fth
 		DROP
 		DFGM.RAW.DOWNLOAD
 	THEN
+;
+
+: Tyler ( --, downloads specific DFGM file )
+	S" ftp download_file /sd/145R0325.bin" GOM
+;
+
+: Dustin ( --, downloads specific DFGM file )
+	S" ftp download_file /sd/146R0326.bin" GOM
 ;		
 
 \ ******************************************************************************\
