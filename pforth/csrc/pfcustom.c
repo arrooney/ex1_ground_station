@@ -1169,6 +1169,23 @@ static void gomshellRingMove( cell_t id, cell_t position, cell_t direction )
 	
 #endif       
 
+static void processBlock( cell_t wake_time_ )
+{
+	uint32_t wake_time;
+	uint32_t current_time;
+	uint32_t time_to_block;
+	
+	wake_time = (uint32_t) wake_time_;
+	current_time = time(NULL);
+	
+	if( current_time > wake_time ) {
+		return;
+	}
+	
+	time_to_block = wake_time - current_time;
+	sleep(time_to_block);
+}
+
 /****************************************************************
 ** Step 2: Create CustomFunctionTable.
 **     Do not change the name of CustomFunctionTable!
@@ -1225,7 +1242,8 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellFtpUpload,
     (CFunc0) gomshellMnlpDownload,
     (CFunc0) gomshellFetchRingByID,
-    (CFunc0) gomshellRingMove
+    (CFunc0) gomshellRingMove,
+    (CFunc0) processBlock
 };
 #endif
 
@@ -1296,6 +1314,8 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "GOM.RING.FETCH", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.RING.MOVE", i++, C_RETURNS_VOID, 3 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "BLOCK", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
         
     return 0;
