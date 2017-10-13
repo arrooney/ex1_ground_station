@@ -1169,6 +1169,14 @@ static void gomshellRingMove( cell_t id, cell_t position, cell_t direction )
 	
 #endif       
 
+static void processSleep( cell_t sleep_time_ )
+{
+	uint32_t sleep_time;
+
+	sleep_time = (uint32_t) sleep_time_;
+	sleep(sleep_time);
+}
+
 static void processBlock( cell_t wake_time_ )
 {
 	uint32_t wake_time;
@@ -1264,7 +1272,8 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellFetchRingByID,
     (CFunc0) gomshellRingMove,
     (CFunc0) processBlock,
-    (CFunc0) unixShellCommand
+    (CFunc0) unixShellCommand,
+    (CFunc0) processSleep
 };
 #endif
 
@@ -1339,6 +1348,8 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "BLOCK", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "SYSTEM", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "SLEEP", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
         
     return 0;

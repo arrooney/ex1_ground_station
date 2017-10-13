@@ -262,6 +262,50 @@ include dispatch.fth
 	THEN
 ;
 
+20 $VAR ring.hold
+40 $VAR ring.buf
+: RING.RESIZE ( addr n1 n2 n3 -- ,
+    addr n1 = string, the name of the ring buffer to resize, ex, "wod", "dfgm raw"
+    n2 = new capacity
+    n3 = new file size
+    ex: S" wod" 3 266 RING.RESIZE -- wod ring buffer will have a max 3 files
+    with each file having a max size of 266 bytes
+    )
+
+    3 pick 3 pick ring.hold $!
+    S" RB|" ring.buf $!
+    ring.buf ring.hold $APPEND
+    S" :" ring.hold $!
+    ring.buf ring.hold $APPEND
+
+    ring.hold 3 PICK >STRING
+    ring.buf ring.hold $APPEND
+
+    S" :" ring.hold $!
+    ring.buf ring.hold $APPEND
+
+    ring.hold 2 PICK >STRING
+    ring.buf ring.hold $APPEND
+    DROP DROP DROP DROP
+    
+    ring.buf GOM.COMMAND
+;
+
+: RING.FLUSH ( -- , run ring buffer flush command )
+    S" RB|flush" GOM.COMMAND
+;
+
+: RING.COMMIT ( -- , rung ring buffer commit command )
+    S" RB|commit" GOM.COMMAND
+;
+
+: RING.HELP ( -- , run ring buffer help command )
+    S" RB" GOM.COMMAND
+;
+
+: RING.CURRENT ( -- , run ring buffer current size command )
+    S" RB:current" GOM.COMMAND
+;
 
 \ ******************************************************************************\
 \ WOD words									\
