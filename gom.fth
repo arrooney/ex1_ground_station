@@ -368,7 +368,7 @@ include dispatch.fth
 	3DUP GOM.RING.MOVE DROP
     LOOP
     DROP DROP DROP DROP
-;    
+;
 
 : RING.FETCH ( -- , Fetch the tail of every ring buffer )
 	GOM.RING.FETCH-ALL-TAILS DUP
@@ -379,6 +379,11 @@ include dispatch.fth
 		." Fetch successful"
 	THEN
 ;
+
+: RING.UPDATE ( -- , Force satellite to update ring buffer meta data )
+    RING.FETCH
+;
+
 
 20 $VAR ring.hold
 40 $VAR ring.buf
@@ -424,6 +429,28 @@ include dispatch.fth
 : RING.CURRENT ( -- , run ring buffer current size command )
     S" RB|current" GOM.COMMAND
 ;
+
+: RING.BUGFIX-TEMP
+    CR S" This will turn off the DFGM, continue? [WAIT]" TYPE WAIT
+    S" wod" 60 31440 RING.RESIZE
+    S" dfgm raw" 150 4096000 RING.RESIZE
+    S" dfgm hk" 30 6912 RING.RESIZE
+    S" dfgm filt1" 100 86880 RING.RESIZE
+    S" dfgm filt2" 100 218880 RING.RESIZE
+    S" athena" 48 102400 RING.RESIZE
+    RING.FLUSH
+    CR S" Abort if there were errors [WAIT]" TYPE WAIT
+    CR S" Proceed immediately after the next beacon [WAIT]" TYPE WAIT
+    S" dfgm power|off" GOM.COMMAND
+    S" ftp rm /sd/MT-WLog.txt" GOM
+    S" ftp rm /sd/MT-RLog.txt" GOM
+    S" ftp rm /sd/MT-ALog.txt" GOM
+    S" ftp rm /sd/MT-BLog.txt" GOM
+    S" ftp rm /sd/MT-HLog.txt" GOM
+    S" ftp rm /sd/MT_KLog.txt" GOM
+    S" reboot 1" GOM
+;
+
 
 \ ******************************************************************************\
 \ WOD words									\
