@@ -304,7 +304,7 @@ include dispatch.fth
 ;
 
 : RING.CURRENT ( -- , run ring buffer current size command )
-    S" RB:current" GOM.COMMAND
+    S" RB|current" GOM.COMMAND
 ;
 
 \ ******************************************************************************\

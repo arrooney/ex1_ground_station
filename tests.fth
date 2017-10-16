@@ -1,4 +1,5 @@
 INCLUDE gom.fth
+40 $VAR rb.str
 
 : BOOT.WAIT
     S" Continue when boot is finished [y/q]" TYPE
@@ -11,19 +12,12 @@ INCLUDE gom.fth
     BOOT.WAIT
 ;
 
-40 $VAR rb.str
-: TEST.RBCONF
-    S" Use [y/q] when prompted for test success / failure" TYPE
-    TEST.RBCONF-WOD
-    TEST.RBCONF-DFGM
-;
-
 : TEST.RBCONF-WOD
     S" wod" rb.str $!
     
     S" Running ring buffer configuration tests for: " TYPE rb.str TYPE CR
     S" Decreasing RB capacity and size" TYPE
-    rb.str 3 266 RING.RESIZE
+    rb.str 3 266 RING.RESIZE 2 SLEEP
 
     RING.CURRENT
     S" Verify RB has capacity=3 file_size=266" TYPE
@@ -33,18 +27,19 @@ INCLUDE gom.fth
     S" Verify flush was successful" TYPE
     WAIT
     
-    S" Fetching current head/tail then rebooting" GOM
-    WOD.FETCH
+    S" Fetching current head/tail then rebooting" TYPE
+    WOD.FETCH 3 SLEEP
     GOM.ERR.OK = NOT IF
 	S" Fetch failed" TYPE
 	QUIT
     THEN
+    S" ftp rm /sd/MT-WLog.txt" GOM 7 SLEEP
     TEST.REBOOT
 
     S" Wait for 7 beacons then continue [y]" TYPE
     WAIT
     S" Verify head/tail [y/q]" TYPE
-    WOD.FETCH
+    WOD.FETCH 3 SLEEP
     GOM.ERR.OK = NOT IF
 	S" Fetch failed" TYPE
 	QUIT
@@ -97,11 +92,15 @@ INCLUDE gom.fth
 	S" Fetch failed" TYPE
 	QUIT
     THEN
+    S" ftp rm /sd/MT-RLog.txt" GOM
     TEST.REBOOT
 
     S" Turning DFGM on" TYPE
+    DFGM.MODE.RAW
+    DFGM.ON
     20 SLEEP
     S" Verify head/tail [y/q]" TYPE
+    DFGM.OFF
     DFGM.RAW.FETCH
     GOM.ERR.OK = NOT IF
 	S" Fetch failed" TYPE
@@ -132,4 +131,10 @@ INCLUDE gom.fth
     S" Verify wod capacity=3 and file_size=6244 [y/q]" TYPE
     WAIT
     S" DFGM test finished" TYPE
+;
+
+: TEST.RBCONF
+    CR S" Use [y/q] when prompted for test success / failure" TYPE
+    CR CR TEST.RBCONF-WOD
+    CR CR TEST.RBCONF-DFGM
 ;

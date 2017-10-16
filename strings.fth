@@ -41,30 +41,10 @@
     + !				\ Append the char
 ;
 
-: >STRING ( addr n1 n2 -- , only works for numbers >= 0 )
-    2 PICK 2 PICK $CLEAR
-    SWAP DROP
-    
-    \ This Loop takes n2 and puts an ascii char on stack for each digit in reverse
-    \ ex: 432 -> 50 51 52, where 50, 51, and 52 are ASCII for 2, 3, and 4.
-    0 >R
-    BEGIN
-	10 /MOD 		\ addr rem quo
-	SWAP 48 + SWAP		\ addr rem+48 quo
-	2 PICK SWAP		\ addr rem+48 addr quo
-	R> 1+ >R
-	DUP 0=			\ addr rem+48 addr quo 0/-1
-    UNTIL
-    DROP DROP
-
-    R> 0 DO
-	$APPEND.CHAR
-    LOOP
-
-    \ Append to the string
-    
-
-    \ Put in addr n1 string
+: $CLEAR ( addr count -- , Clear the contents of the string to nothing )
+  	DROP
+	0 SWAP
+	CELL- !
 ;
 
 : $MAX ( addr count -- count , Puts max size of the string on the stack
@@ -101,12 +81,6 @@
 
 	\ Set the contents
 	DROP SWAP CMOVE
-;
-
-: $CLEAR ( addr count -- , Clear the contents of the string to nothing )
-  	DROP
-	0 SWAP
-	CELL- !
 ;
 
 : $! $SET ;
@@ -191,6 +165,31 @@
 	DROP
 ;
 
+: >STRING ( addr n1 n2 -- , only works for numbers >= 0 )
+    2 PICK 2 PICK $CLEAR
+    SWAP DROP
+    
+    \ This Loop takes n2 and puts an ascii char on stack for each digit in reverse
+    \ ex: 432 -> 50 51 52, where 50, 51, and 52 are ASCII for 2, 3, and 4.
+    0 >R
+    BEGIN
+	10 /MOD 		\ addr rem quo
+	SWAP 48 + SWAP		\ addr rem+48 quo
+	2 PICK SWAP		\ addr rem+48 addr quo
+	R> 1+ >R
+	DUP 0=			\ addr rem+48 addr quo 0/-1
+    UNTIL
+    DROP DROP
+
+    R> 0 DO
+	$APPEND.CHAR
+    LOOP
+
+    \ Append to the string
+    
+
+    \ Put in addr n1 string
+;
 
 
 

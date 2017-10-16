@@ -20,11 +20,16 @@
 ;
 
 : cwod
-    S" ftp rm /sd/001W0019.bin" GOM
-    S" ftp rm /sd/002W0020.bin" GOM
-    S" ftp rm /sd/003W0003.bin" GOM
-    S" ftp rm /sd/001W0022.bin" GOM
-    S" ftp rm /sd/002W0017.bin" GOM
-    S" ftp rm /sd/000W0018.bin" GOM
-    S" ftp rm /sd/000W0021.bin" GOM
+    S" ftp rm /boot/M360206H.bin" GOM
+    S" ftp rm /boot/M360206S.bin" GOM
+    S" ftp rm /boot/M360206E.bin" GOM
+    S" ftp rm /boot/M360207H.bin" GOM
+    S" ftp rm /boot/M360207S.bin" GOM
+    S" ftp rm /boot/M360207E.bin" GOM
+    S" ftp rm /boot/M360208H.bin" GOM
+    S" ftp rm /boot/M360208S.bin" GOM
+    S" ftp rm /boot/M360208E.bin" GOM
+    S" ftp rm /boot/M360209H.bin" GOM
+    S" ftp rm /boot/M360209S.bin" GOM
+    S" ftp rm /boot/M360209E.bin" GOM
 ;
