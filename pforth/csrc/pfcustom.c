@@ -26,6 +26,7 @@
 ***************************************************************/
 
 
+#include <serial.h>
 #include "pf_all.h"
 #include <IOHook.h>
 #include <stdlib.h>
@@ -1037,6 +1038,47 @@ static void gomshellMnlpDownload( cell_t num_files )
 	 */
 }
 
+static char dfgm_mock_packet[1248];
+static void dfgm_mock_thread_function( void* arg )
+{
+	struct serial_dev_t* dev = arg;
+
+	for( ;; ) {
+		serial_putstr(dev, dfgm_mock_packet, 1248);
+		sleep(1);
+	}
+}
+
+static void dfgm_mock_init( cell_t dev_, cell_t dev_len_ )
+{
+	const char* dev;
+	char* dev_str;
+	size_t dev_length;
+
+	static int is_init = 0;
+	static struct serial_dev_t serial_dev;
+	static pthread_t dfgm_mock_thread;
+
+	if( is_init == 1 ) {
+		sdTerminalPrint("DFGM Mock initialized");
+		return;
+	}
+
+	dev = (const char*) dev_;
+	dev_length = (size_t) dev_len_;
+
+	dev_str = malloc(sizeof(char) * dev_length + 1);
+	if( dev_str == NULL ) {
+			sdTerminalPrint("Failed to malloc");
+	}
+	strncpy(dev_str, dev, dev_length);
+	dev_str[dev_length] = '\0';
+
+	serial_dev_init(&serial_dev, dev_str, 115200);
+	pthread_create(&dfgm_mock_thread, NULL, dfgm_mock_thread_function, &serial_dev);
+	is_init = 1;
+}
+
 #endif
 
 static void programExit( )
@@ -1166,6 +1208,10 @@ static void gomshellFetchRingByID( cell_t id )
 static void gomshellRingMove( cell_t id, cell_t position, cell_t direction )
 {
 }
+
+static void dfgm_mock_init( cell_t dev_, cell_t dev_len_ )
+{
+}
 	
 #endif       
 
@@ -1213,6 +1259,8 @@ static void unixShellCommand( cell_t cmd_string_, cell_t length_ )
 
 	system(null_term_cmd_string);
 }
+
+
 
 /****************************************************************
 ** Step 2: Create CustomFunctionTable.
@@ -1273,7 +1321,8 @@ CFunc0 CustomFunctionTable[] =
     (CFunc0) gomshellRingMove,
     (CFunc0) processBlock,
     (CFunc0) unixShellCommand,
-    (CFunc0) processSleep
+    (CFunc0) processSleep,
+	(CFunc0) dfgm_mock_init
 };
 #endif
 
@@ -1351,7 +1400,8 @@ Err CompileCustomFunctions( void )
     if( err < 0 ) return err;
     err = CreateGlueToC( "SLEEP", i++, C_RETURNS_VOID, 1 );
     if( err < 0 ) return err;
-        
+    err = CreateGlueToC( "DFGM-MOCK.INIT", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
     return 0;
 }
 #else
