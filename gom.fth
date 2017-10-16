@@ -23,6 +23,15 @@ include dispatch.fth
 	S" ftp download_file /boot/adcs.bin" GOM
 ;
 
+: SOMETHING ( -- , downloads the file of the night from SD card only )
+	S" ftp upload_file lsbo_tl.txt /sd/lsbo_tl.txt" GOM
+;
+
+: FILEFORMAT ( -- , downloads the file of the night from SD card only )
+	S" ftp backend 1" GOM
+	S" ftp mkfs 0" GOM
+;
+
 : BRENDAN
 	S" /sd/MT-RLog.txt" GOM.FTP.DOWNLOAD WAIT
 	S" /sd/MT-ALog.txt" GOM.FTP.DOWNLOAD WAIT
@@ -44,6 +53,29 @@ include dispatch.fth
 	S" ftp rm /boot/tc_log.bin" GOM
 ;
 
+: MNLP.UP ( -- , Upload mnlp script to slot 0. Must be empty first. )
+	S" ftp upload_file mnlp_script_Aug4.bin /sd/MNLP_3.bin" GOM
+;
+
+: MNLP.DOWN ( -- , downloads the named MNLP file )
+	S" ftp download_file /boot/M170805S.bin" GOM
+;
+
+: MNLP.RM ( -- , removes the specified MNLP script )
+	S" ftp rm /sd/MNLP_2.bin" GOM
+;
+
+: MNLP.OFF ( -- , shuts off MNLP task. )
+	S" mnlp stop" GOM.COMMAND
+	CHECK-ERR
+;
+
+: MNLP.ON ( -- , restarts MNLP task. )
+	S" mnlp start" GOM.COMMAND
+	CHECK-ERR
+;
+
+
 : PING ( -- , send a ping to the nanomind )
 	S" ping 1 1200 10" GOM
 ;
@@ -60,7 +92,11 @@ include dispatch.fth
 
 : PING.HUB ( -- , send a ping to the nanohub )
         S" ping 3 1200 10" GOM
-; 
+;
+
+\ ******************************************************************************\
+\ ADCS general words								\
+\ ******************************************************************************\
 
 : ADCS.RESET ( -- , resets the adcs. Wait 15 seconds for it to boot. )
 	S" obc adcs 1 1 reset.txt" GOM
@@ -97,6 +133,17 @@ include dispatch.fth
 	S" obc adcs 119 0 null.txt" GOM
 ;
 
+: ADCS.TAKE.PHOTO ( -- , take photo. Currently nadir camera. )
+	S" obc adcs 110 10 take_photo_nadir.txt" GOM
+	WAIT
+	s" obc adcs 230 16 null.txt" GOM
+	WAIT
+;
+
+\ ******************************************************************************\
+\ ADCS sensor telemetry words								\
+\ ******************************************************************************\
+
 : ADCS.CSS ( -- , gets the raw coarse sun sensor values from the ADCS )
 	S" obc adcs 166 6 null.txt" GOM
 	WAIT
@@ -109,44 +156,12 @@ include dispatch.fth
 	S" obc adcs 157 6 null.txt" GOM
 ;
 
-: ADCS.DEPLOY ( -- , attempts mag deployment with timeout in txt file. )
-	S" obc adcs 6 1 deploy_mag_20.txt" GOM
+: ADCS.MEMS ( -- , gets the mems rate sensor measurement. )
+	S" obc adcs 153 6 null.txt" GOM
 ;
 
-: ADCS.SET.RTC ( -- , updates the clock with computer time)
-	S" obc adcs 2 6 null.txt" GOM
-;
-
-: ADCS.SAVE.CONFIG ( -- , writes config from ram to boot file )
-	S" obc adcs 100 0 null.txt" GOM
-;
-
-: ADCS.SET.NADIR ( -- , uploads nadir camera settings )
-	S" obc adcs 85 57 nadir_eauto.txt" GOM
-;
-
-: ADCS.SET.TORQ ( -- , uploads magnetotorquer settings )
-	S" obc adcs 81 13 torq_config_v2.1_nosignal.txt" GOM
-;
-
-: ADCS.SET.WHEEL ( -- , uploads wheel settings )
-	S" obc adcs 82 13 wheel_config.txt" GOM
-;
-
-: ADCS.SET.MAG ( -- , uploads mag settings )
-	S" obc adcs 86 30 mag_config_v3.txt" GOM
-;
-
-: ADCS.SET.CSS ( -- , uploads CSS settings )
-	S" obc adcs 83 14 css_config.txt" GOM
-;
-
-: ADCS.SET.RATESENSOR ( -- , uploads rate sensor settings )
-	S" obc adcs 87 6 rot_sens_config.txt" GOM
-;
-
-: ADCS.SET.TLE ( -- , uploads TLE to adcs )
-	S" obc adcs 64 64 tle_adcs_jul1.txt" GOM
+: ADCS.WHEEL ( -- , gets the wheel spead measurement. )
+	S" obc adcs 154 6 null.txt" GOM
 ;
 
 : ADCS.GPS.STATUS ( -- , gets GPS status from ADCS )
@@ -165,23 +180,126 @@ include dispatch.fth
 	S" obc adcs 172 6 null.txt" GOM
 ;
 
-: ADCS.TAKE.PHOTO ( -- , take photo. Currently nadir camera. )
-	S" obc adcs 110 10 take_photo_nadir.txt" GOM
-	WAIT
-	s" obc adcs 230 16 null.txt" GOM
-	WAIT
-;
-
-: ADCS.DETUMBLE ( -- , puts ADCS into the detumble control mode. Use after setting up log only. )
-	S" obc adcs 18 4 detumble_30min.txt" GOM
-	WAIT
-;
-
 : ADCS.MAG.TEMP ( -- , gets the a few housekeeping values, including mag temp. )
 	S" obc adcs 175 6 null.txt" GOM
 	WAIT
 ;
 
+: ADCS.TLE ( -- , gets the TLE parameters saved in the config. )
+	S" obc adcs 191 64 null.txt" GOM
+	WAIT
+;
+
+: ADCS.B1 ( -- , gets ADCS boot and running program status. )
+	S" obc adcs 129 6 null.txt" GOM
+	WAIT
+;
+
+: ADCS.B2 ( -- , Coomunication status for CubeACP. )
+	S" obc adcs 130 6 null.txt" GOM
+	WAIT
+;
+
+: ADCS.B3 ( -- , Telemetry frame with acknowledge of previous command send. )
+	S" obc adcs 131 4 null.txt" GOM
+	WAIT
+;
+
+: ADCS.STATUS ( -- , gets the current state of the ADCS solution. )
+	S" obc adcs 136 48 null.txt" GOM
+	WAIT
+;
+
+
+
+\ ******************************************************************************\
+\ ADCS actuator control words							\
+\ ******************************************************************************\
+
+: ADCS.WHEEL.ON ( -- , turns the wheel on to the selected speed. )
+	S" obc adcs 32 6 wheel_speed_4140.txt" GOM
+;
+
+: ADCS.WHEEL.OFF ( -- , turns wheel off with speed set to 0. )
+	S" obc adcs 32 6 wheel_speed_0.txt" GOM
+;
+
+: ADCS.DEPLOY ( -- , attempts mag deployment with timeout in txt file. )
+	S" obc adcs 6 1 deploy_mag_20.txt" GOM
+;
+
+: ADCS.DETUMBLE ( -- , puts ADCS into the detumble control mode. )
+	S" obc adcs 18 4 detumble_forever.txt" GOM
+	WAIT
+;
+
+: ADCS.YMOM ( -- , puts ADCS into y momentum control mode. )
+	S" obc adcs 18 4 ymomentum_forever.txt" GOM
+	WAIT
+;
+
+: ADCS.NOCONTROL ( -- , stops all ADCS control. )
+	S" obc adcs 18 4 no_control.txt" GOM
+	WAIT
+;
+
+: ADCS.MODE ( -- , stops all ADCS control. )
+	S" obc adcs 17 1 estimate_ekf.txt" GOM
+	WAIT
+;
+
+
+\ ******************************************************************************\
+\ ADCS config words								\
+\ ******************************************************************************\
+
+: ADCS.SET.RTC ( -- , updates the clock with computer time)
+	S" obc adcs 2 6 null.txt" GOM
+;
+
+: ADCS.SAVE.CONFIG ( -- , writes config from ram to boot file )
+	S" obc adcs 100 0 null.txt" GOM
+;
+
+: ADCS.SET.NADIR ( -- , uploads nadir camera settings )
+	S" obc adcs 85 57 nadir_eauto.txt" GOM
+;
+
+: ADCS.SET.TORQ ( -- , uploads magnetotorquer settings )
+	S" obc adcs 81 13 torq_config_v2.1.txt" GOM
+;
+
+: ADCS.SET.WHEEL ( -- , uploads wheel settings )
+	S" obc adcs 82 13 wheel_config.txt" GOM
+;
+
+: ADCS.SET.MAG ( -- , uploads mag settings )
+	S" obc adcs 86 30 mag_config_v4.txt" GOM
+;
+
+: ADCS.SET.CSS ( -- , uploads CSS settings )
+	S" obc adcs 83 14 css_config.txt" GOM
+;
+
+: ADCS.SET.RATESENSOR ( -- , uploads rate sensor settings )
+	S" obc adcs 87 6 rot_sens_config.txt" GOM
+;
+
+: ADCS.SET.INERTIA ( -- , uploads moment of inertia table)
+	S" obc adcs 90 24 inertia_config.txt" GOM
+;
+
+: ADCS.SET.DETUMBLE_CONTROL ( -- , uploads detumble control parameters)
+	S" obc adcs 88 10 detumble_cont_config.txt" GOM
+;
+
+: ADCS.SET.TLE ( -- , uploads TLE to adcs )
+	S" obc adcs 64 64 tle_adcs_aug3.txt" GOM
+;
+
+\ ******************************************************************************\
+\ Satellite subsystem words								\
+\ ******************************************************************************\
 
 : EPS.GPS.ON ( -- , turns on the GPS power output )
 	S" eps output 4 1 0" GOM
@@ -417,7 +535,7 @@ include dispatch.fth
 ;
 
 : Tyler ( --, downloads specific DFGM file )
-	S" ftp download_file /sd/145R0325.bin" GOM
+	S" ftp download_file /sd/004R0004.bin" GOM
 ;
 
 : Dustin ( --, downloads specific DFGM file )
