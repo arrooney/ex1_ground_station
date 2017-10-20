@@ -1038,13 +1038,14 @@ static void gomshellMnlpDownload( cell_t num_files )
 	 */
 }
 
-static char dfgm_mock_packet[1248];
 static void dfgm_mock_thread_function( void* arg )
 {
 	struct serial_dev_t* dev = arg;
-
+	static char dfgm_mock_packet[1248];
+	
+	sdTerminalPrint("Mock running");
 	for( ;; ) {
-		serial_putstr(dev, dfgm_mock_packet, 1248);
+		serial_putstr(dev, "E", 1);
 		sleep(1);
 	}
 }
@@ -1054,7 +1055,7 @@ static void dfgm_mock_init( cell_t dev_, cell_t dev_len_ )
 	const char* dev;
 	char* dev_str;
 	size_t dev_length;
-
+	
 	static int is_init = 0;
 	static struct serial_dev_t serial_dev;
 	static pthread_t dfgm_mock_thread;
@@ -1074,7 +1075,10 @@ static void dfgm_mock_init( cell_t dev_, cell_t dev_len_ )
 	strncpy(dev_str, dev, dev_length);
 	dev_str[dev_length] = '\0';
 
-	serial_dev_init(&serial_dev, dev_str, 115200);
+	if( serial_dev_init(&serial_dev, dev_str, 9600) != 0 ) {
+		sdTerminalPrint("Try again");
+		return;
+	}
 	pthread_create(&dfgm_mock_thread, NULL, dfgm_mock_thread_function, &serial_dev);
 	is_init = 1;
 }

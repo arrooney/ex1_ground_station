@@ -24,7 +24,7 @@ Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
 
 static void *serial_dev_rx_thread(void *vptr_args);
 
-void serial_dev_init( struct serial_dev_t* dev, const char* path, uint32_t baud )
+int serial_dev_init( struct serial_dev_t* dev, const char* path, uint32_t baud )
 {
 
 	struct termios options;
@@ -35,7 +35,7 @@ void serial_dev_init( struct serial_dev_t* dev, const char* path, uint32_t baud 
 
 	if (dev->fd < 0) {
 		printf("Failed to open %s: %s\r\n", path, strerror(errno));
-		return;
+		return -1;
 	}
 
 	switch(baud) {
@@ -80,7 +80,8 @@ void serial_dev_init( struct serial_dev_t* dev, const char* path, uint32_t baud 
 		printf("Error flushing serial port - %s(%d).\n", strerror(errno), errno);
 
 	if (pthread_create(&dev->rx_thread, NULL, serial_dev_rx_thread, dev) != 0)
-		return;
+		return -1;
+	return 0;
 
 }
 
