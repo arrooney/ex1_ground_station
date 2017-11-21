@@ -90,9 +90,9 @@ void serial_set_callback( struct serial_dev_t* dev, serial_callback_t callback)
 	dev->serial_callback = callback;
 }
 
-void serial_putstr( struct serial_dev_t* dev, char * buf, int len)
+int serial_putstr( struct serial_dev_t* dev, char * buf, int len)
 {
-	write(dev->fd, buf, len);
+	return (int) write(dev->fd, buf, len);
 }
 
 void serial_putc( struct serial_dev_t* dev, char c )

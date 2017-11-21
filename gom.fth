@@ -32,13 +32,6 @@ include dispatch.fth
 	S" ftp mkfs 0" GOM
 ;
 
-: BRENDAN
-	S" /sd/MT-RLog.txt" GOM.FTP.DOWNLOAD WAIT
-	S" /sd/MT-ALog.txt" GOM.FTP.DOWNLOAD WAIT
-	S" /sd/MT-BLog.txt" GOM.FTP.DOWNLOAD WAIT
-	S" /sd/MT-HLog.txt" GOM.FTP.DOWNLOAD WAIT
-;
-
 : DOWN&RM ( -- , downloads the file and then deletes after with user input)
 	S" ftp download_file /sd/020W0272.bin" GOM
 	WAIT
@@ -94,9 +87,25 @@ include dispatch.fth
         S" ping 3 1200 10" GOM
 ;
 
+: RTOS.STAT
+    S" rtos info" GOM.COMMAND
+; 
+
 \ ******************************************************************************\
 \ ADCS general words								\
 \ ******************************************************************************\
+30 $VAR adcs_flush_n
+30 $VAR adcs_flush_cmd
+: ADCS.FLUSH ( n -- , n = number of bytes to flush from ADCS USART )
+    adcs_flush_n $CLEAR
+    adcs_flush_cmd $CLEAR
+
+    adcs_flush_n 2 PICK >STRING
+    S" adcs flush|" adcs_flush_cmd $!
+    adcs_flush_cmd adcs_flush_n $APPEND
+
+    adcs_flush_cmd GOM.COMMAND
+;
 
 : ADCS.RESET ( -- , resets the adcs. Wait 15 seconds for it to boot. )
 	S" obc adcs 1 1 reset.txt" GOM
@@ -348,6 +357,24 @@ include dispatch.fth
 \ ******************************************************************************\
 \ Ring buffer words								\
 \ ******************************************************************************\
+30 $VAR ring-entry
+30 $VAR file-entry
+: RING.CLEAN
+    ( addr n1 n2 -- , delete n2 ring buffer entries starting at addr,n1.
+    Assumes backend 2
+    ex: S" 004R0004.bin" 3 RING.CLEAN
+    This will remove 004, 005, and 006 from the R ring buffer. )
+    2 PICK 2 PICK ring-entry $!
+
+    0 DO \ Loop n2 times
+	S" /sd/" file-entry $!
+	file-entry ring-entry $APPEND
+	file-entry GOM.FTP.REMOVE
+	ring-entry NEXT-RING DROP DROP
+    LOOP
+    DROP DROP
+;
+
 : RING.DOWNLOAD ( n1, n2 -- , Download n1 files from ring buffer n2 )
 	SWAP 0 DO
 		DUP GOM.RING.DOWNLOAD
@@ -505,9 +532,34 @@ include dispatch.fth
 	CHECK-ERR
 ;
 
-: DFGM.MODE.RAW ( -- , Enable raw capture for DFGM )
-	S" dfgm stream|raw" GOM.COMMAND
-	CHECK-ERR
+: DFGM.RAW.ON
+    S" dfgm stream|raw on" GOM.COMMAND
+    CHECK-ERR
+;
+
+: DFGM.RAW.OFF
+    S" dfgm stream|raw off" GOM.COMMAND
+    CHECK-ERR
+;
+
+: DFGM.FILT1.ON
+    S" dfgm stream|filt1 on" GOM.COMMAND
+    CHECK-ERR
+;
+
+: DFGM.FILT1.OFF
+    S" dfgm stream|filt1 off" GOM.COMMAND
+    CHECK-ERR
+;
+
+: DFGM.FILT2.ON
+    S" dfgm stream|filt2 on" GOM.COMMAND
+    CHECK-ERR
+;
+
+: DFGM.FILT2.OFF
+    S" dfgm stream|filt2 off" GOM.COMMAND
+    CHECK-ERR
 ;
 
 : DFGM.RAW.DOWNLOAD ( n -- , Download n raw DFGM files )
@@ -540,7 +592,7 @@ include dispatch.fth
 
 
 : DFGM.S0.FETCH ( -- , Fetch head and tail of DFGM S0 ring buffer )
-    GOM.RING.DFGM-RAW GOM.RING.FETCH
+    GOM.RING.DFGM-S0 GOM.RING.FETCH
 ;
 
 : DFGM.S1.DOWNLOAD ( n --, Download n stream 1 DFGM files )
@@ -548,7 +600,7 @@ include dispatch.fth
 ;
 
 : DFGM.S1.FETCH ( -- , Fetch head and tail of DFGM S1 ring buffer )
-    GOM.RING.DFGM-RAW GOM.RING.FETCH
+    GOM.RING.DFGM-S1 GOM.RING.FETCH
 ;
 
 : DFGM.DOWNLOAD+ ( n -- n , Fetch ring tails then download n DFGM files. Puts error code of fetch on the stack )
@@ -562,10 +614,12 @@ include dispatch.fth
 ;
 
 : Tyler ( --, downloads specific DFGM file )
+    CR ." Salmon!" CR
 	S" ftp download_file /sd/004R0004.bin" GOM
 ;
 
 : Dustin ( --, downloads specific DFGM file )
+    CR ." CHARIZARD GO!" CR
 	S" ftp download_file /sd/146R0326.bin" GOM
 ;		
 

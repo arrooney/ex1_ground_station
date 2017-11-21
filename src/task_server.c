@@ -36,6 +36,7 @@
 
 #define WOD_BEACON_PORT 32
 #define CALLSIGN_PORT 33
+#define CMD_RSP_PORT 30
 
 #define CSP_PRINT_BUFFER_LENGTH 512
 #define CSP_PRINT_ELEMENT_SIZE  sizeof(char)
@@ -210,6 +211,7 @@ void * task_server(void * parameters) {
 						printf_fp("%d Node:%d # %s\n",time(NULL),packet->id.src,mssg);
 						}
 					free(mssg);
+					fflush(stdout);
 					csp_close(conn);
 					break;
 				case WOD_BEACON_PORT:
@@ -241,6 +243,16 @@ void * task_server(void * parameters) {
 					printf_fp("%s \n", packet->data);
 					csp_close(conn);
 					break;
+				case CMD_RSP_PORT: {
+					int rsp = packet->data[0] << 24
+						+ packet->data[1] << 16
+						+ packet->data[2] << 8
+						+ packet->data[3];
+					printf_fp("cmd resp: %d\n", rsp);
+					fflush(stdout);
+					csp_close(conn);
+					break;
+				}
 				default: {
 					csp_service_handler(conn, packet);
 					csp_close(conn);
@@ -248,6 +260,7 @@ void * task_server(void * parameters) {
 				}
 
 			}
+			csp_buffer_free(packet);
 
 		}
 

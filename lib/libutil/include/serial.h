@@ -31,7 +31,7 @@ struct serial_dev_t
 
 int serial_dev_init( struct serial_dev_t* dev, const char* path, uint32_t baud );
 void serial_set_callback( struct serial_dev_t* dev, serial_callback_t callback);
-void serial_putstr( struct serial_dev_t* dev, char * buf, int len);
+int serial_putstr( struct serial_dev_t* dev, char * buf, int len);
 void serial_putc( struct serial_dev_t* dev, char c );
 char serial_getc( struct serial_dev_t* dev );
 void serial_insert( struct serial_dev_t* dev, char c );
