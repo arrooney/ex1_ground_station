@@ -16,15 +16,52 @@ include dispatch.fth
 : WDT ( -- , resets the EPS and COM watchdogs )
 	S" eps resetwdt" GOM
 	S" ax100_rst_wdt" GOM
-	S" eps hk" GOM
 ;
 
 : DOWN ( -- , downloads the file of the night from SD card only )
-	S" ftp download_file /boot/adcs.bin" GOM
+	S" ftp download_file /boot/state_log.bin" GOM
 ;
+
+: FIX ( -- , try to fix shit. )
+	S" ftp rm /boot/debug_radio.txt" GOM
+	WAIT
+	S" reboot 1" GOM
+	WAIT
+	S" ftp upload_file safemode.bin /boot/safemode.bin" GOM
+	WAIT
+;
+
 
 : SOMETHING ( -- , downloads the file of the night from SD card only )
 	S" ftp upload_file lsbo_tl.txt /sd/lsbo_tl.txt" GOM
+;
+
+: NEWRAM ( -- , downloads the file of the night from SD card only )
+	S" ftp upload_file nanomind_Oct16.lzo /boot/nanomind.bin" GOM
+;
+
+: RAM ( -- , uploads boot.conf to allow use of the RAM image )
+	S" ftp upload_file boot.conf /boot/boot.conf" GOM
+;
+
+: NORAM ( -- , removes boot.conf in case of shit )
+	S" ftp rm /boot/boot.conf" GOM
+;
+
+: SAFE.UP ( -- , uploads the safemode.bin file to enable safemode )
+	S" ftp upload_file safemode.bin /boot/safemode.bin" GOM
+;
+
+: SAFE.DOWN ( -- , removes the safemode.bin file and allows normal boot. )
+	S" ftp rm /boot/safemode.bin" GOM
+;
+
+: DEBUG.UP ( -- , removes the safemode.bin file and allows normal boot. )
+	S" ftp upload_file debug_radio.txt /boot/debug_radio.txt" GOM
+;
+
+: DEBUG.DOWN ( -- , removes the debug_radio.txt file to silence debugs. )
+	S" ftp rm /boot/debug_radio.txt" GOM
 ;
 
 : FILEFORMAT ( -- , downloads the file of the night from SD card only )
@@ -33,29 +70,53 @@ include dispatch.fth
 ;
 
 : DOWN&RM ( -- , downloads the file and then deletes after with user input)
-	S" ftp download_file /sd/020W0272.bin" GOM
+	S" ftp download_file /sd/006W0126.bin" GOM
 	WAIT
 	KEY
 	[CHAR] d = IF
 		." Removing" CR
-		S" ftp rm /sd/020W0272.bin" GOM
+		S" ftp rm /sd/006W0126.bin" GOM
 	THEN
 ;
 
 : RM ( -- , remove the file of the night. )
-	S" ftp rm /boot/tc_log.bin" GOM
+	S" ftp rm /boot/bootcause.bin" GOM
 ;
 
-: MNLP.UP ( -- , Upload mnlp script to slot 0. Must be empty first. )
-	S" ftp upload_file mnlp_script_Aug4.bin /sd/MNLP_3.bin" GOM
+: MNLP.UP.1 ( -- , Upload mnlp script to slot 0. Must be empty first. )
+	S" ftp upload_file CA03_2017WK42_D1_SCRIPT.bin /sd/MNLP_0.bin" GOM
+;
+
+: MNLP.UP.2 ( -- , Upload mnlp script to slot 1. Must be empty first. )
+	S" ftp upload_file CA03_2017WK42_D2_SCRIPT.bin /sd/MNLP_1.bin" GOM
+;
+
+: MNLP.UP.3 ( -- , Upload mnlp script to slot 2. Must be empty first. )
+	S" ftp upload_file CA03_2017WK42_D3_SCRIPT.bin /sd/MNLP_2.bin" GOM
+;
+
+: MNLP.UP.4 ( -- , Upload mnlp script to slot 3. Must be empty first. )
+	S" ftp upload_file CA03_2017WK42_D4_SCRIPT.bin /sd/MNLP_3.bin" GOM
+;
+
+: MNLP.UP.5 ( -- , Upload mnlp script to slot 4. Must be empty first. )
+	S" ftp upload_file CA03_2017WK42_D5_SCRIPT.bin /sd/MNLP_4.bin" GOM
+;
+
+: MNLP.UP.6 ( -- , Upload mnlp script to slot 5. Must be empty first. )
+	S" ftp upload_file CA03_2017WK42_D6_SCRIPT.bin /sd/MNLP_5.bin" GOM
+;
+
+: MNLP.UP.7 ( -- , Upload mnlp script to slot 6. Must be empty first. )
+	S" ftp upload_file CA03_2017WK42_D7_SCRIPT.bin /sd/MNLP_6.bin" GOM
 ;
 
 : MNLP.DOWN ( -- , downloads the named MNLP file )
-	S" ftp download_file /boot/M170805S.bin" GOM
+	S" ftp download_file /boot/M170922S.bin" GOM
 ;
 
 : MNLP.RM ( -- , removes the specified MNLP script )
-	S" ftp rm /sd/MNLP_2.bin" GOM
+	S" ftp rm /sd/MNLP_5.bin" GOM
 ;
 
 : MNLP.OFF ( -- , shuts off MNLP task. )
@@ -140,12 +201,72 @@ include dispatch.fth
 
 : ADCS.FORMAT.FS ( -- , delete all files in the ADCS sd card! )
 	S" obc adcs 119 0 null.txt" GOM
+	WAIT
+	s" obc adcs 129 6 null.txt" GOM
+	WAIT
+	s" obc adcs 130 6 null.txt" GOM
+	WAIT
+	s" obc adcs 131 4 null.txt" GOM
+	WAIT
 ;
 
 : ADCS.TAKE.PHOTO ( -- , take photo. Currently nadir camera. )
 	S" obc adcs 110 10 take_photo_nadir.txt" GOM
 	WAIT
 	s" obc adcs 230 16 null.txt" GOM
+	WAIT
+;
+
+: ADCS.LOG.START ( -- , Starts the telemetry log. )
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	s" obc adcs 5 5 power_minimum.txt" GOM
+	WAIT
+	s" obc adcs 3 1 mode_run.txt" GOM
+	WAIT
+	s" obc adcs 17 1 estimate_rate_pitch.txt" GOM
+	WAIT
+	s" obc adcs 4 13 log_telem_3axis.txt" GOM
+	WAIT
+;
+
+: ADCS.LOG.SHORT ( -- , Starts the telemetry log, but only the log command. )
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	s" obc adcs 4 13 log_telem_3axis.txt" GOM
+	WAIT
+;
+
+: ADCS.LOG.STOP ( -- , Stops the telemetry log )
+	s" obc adcs 4 13 stop_telem_step1.txt" GOM
+	WAIT
+	s" obc adcs 114 0 null.txt" GOM
+	WAIT
+	s" obc adcs 240 22 null.txt" GOM
+	WAIT
+;
+
+: ADCS.FIND ( -- , Finds the files in the SD card )
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	s" obc adcs 114 0 null.txt" GOM
+	WAIT
+	s" obc adcs 240 22 null.txt" GOM
+	WAIT
+;
+
+: ADCS.DOWNLOAD.0 ( -- , Downloads 1st telem file to Nanomind )
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	s" obc adcs 114 0 null.txt" GOM
+	WAIT
+	s" obc adcs 240 22 null.txt" GOM
+	WAIT
+	s" obc adcs 116 13 download_telem_00.txt" GOM
+	WAIT
+	s" obc adcs 241 6 null.txt" GOM
+	WAIT
+	s" obc adcs 242 0 null.txt" GOM
 	WAIT
 ;
 
@@ -156,7 +277,22 @@ include dispatch.fth
 : ADCS.CSS ( -- , gets the raw coarse sun sensor values from the ADCS )
 	S" obc adcs 166 6 null.txt" GOM
 	WAIT
-	S" obc adcs 167 6 null.txt" GOM
+	S" obc adcs 165 6 null.txt" GOM
+	WAIT
+;
+
+: ADCS.SUN.CAL ( -- , gets the predicted sun, calibrated css and fine sun vectors )
+	S" obc adcs 158 6 null.txt" GOM
+	WAIT
+	S" obc adcs 150 6 null.txt" GOM
+	WAIT
+	S" obc adcs 151 6 null.txt" GOM
+	WAIT
+;
+
+: ADCS.IGRF ( -- , gets the IGRF model vector )
+	S" obc adcs 157 6 null.txt" GOM
+	WAIT
 ;
 
 : ADCS.MAG ( -- , gets the calibrated magnetometer xyz, and then the SGP predicted values. )
@@ -196,6 +332,11 @@ include dispatch.fth
 
 : ADCS.TLE ( -- , gets the TLE parameters saved in the config. )
 	S" obc adcs 191 64 null.txt" GOM
+	WAIT
+;
+
+: ADCS.CONF ( -- , gets the ADCS Config. )
+	S" obc adcs 192 240 null.txt" GOM
 	WAIT
 ;
 
@@ -242,8 +383,18 @@ include dispatch.fth
 	WAIT
 ;
 
+: ADCS.DETUMBLE.HIGHRATE ( -- , puts ADCS into the high rate detumble control mode >30 deg/s. )
+	S" obc adcs 18 4 detumble_highrate_forever.txt" GOM
+	WAIT
+;
+
 : ADCS.YMOM ( -- , puts ADCS into y momentum control mode. )
 	S" obc adcs 18 4 ymomentum_forever.txt" GOM
+	WAIT
+;
+
+: ADCS.YMOM.FORCED ( -- , puts ADCS into y momentum control mode, ignoring the bounds.. )
+	S" obc adcs 18 4 ymom_forced_forever.txt" GOM
 	WAIT
 ;
 
@@ -252,8 +403,37 @@ include dispatch.fth
 	WAIT
 ;
 
-: ADCS.MODE ( -- , stops all ADCS control. )
+: ADCS.EKF ( -- , enables EKF estimation. )
 	S" obc adcs 17 1 estimate_ekf.txt" GOM
+	WAIT
+;
+
+: ADCS.MAGRATE ( -- , enables magrate estimation. )
+	S" obc adcs 17 1 estimate_magrate.txt" GOM
+	WAIT
+;
+
+: ADCS.RATEPITCH ( -- , enables rate pitch estimation. )
+	S" obc adcs 17 1 estimate_rate_pitch.txt" GOM
+	WAIT
+;
+
+: ADCS.TEST ( -- , multistep command to test no rate detumble with EKF. )
+	S" obc adcs 128 8 null.txt" GOM
+	WAIT	
+	S" obc adcs 64 64 tle_adcs_oct18.txt" GOM
+	WAIT
+	S" obc adcs 91 26 est_param_config_v2.txt" GOM
+	WAIT
+	S" obc adcs 90 24 inertia_config.txt" GOM
+	WAIT
+	S" obc adcs 17 1 estimate_rate_pitch.txt" GOM
+	WAIT
+	S" obc adcs 136 48 null.txt" GOM
+	WAIT
+	S" obc adcs 18 4 detumble_forever.txt" GOM
+	WAIT
+	S" obc adcs 136 48 null.txt" GOM
 	WAIT
 ;
 
@@ -261,6 +441,35 @@ include dispatch.fth
 \ ******************************************************************************\
 \ ADCS config words								\
 \ ******************************************************************************\
+: ADCS.SET.CONFIG ( -- , updates configs that change or get deleted)
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	S" obc adcs 91 26 est_param_config_v2.txt" GOM
+	WAIT
+	S" obc adcs 90 24 inertia_config.txt" GOM
+	WAIT
+	S" obc adcs 86 30 mag_config_v4.txt" GOM
+	WAIT
+	S" obc adcs 83 14 css_config_v2.txt" GOM
+	WAIT
+	S" obc adcs 84 17 sun_config_v1.txt" GOM
+	WAIT
+	S" obc adcs 87 6 rot_sens_config.txt" GOM
+	WAIT
+	S" obc adcs 82 13 wheel_config.txt" GOM
+	WAIT
+	S" obc adcs 88 10 detumble_cont_config.txt" GOM
+	WAIT
+	S" obc adcs 81 13 torq_config_v2.1.txt" GOM
+	WAIT
+	S" obc adcs 64 64 tle_adcs_oct18.txt" GOM
+	WAIT
+	S" obc adcs 2 6 null.txt" GOM
+	WAIT
+	S" obc adcs 136 48 null.txt" GOM
+	WAIT
+;
+
 
 : ADCS.SET.RTC ( -- , updates the clock with computer time)
 	S" obc adcs 2 6 null.txt" GOM
@@ -268,10 +477,20 @@ include dispatch.fth
 
 : ADCS.SAVE.CONFIG ( -- , writes config from ram to boot file )
 	S" obc adcs 100 0 null.txt" GOM
+	WAIT
+;
+
+: ADCS.SET.ESTPARAM ( -- , writes config for estimation parameters )
+	S" obc adcs 91 26 est_param_config_v3_sun_css.txt" GOM
+	WAIT
 ;
 
 : ADCS.SET.NADIR ( -- , uploads nadir camera settings )
 	S" obc adcs 85 57 nadir_eauto.txt" GOM
+;
+
+: ADCS.SET.SUN ( -- , uploads sun camera settings )
+	S" obc adcs 84 17 sun_config_v1.txt" GOM
 ;
 
 : ADCS.SET.TORQ ( -- , uploads magnetotorquer settings )
@@ -303,7 +522,7 @@ include dispatch.fth
 ;
 
 : ADCS.SET.TLE ( -- , uploads TLE to adcs )
-	S" obc adcs 64 64 tle_adcs_aug3.txt" GOM
+	S" obc adcs 64 64 tle_adcs_oct18.txt" GOM
 ;
 
 \ ******************************************************************************\
@@ -339,6 +558,158 @@ include dispatch.fth
 : RADIO.SILENCE ( -- , Sets the tx_inhibit rparam to the value of seconds. )
 	S" rparam init 5 0" GOM
 	S" rparam set tx_inhibit 60" GOM
+;
+
+: RADIO.RAMUP.GO
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set rx_baud 12000" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set tx_baud 12000" GOM
+	WAIT
+;
+
+: RADIO.RAMUP.STOP
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set rx_baud 4800" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set tx_baud 4800" GOM
+	WAIT
+;
+
+: RADIO.RAMDOWN.GO
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 12000" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 12000" GOM
+	WAIT
+;
+
+: RADIO.RAMDOWN.STOP
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 4800" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 4800" GOM
+	WAIT
+;
+
+: RADIO.5
+	s" rparam init 15 0" GOM
+	s" rparam set tx_baud 4800" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set rx_baud 9600" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set tx_baud 9600" GOM
+	WAIT
+;
+
+: RADIO.4
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 28800" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 28800" GOM
+	WAIT
+;
+
+: RADIO.3
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 19200" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 19200" GOM
+	WAIT
+;
+
+: RADIO.2
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 9600" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 9600" GOM
+	WAIT
+;
+
+: RADIO.1
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	WAIT
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 4800" GOM
+	WAIT
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 4800" GOM
+	WAIT
+;
+: RADIO.1a
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 4800" GOM
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 4800" GOM
+;
+
+: RADIO.2a
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 9600" GOM
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 9600" GOM
+;
+
+: RADIO.3a
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 19200" GOM
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 19200" GOM
+;
+
+: RADIO.4a
+	s" rparam init 5 0" GOM
+	s" rparam set reboot_in 600" GOM
+	s" rparam init 15 0" GOM
+	s" rparam set rx_baud 28800" GOM
+	s" rparam init 5 0" GOM
+	s" rparam set tx_baud 28800" GOM
+;
+
+: RADIO.5a
+	s" rparam init 15 0" GOM
+	s" rparam set tx_baud 4800" GOM
+	s" rparam init 5 0" GOM
+	s" rparam set rx_baud 9600" GOM
+	s" rparam init 15 0" GOM
+	s" rparam set tx_baud 9600" GOM
 ;
 
 
@@ -622,6 +993,26 @@ include dispatch.fth
     CR ." CHARIZARD GO!" CR
 	S" ftp download_file /sd/146R0326.bin" GOM
 ;		
+
+: Drew ( --, downloads specific DFGM file )
+	S" ftp download_file /sd/001R0001.bin" GOM
+;
+
+: DUSTIN.1 ( --, downloads specific DFGM file )
+	S" ftp download_file /sd/002R0002.bin" GOM
+;
+
+: DUSTIN.2 ( --, downloads specific DFGM file )
+	S" ftp download_file /sd/003R0003.bin" GOM
+;	
+
+: DUSTIN.3 ( --, downloads specific DFGM file )
+	S" ftp download_file /sd/004R0004.bin" GOM
+;	
+
+: DUSTIN.4 ( --, downloads specific DFGM file )
+	S" ftp download_file /sd/005R0005.bin" GOM
+;			
 
 \ ******************************************************************************\
 \ OBC words									\
