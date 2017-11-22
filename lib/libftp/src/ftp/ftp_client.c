@@ -28,6 +28,7 @@
 #include <ftp/ftp_client.h>
 
 #define FTP_TIMEOUT 10000 
+#define FTP_CRC_TIMEOUT (2*60*1000)
 #define FTP_MKFS_TIMEOUT 10*60*1000
 
 /* Chunk status markers */
@@ -218,8 +219,10 @@ int ftp_download(uint8_t host, uint8_t port, const char * path, uint8_t backend,
 	rep_length = sizeof(ftp_type_t) + sizeof(ftp_download_reply_t);
 
 	conn = csp_connect(CSP_PRIO_NORM, host, port, 10000, CSP_O_RDP);
-	if (conn == NULL)
+	if (conn == NULL) {
+		color_printf(COLOR_RED, "Failed to open socket\r\n");
 		return -1;
+	}
 
 	int res_length = csp_transaction_persistent(conn, 120000, &req, req_length, &rep, rep_length);
 	if (res_length != rep_length) {
@@ -228,6 +231,7 @@ int ftp_download(uint8_t host, uint8_t port, const char * path, uint8_t backend,
 	}
 
 	if (rep.type != FTP_DOWNLOAD_REPLY || rep.downrep.ret != FTP_RET_OK) {
+		color_printf(COLOR_RED, "Invalid response from download setup\r\n");
 		ftp_perror(rep.downrep.ret);
 		return -1;
 	}
@@ -238,7 +242,6 @@ int ftp_download(uint8_t host, uint8_t port, const char * path, uint8_t backend,
 	*size = ftp_file_size;
 
 	color_printf(COLOR_GREEN, "File size is %"PRIu32"\r\n", ftp_file_size);
-	color_printf(COLOR_GREEN, "Checksum is %#010"PRIx32"\r\n", ftp_checksum);
 
 	/* Map file name */
 	char map[100];
@@ -506,8 +509,10 @@ int ftp_status_reply(void) {
 		csp_buffer_free(packet);
 
 		/* Break if all packets were received */
-		if (ftp_packet->data.chunk == ftp_chunks - 1)
+		if (ftp_packet->data.chunk == ftp_chunks - 1) {
+			color_printf(COLOR_YELLOW, "\r\nAll chunks received");
 			break;
+		}
 	}
 
 	color_printf(COLOR_NONE, "\r\n");
@@ -644,11 +649,20 @@ int ftp_crc(void) {
 
 	/* Reply */
 	int repsiz = sizeof(ftp_type_t) + sizeof(ftp_crc_reply_t);
-	if (csp_transaction_persistent(conn, FTP_TIMEOUT, &packet, sizeof(ftp_type_t), &packet, repsiz) != repsiz)
+	int result;
+
+	result = csp_transaction_persistent(conn, FTP_CRC_TIMEOUT, &packet, sizeof(ftp_type_t), &packet, repsiz);
+	if( result != repsiz) {
+		color_printf(COLOR_YELLOW, "expecting repsize %d\r\n", repsiz);
+		color_printf(COLOR_RED, "CRC CSP transaction failed repsize %d\r\n", result);
 		return -1;
-	if (packet.type != FTP_CRC_REPLY)
+	}
+	if (packet.type != FTP_CRC_REPLY) {
+		color_printf(COLOR_RED, "CRC Invalid response type\r\n");
 		return -1;
+	}
 	if (packet.crcrep.ret != FTP_RET_OK) {
+		color_printf(COLOR_RED, "CRC FTP Server encountered error \r\n");
 		ftp_perror(packet.crcrep.ret);
 		return -1;
 	}

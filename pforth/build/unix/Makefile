@@ -25,7 +25,7 @@ LIBTEST := libtest
 LIBTEST_MAIN := main_libtest.c
 
 IOHOOK_PATH := ../../../IOController/IOHook
-EXT_INC_PATH := $(IOHOOK_PATH) ../../../CObject/liba/Class ../../../CObject/liba/util
+EXT_INC_PATH := $(IOHOOK_PATH) ../../../CObject/liba/Class ../../../CObject/liba/util ../../../lib/libutil/include
 IOHOOK_LIB_PATH := $(addsuffix /debug,$(IOHOOK_PATH))
 EXT_LIB_PATH := $(addsuffix /debug,$(EXT_INC_PATH))
 IOHOOK_LIB := IOHook
