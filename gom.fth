@@ -67,6 +67,8 @@ include dispatch.fth
 : FILEFORMAT ( -- , downloads the file of the night from SD card only )
 	S" ftp backend 1" GOM
 	S" ftp mkfs 0" GOM
+	WAIT
+	S" ftp backend 2" GOM
 ;
 
 : BRENDAN
@@ -180,7 +182,7 @@ include dispatch.fth
 	WAIT
 	S" eps hk" GOM
 	WAIT
-	S" eps output 3 1 0" GOM
+	S" eps output 3 1 0" GOM 
 	S" eps output 0 1 0" GOM
 	WAIT
 	S" eps hk" GOM
@@ -199,12 +201,6 @@ include dispatch.fth
 
 : ADCS.FORMAT.FS ( -- , delete all files in the ADCS sd card! )
 	S" obc adcs 119 0 null.txt" GOM
-	WAIT
-	s" obc adcs 129 6 null.txt" GOM
-	WAIT
-	s" obc adcs 130 6 null.txt" GOM
-	WAIT
-	s" obc adcs 131 4 null.txt" GOM
 	WAIT
 ;
 
@@ -376,6 +372,15 @@ include dispatch.fth
 	S" obc adcs 6 1 deploy_mag_20.txt" GOM
 ;
 
+: ADCS.DFGM ( -- , runs new DFGM control mode with static wheel speed and fixed X torquer cycle. )
+	s" obc adcs 5 5 power_all.txt" GOM
+	WAIT
+	S" obc adcs 33 6 torq_duty_dfgm_50.txt" GOM
+	WAIT
+	S" obc adcs 32 6 wheel_speed_dfgm.txt" GOM
+	WAIT
+;
+
 : ADCS.DETUMBLE ( -- , puts ADCS into the detumble control mode. )
 	S" obc adcs 18 4 detumble_forever.txt" GOM
 	WAIT
@@ -416,23 +421,26 @@ include dispatch.fth
 	WAIT
 ;
 
-: ADCS.TEST ( -- , multistep command to test no rate detumble with EKF. )
-	S" obc adcs 128 8 null.txt" GOM
-	WAIT	
-	S" obc adcs 64 64 tle_adcs_oct18.txt" GOM
+: ADCS.YRATE ( -- , enables mems sensor estimation only. )
+	S" obc adcs 17 1 estimate_yrate_only.txt" GOM
 	WAIT
-	S" obc adcs 91 26 est_param_config_v2.txt" GOM
+;
+
+: ADCS.START ( -- , Enables power and starts control loop )
+	s" obc adcs 128 8 null.txt" GOM
 	WAIT
-	S" obc adcs 90 24 inertia_config.txt" GOM
+	s" obc adcs 5 5 power_all.txt" GOM
 	WAIT
-	S" obc adcs 17 1 estimate_rate_pitch.txt" GOM
+	s" obc adcs 3 1 mode_run.txt" GOM
 	WAIT
-	S" obc adcs 136 48 null.txt" GOM
-	WAIT
-	S" obc adcs 18 4 detumble_forever.txt" GOM
-	WAIT
-	S" obc adcs 136 48 null.txt" GOM
-	WAIT
+;
+
+: ADCS.AUTO ( -- , Telem 128 for use with automation. )
+	s" obc adcs 128 8 null.txt" GOM
+;
+
+: ADCS.NOCONTROL.AUTO ( -- , stops all ADCS control. )
+	S" obc adcs 18 4 no_control.txt" GOM
 ;
 
 
@@ -493,6 +501,10 @@ include dispatch.fth
 
 : ADCS.SET.TORQ ( -- , uploads magnetotorquer settings )
 	S" obc adcs 81 13 torq_config_v2.1.txt" GOM
+;
+
+: ADCS.SET.TORQ.HIGHRATE ( -- , uploads reversed Y magnetotorquer settings for absurd detumble )
+	S" obc adcs 81 13 torq_config_v2.1_highrate.txt" GOM
 ;
 
 : ADCS.SET.WHEEL ( -- , uploads wheel settings )
