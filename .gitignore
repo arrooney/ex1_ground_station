@@ -13,3 +13,5 @@ build/*
 *.TXT
 **/debug/**/*
 **/debug/*
+**/Ex-Alta1_Data/**
+*.a

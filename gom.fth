@@ -13,13 +13,29 @@ include dispatch.fth
 	THEN
 ;
 
+: DOWN.DFGM ( -- , downloads the first dfgm raw file.)
+	S" ftp download_file /sd/001R0001.bin" GOM
+;
+
+: RM.DFGM ( -- , removes the first dfgm raw file.)
+	S" ftp rm /sd/001R0001.bin" GOM
+;
+
+: DOWN.ADCS ( -- , downloads the adcs file.)
+	S" ftp download_file /boot/adcs.bin" GOM
+;
+
+: RM.ADCS ( -- , removes the adcs file from boot.)
+	S" ftp rm /boot/adcs.bin" GOM
+;
+
 : WDT ( -- , resets the EPS and COM watchdogs )
 	S" eps resetwdt" GOM
 	S" ax100_rst_wdt" GOM
 ;
 
-: DOWN ( -- , downloads the file of the night from SD card only )
-	S" ftp download_file /boot/state_log.bin" GOM
+: LOGCLEAN ( -- , removes the delinquent tc_log.bin file from /boot/ )
+	S" ftp rm /boot/tc_log.bin" GOM
 ;
 
 : FIX ( -- , try to fix shit. )
@@ -31,17 +47,16 @@ include dispatch.fth
 	WAIT
 ;
 
-
-: SOMETHING ( -- , downloads the file of the night from SD card only )
-	S" ftp upload_file lsbo_tl.txt /sd/lsbo_tl.txt" GOM
+: NEWRAM ( -- , uploads the new image to a new file. Has to be updated manually. )
+	S" ftp upload_file nanomind_Dec12.lzo /boot/nanominddec12.bin" GOM
 ;
 
-: NEWRAM ( -- , downloads the file of the night from SD card only )
-	S" ftp upload_file nanomind_Oct16.lzo /boot/nanomind.bin" GOM
+: RAM.OLD ( -- , uploads boot.conf to allow use of the RAM image )
+	S" ftp upload_file boot_Oct16.conf /boot/boot.conf" GOM
 ;
 
 : RAM ( -- , uploads boot.conf to allow use of the RAM image )
-	S" ftp upload_file boot.conf /boot/boot.conf" GOM
+	S" ftp upload_file boot_Dec12.conf /boot/boot.conf" GOM
 ;
 
 : NORAM ( -- , removes boot.conf in case of shit )
@@ -81,9 +96,6 @@ include dispatch.fth
 	THEN
 ;
 
-: RM ( -- , remove the file of the night. )
-	S" ftp rm /boot/bootcause.bin" GOM
-;
 
 : MNLP.UP.1 ( -- , Upload mnlp script to slot 0. Must be empty first. )
 	S" ftp upload_file CA03_2017WK42_D1_SCRIPT.bin /sd/MNLP_0.bin" GOM
@@ -229,7 +241,7 @@ include dispatch.fth
 : ADCS.LOG.SHORT ( -- , Starts the telemetry log, but only the log command. )
 	s" obc adcs 128 8 null.txt" GOM
 	WAIT
-	s" obc adcs 4 13 log_telem_3axis.txt" GOM
+	s" obc adcs 4 13 log_telem_cmm2.txt" GOM
 	WAIT
 ;
 
@@ -383,6 +395,11 @@ include dispatch.fth
 	WAIT
 ;
 
+: ADCS.NOTORQ ( -- , sets torque commands to 0. )
+	S" obc adcs 33 6 torq_duty_none.txt" GOM
+	WAIT
+;
+
 : ADCS.DETUMBLE ( -- , puts ADCS into the detumble control mode. )
 	S" obc adcs 18 4 detumble_forever.txt" GOM
 	WAIT
@@ -434,6 +451,15 @@ include dispatch.fth
 	s" obc adcs 5 5 power_all.txt" GOM
 	WAIT
 	s" obc adcs 3 1 mode_run.txt" GOM
+	WAIT
+;
+
+: ADCS.START.TRIGGER ( -- , Enables power and starts control loop in trigger mode )
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	s" obc adcs 5 5 power_all.txt" GOM
+	WAIT
+	s" obc adcs 3 1 mode_trigger.txt" GOM
 	WAIT
 ;
 
@@ -507,6 +533,14 @@ include dispatch.fth
 
 : ADCS.SET.TORQ.HIGHRATE ( -- , uploads reversed Y magnetotorquer settings for absurd detumble )
 	S" obc adcs 81 13 torq_config_v2.1_highrate.txt" GOM
+;
+
+: ADCS.SET.TORQ.ONLYZ ( -- , uploads config with X and Y torquers unassigned. Z regular polarity. )
+	S" obc adcs 81 13 torq_config_onlyz.txt" GOM
+;
+
+: ADCS.SET.TORQ.ONLYZREV ( -- , uploads config with X and Y torquers unassigned. Z reversed polarity. )
+	S" obc adcs 81 13 torq_config_zrev.txt" GOM
 ;
 
 : ADCS.SET.WHEEL ( -- , uploads wheel settings )

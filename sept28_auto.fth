@@ -1,0 +1,27 @@
+include gom.fth
+
+1506665880 BLOCK
+radio.5a
+eps.hk
+1506666000 BLOCK
+eps.hk
+1506666120 BLOCK
+eps.hk
+1506666240 BLOCK
+eps.hk
+1506666360 BLOCK
+eps.hk
+
+1506671640 BLOCK
+radio.5a
+eps.hk
+1506671760 BLOCK
+eps.hk
+1506671880 BLOCK
+eps.hk
+1506672000 BLOCK
+eps.hk
+1506672120 BLOCK
+eps.hk
+
+CR S" Script Finished" TYPE CR
