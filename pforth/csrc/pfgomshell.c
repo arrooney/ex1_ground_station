@@ -279,7 +279,7 @@ void gomshellFtpRemove( cell_t file_name_cell, cell_t file_name_cell_length )
 	free(file_name);
 }
 
-void gomshellPing( cell_t node )
+void gomshellPing( cell_t node, cell_t timeout, cell_t size )
 {
 	sdTerminalPrint("gomshell ping");
 }

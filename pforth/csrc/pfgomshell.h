@@ -16,7 +16,7 @@
  * FORTH
  * Pings the specified node in the CSP network.
  */
-void gomshellPing( cell_t node );
+void gomshellPing( cell_t node, cell_t timeout, cell_t size );
 
 /**
  * FORTH
