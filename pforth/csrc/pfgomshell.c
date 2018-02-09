@@ -1,6 +1,11 @@
 #include <pfgomshell.h>
 #include <command/command.h>
 #include <CCThreadedQueue.h>
+#include <csp/csp.h>
+#include <csp/csp_cmp.h>
+#include <util/timestamp.h>
+#include <stdlib.h>
+#include <time.h>
 
 #define GOMSHELL_OCP_COMMAND_START "exec 'COMMAND(\""
 #define GOMSHELL_OCP_COMMAND_START_LENGTH strlen(GOMSHELL_OCP_COMMAND_START)
@@ -279,8 +284,29 @@ void gomshellFtpRemove( cell_t file_name_cell, cell_t file_name_cell_length )
 	free(file_name);
 }
 
-void gomshellPing( cell_t node, cell_t timeout, cell_t size )
+void gomshellPing( cell_t node_, cell_t timeout_, cell_t size_ )
 {
-	sdTerminalPrint("gomshell ping");
+	int node, timeout, size;
+	int resp_time;
+	csp_timestamp_t start, stop;
+
+	node = (unsigned int) node_;
+	timeout = (unsigned int) timeout_;
+	size = (unsigned int) size_;
+	
+	sdTerminalPrint("Ping name %d, timeout %d, size %d: ", node, timeout, size);
+
+	clock_get_time(&start);
+	resp_time = csp_ping(node, timeout, size, CSP_O_NONE);
+	clock_get_time(&stop);
+
+	timestamp_diff((timestamp_t*) &stop, (timestamp_t*) &start);
+	if (resp_time < 0) {
+		sdTerminalPrint("Timeout after %.03f ms\r\n", stop.tv_sec * 1000 + stop.tv_nsec / 1E6);
+		PUSH_DATA_STACK(GOMSHELL_ERR_COM);
+	} else {
+		sdTerminalPrint("Reply in %.03f ms\r\n", stop.tv_sec * 1000 + stop.tv_nsec / 1E6);
+		PUSH_DATA_STACK(GOMSHELL_OK);
+	}
 }
 

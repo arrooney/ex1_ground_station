@@ -24,15 +24,15 @@ LIBPFORTH := pforth
 LIBTEST := libtest
 LIBTEST_MAIN := main_libtest.c
 
-EXT_INC_PATH := ../../../CObject/liba/Class ../../../CObject/liba/util ../../../lib/libutil/include ../../csrc
+EXT_INC_PATH := ../../../CObject/liba/Class ../../../CObject/liba/util ../../../lib/libutil/include ../../csrc ../../../lib/libcsp/include ../../../lib/libutil/include
 EXT_LIB_PATH := $(addsuffix /debug,$(EXT_INC_PATH))
 EXT_LIBS := m cutil cclass pthread
 
 # This is needed to get pForth to build on Snow Leopard and other 64 bit platforms.
 WIDTHOPT=
 
+#        --std=c89
 FULL_WARNINGS =  \
-        --std=c89 \
         -fsigned-char \
         -fno-builtin \
         -fno-unroll-loops \

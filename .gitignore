@@ -15,3 +15,5 @@ build/*
 **/debug/*
 **/Ex-Alta1_Data/**
 *.a
+**/#*
+**/.#*
