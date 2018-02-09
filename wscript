@@ -33,29 +33,25 @@ def configure(ctx):
 	except ctx.errors.ConfigurationError:
 		pass
 	
-	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client', 'Prototypes/libex', 'IOController/IOHook', \
+	ctx.env.append_unique('INCLUDES_CSPTERM',['include', 'client', 'Prototypes/libex', \
                                                   'albertasat-gomspace/albertasat-on-board-computer/liba/Subsystem/include', \
                                                   'CObject/liba/Class', 'CObject/liba/util', 'pforth/csrc'])
 	ctx.env.append_unique('FILES_CSPTERM', 'src/*.c')
-	ctx.env.append_unique('LIBS_CSPTERM', ['pforth', 'm', 'cutil', 'cclass', 'slre', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi', 'IOHook'])
+	ctx.env.append_unique('LIBS_CSPTERM', ['pforth', 'm', 'cutil', 'cclass', 'rt', 'pthread', 'elf', 'ncurses', 'sayhi'])
 	ctx.env.append_unique('DEFINES_CSPTERM', ['AUTOMATION', 'BDEBUG', 'OUTPUT_LOG', 'OUTPUT_LOG_NAME="' + os.getcwd() + '/logs/output_log.txt"', \
                                                   'PFORTH_DIC_PATH="pforth/build/unix/pforth.dic"'])
 	ctx.env.append_unique('LIBPATH_CSPTERM', [os.getcwd() + '/Prototypes/libex/debug', \
 						  os.getcwd() + '/CObject/liba/Class/debug', \
 						  os.getcwd() + '/CObject/liba/util/debug', \
-						  os.getcwd() + '/IOController/IOHook/debug', \
-                                                  os.getcwd() + '/pforth/build/unix', \
-                                                  os.getcwd() + '/slre/debug'])
-        ctx.env.append_unique('LINKFLAGS_CSPTERM', ['-Wl,-rpath=' + os.getcwd() + '/IOController/IOHook/debug', '-O0'])
+                                                  os.getcwd() + '/pforth/build/unix'])
+        ctx.env.append_unique('LINKFLAGS_CSPTERM', ['-O0'])
 	ctx.env.append_unique('CFLAGS_CSPTERM', ['-O0'])
 	
 	# Check WAF can find the required libraries.
 	ctx.check_cc(lib = 'sayhi', use = 'CSPTERM')
 	ctx.check_cc(lib = 'cclass', use = 'CSPTERM')
 	ctx.check_cc(lib = 'cutil', use = 'CSPTERM')
-	ctx.check_cc(lib = 'IOHook', use = 'CSPTERM')
         ctx.check_cc(lib = 'pforth', use = 'CSPTERM')
-        ctx.check_cc(lib = 'slre', use = 'CSPTERM')
 
 	# Options for CSP
 	ctx.options.with_os = 'posix'
@@ -111,13 +107,12 @@ def configure(ctx):
 def build(ctx):
 	ctx(export_includes=ctx.env.INCLUDES_CSPTERM, name='include')
 	ctx.recurse(modules, mandatory=False)
-	ctx.cxxflags = ['-Wl,-rpath=IOController/IOHook/debug']
 	ctx.program(
 		source=ctx.path.ant_glob(ctx.env.FILES_CSPTERM), 
-		stdlibpath = ['-LCObject/liba/Class/debug/', '-LCObject/liba/util/debug', '-LIOController/IOHook/debug', '-Lpforth/build/unix'],
+		stdlibpath = ['-LCObject/liba/Class/debug/', '-LCObject/liba/util/debug', '-Lpforth/build/unix'],
 		defines = ctx.env.DEFINES_NANOMIND,
 		target='csp-term', 
-		use=['CSPTERM', 'csp', 'param', 'util', 'gosh', 'ftp', 'log', 'slre', 'cclass', 'cutil', 'IOHook', 'pforth'],
+		use=['CSPTERM', 'csp', 'param', 'util', 'gosh', 'ftp', 'log', 'cclass', 'cutil', 'pforth'],
 		lib=ctx.env.LIBS_CSPTERM + ctx.env.LIBS
 		)
 

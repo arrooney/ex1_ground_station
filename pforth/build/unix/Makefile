@@ -24,13 +24,9 @@ LIBPFORTH := pforth
 LIBTEST := libtest
 LIBTEST_MAIN := main_libtest.c
 
-IOHOOK_PATH := ../../../IOController/IOHook
-EXT_INC_PATH := $(IOHOOK_PATH) ../../../CObject/liba/Class ../../../CObject/liba/util ../../../lib/libutil/include
-IOHOOK_LIB_PATH := $(addsuffix /debug,$(IOHOOK_PATH))
+EXT_INC_PATH := ../../../CObject/liba/Class ../../../CObject/liba/util ../../../lib/libutil/include ../../csrc
 EXT_LIB_PATH := $(addsuffix /debug,$(EXT_INC_PATH))
-IOHOOK_LIB := IOHook
-EXT_LIBS := m $(IOHOOK_LIB) cutil cclass pthread
-DIC_BUILD_PRELOAD := $ LD_PRELOAD="../../IOController/IOHook/debug/libIOHook.so"
+EXT_LIBS := m cutil cclass pthread
 
 # This is needed to get pForth to build on Snow Leopard and other 64 bit platforms.
 WIDTHOPT=
@@ -61,10 +57,11 @@ EMBCCOPTS = -DPF_STATIC_DIC #-DPF_NO_FILEIO
 PFINCLUDES = pf_all.h pf_cglue.h pf_clib.h pf_core.h pf_float.h \
 	pf_guts.h pf_host.h pf_inc1.h pf_io.h pf_mem.h pf_save.h \
 	pf_text.h pf_types.h pf_win32.h pf_words.h pfcompfp.h \
-	pfcompil.h pfdicdat_arm.h pfinnrfp.h pforth.h $(IOHOOK_PATH)
+	pfcompil.h pfdicdat_arm.h pfinnrfp.h pforth.h
 PFBASESOURCE = pf_cglue.c pf_clib.c pf_core.c pf_inner.c \
 	pf_io.c pf_io_none.c pf_main.c pf_mem.c pf_save.c \
-	pf_text.c pf_words.c pfcompil.c pfcustom.c
+	pf_text.c pf_words.c pfcompil.c pfcustom.c pfdfgm.c pfrings.c pfgomshell.c \
+	pfunix.c
 PFSOURCE = $(PFBASESOURCE) $(IO_SOURCE)
 
 VPATH = .:$(CSRCDIR):$(CSRCDIR)/posix:$(CSRCDIR)/stdio:$(CSRCDIR)/win32_console:$(CSRCDIR)/win32
@@ -88,7 +85,7 @@ PFOBJS     = $(PFSOURCE:.c=.o)
 PFEMBOBJS  = $(PFSOURCE:.c=.eo)
 
 .c.o: $(PFINCLUDES)
-	$(COMPILE) -c -o $@ $<
+	$(COMPILE) -I../../../lib/libgosh/include -I../../../build/include -DGOMSHELL -c -o $@ $<
 
 .c.eo: $(PFINCLUDES) pfdicdat.h
 	$(COMPILE) $(EMBCCOPTS) -c -o $@ $<
@@ -96,12 +93,7 @@ PFEMBOBJS  = $(PFSOURCE:.c=.eo)
 .PHONY: all clean test
 .PHONY: help pffiles pfdicapp pfdicdat pforthapp
 
-all: $(PFORTHAPP) gomshell_lib
-
-gomshell_lib:
-	rm pfcustom.o
-	$(COMPILE) -I../../../lib/libgosh/include -I../../../build/include -I../../../slre -c -DGOMSHELL -o pfcustom.o ../../csrc/pfcustom.c
-	$(ARCHIVE) rcs -o lib$(LIBPFORTH).a $(PFOBJS)
+all: $(PFORTHAPP) 
 
 pffiles:
 	@echo "INCLUDE FILES -----------------"
@@ -113,6 +105,9 @@ pffiles:
 	@echo "EMBEDDED OBJECT FILES ------------------"
 	@echo ${PFEMBOBJS}
 
+obj_only: $(PFOBJS)
+	$(ARCHIVE) rcs -o lib$(LIBPFORTH).a $(PFOBJS)
+
 # Build pforth by compiling 'C' source.
 $(PFDICAPP): $(PFINCLUDES) $(PFOBJS)
 	$(LINK) -o $@ $(PFOBJS) $(LDADD) $(LIB_LINKS)
@@ -121,7 +116,7 @@ $(PFDICAPP): $(PFINCLUDES) $(PFOBJS)
 
 # Build basic dictionary image by running newly built pforth and including "system.fth".
 $(PFORTHDIC): $(PFDICAPP)
-	wd=$$(pwd); (cd $(FTHDIR); $(DIC_BUILD_PRELOAD) $${wd}/$(PFDICAPP) -i system.fth)
+	wd=$$(pwd); (cd $(FTHDIR); $${wd}/$(PFDICAPP) -i system.fth)
 	(cd $(FTHDIR); cat pforth.dic; rm -f pforth.dic) > $@
 
 $(PFDICDAT): $(PFORTHDIC) $(PFDICAPP)

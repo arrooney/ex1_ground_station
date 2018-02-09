@@ -19,8 +19,6 @@
 ** 090220 PLB Fixed broken sdQueryTerminal on Mac. It always returned true.
 ***************************************************************/
 
-#include <IOHook.h>
-
 #include "../pf_all.h"
 
 /* Configure console so that characters are not buffered.
@@ -35,16 +33,12 @@
 #include <termios.h>
 #include <sys/poll.h>
 #include <stdarg.h>
-
-#include <IOHook.h>
+#include <stdio.h>
 
 int pforth_dic_build = 0;
 
 static struct termios save_termios;
 static int stdin_is_tty;
-
-static IOHook_Printf_FP printf_fp;
-static IOHook_Getchar_FP getchar_fp;
 
 /* poll() is broken in Mac OS X Tiger OS so use select() instead. */
 #ifndef PF_USE_SELECT
@@ -54,7 +48,7 @@ static IOHook_Getchar_FP getchar_fp;
 /* Default portable terminal I/O. */
 int  sdTerminalOut( char c )
 {
-	printf_fp("%c", c);
+	printf("%c", c);
 	return (int) c;
 }
 
@@ -72,13 +66,13 @@ int sdTerminalPrint( const char* format, ... )
 
 int  sdTerminalEcho( char c )
 {
-	printf_fp("%c", c);
+	printf("%c", c);
 	return 0;
 }
 
 int  sdTerminalIn( void )
 {
-	return getchar_fp( );
+	return getchar( );
 }
 
 int  sdTerminalFlush( void )
@@ -134,15 +128,6 @@ void sdTerminalInit(void)
 {
     struct termios term;
 
-    /* Need this here for building pforth.dic. Need to remove it for the gomshell.
-     * sadface.
-     */
-    if( pforth_dic_build == 1 ) {
-	    IOHook_Init( );
-    }
-    printf_fp = IOHook_GetPrintf( );
-    getchar_fp = IOHook_GetGetchar( );
-    
     stdin_is_tty = isatty(STDIN_FILENO);
     if (stdin_is_tty)
     {

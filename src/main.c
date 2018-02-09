@@ -4,7 +4,6 @@
  * @author Johan De Claville Christiansen
  * Copyright 2010-2015 GomSpace ApS. All rights reserved.
  */
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -33,21 +32,29 @@
 #include <util/console.h>
 #include <util/log.h>
 #include <util/vmem.h>
-/* IO Controller */
 #ifdef AUTOMATION
 #include <unistd.h>
-#include <IOHook.h>
 #include <pforth.h>
+#include <CCThreadedQueue.h>
+#include <CCArrayQueue.h>
 #endif
 
 const vmem_t vmem_map[] = {{0}};
 char * pipe_buffer;
 char holdbuff=0;
 #ifdef AUTOMATION
-#define STARTUP_BUFFER_TIMEOUT 500
+struct CCThreadedQueue gomshell_input;
+static struct CCArrayQueue gomshell_input_backbone;
 static pthread_t forth_thread_handle;
 static void* forth_thread( void* arg );
+static char *DicName = "pforth/fth/pforth.dic";
+static char DicName_[100];
+static char *SrcName = NULL;
+static char SrcName_[100];
+static char IfInit = 0;
 #endif
+
+static void print_logo( void );
 
 static void print_help(void) {
 	printf(" usage: csp-term <-d|-c|-z> [optargs]\r\n");
@@ -63,11 +70,19 @@ static void print_help(void) {
 int main(int argc, char * argv[])
 {
 #ifdef AUTOMATION
-	/* Initialize IOHook.
+	/* Initialize queue for forth -> gomshell IO 
 	 */
-	if( IOHook_Init( ) != 0 ) {
+	CError err;
+	err = CCArrayQueue(&gomshell_input_backbone, sizeof(char), 512);
+	if( err != COBJ_OK ) {
+		printf("Error creating forth->gomshell queue\n");
 		return -1;
 	}
+	err = CCThreadedQueue(&gomshell_input, &gomshell_input_backbone.ciqueue);
+	if( err != COBJ_OK ) {
+		printf("Error creating forth->gomshell threaded queue\n");
+		return -1;
+	}	
 #endif
 	/* Config */
 	uint8_t addr = 8;
@@ -91,7 +106,7 @@ int main(int argc, char * argv[])
 	 * Parser
 	 **/
 	int c;
-	while ((c = getopt(argc, argv, "a:b:c:d:hz:")) != -1) {
+	while ((c = getopt(argc, argv, "l:is:a:b:c:d:hz:")) != -1) {
 		switch (c) {
 		case 'a':
 			addr = atoi(optarg);
@@ -116,6 +131,23 @@ int main(int argc, char * argv[])
 			break;
 		case '?':
 			return 1;
+
+		/* 'l', 's', and 'i' are pforth options. */
+		case 'l':
+			strcpy(DicName_, optarg);
+			DicName = DicName_;
+			printf("Using Forth dictionary %s\n", DicName);
+			break;
+		case 'i':
+			printf("Setting IfInit to TRUE\n");
+			IfInit = 1;
+			DicName = NULL;
+			break;
+		case 's':
+			strcpy(SrcName_, optarg);
+			SrcName = SrcName_;
+			printf("Running Forth source %s\n", SrcName);
+			break;
 		default:
 			exit(EXIT_FAILURE);
 		}
@@ -220,6 +252,7 @@ int main(int argc, char * argv[])
 	pthread_setname_np(handle_console, "gomshell");
 	
 #ifdef AUTOMATION
+	printf("Initializing Forth kernal thread\n");
 	pthread_create(&forth_thread_handle, NULL, forth_thread, NULL);
 	pthread_setname_np(forth_thread_handle, "forth");
 #endif
@@ -235,70 +268,20 @@ int main(int argc, char * argv[])
 
 }
 
-/* Flush data from the gomshell output queue onto the terminal.
- * Will exit after STARTUP_BUFFER_TIMEOUT ms with no activity on the
- * output queue.
- */
-static void gomshell_flush( )
-{
-	IOHook_Printf_FP printf_fp;
-	char msg;
-	int i;
-	struct CCThreadedQueue* output_buffer;
-	CCTQueueError err;
-	
-	printf_fp = IOHook_GetPrintf( );
-	output_buffer = IOHook_GetGomshellOutputQueue( );
-
-	/* Empty the gomshell output buffer.
-	 */
-	for( ;; ) {
-		err = CCThreadedQueue_Remove(output_buffer, &msg, STARTUP_BUFFER_TIMEOUT);
-		if( err == CCTQUEUE_OK ) {
-			printf_fp("%c", msg);
-		}
-		else {
-			break;
-		}
-	}
-
-}
 
 #ifdef AUTOMATION
 static void* forth_thread( void* arg )
 {
  	(void) arg;
-	IOHook_Printf_FP printf_fp;
-	const char *SourceName = NULL;
-	char IfInit = 0;
 	char *s;
 	char msg;
 	int i;
 	int Result;
-	const char *DicName = PFORTH_DIC_PATH;
+
 	struct CCThreadedQueue* output_buffer;
 	CCTQueueError err;
 	
-	printf_fp = IOHook_GetPrintf( );
-	printf_fp("Running startup diagnostics...\n");
-	usleep(1000*40);
-	printf_fp("\tGomshell backend...");
-	usleep(1000*90);
-	printf_fp(" diagnostics OK, running\n");
-	usleep(1000*30);
-	printf_fp("\tShared library and IO override...");
-	usleep(1000*340);
-	printf_fp(" diagnostics OK, running\n");
-	usleep(1000*60);
-	printf_fp("\tForth frontend...");
-	usleep(1000*90);
-	printf_fp(" diagnostics OK, running\n");
-	usleep(1000*230);
-	printf_fp("\tAll systems go\n\n");
-	
-	/* Clear the output queue of startup garbage.
-	 */
-	CCThreadedQueue_Clear(IOHook_GetGomshellOutputQueue( ));
+	printf("Welcome to Ex-Alta 1's interactive Forth shell.\n");
 
 	/* Disable verbose output of forth interpreter. Set to 0 if you
 	 * like verbose things.
@@ -307,30 +290,20 @@ static void* forth_thread( void* arg )
 
 	/* Start the Forth Kernal. This will never return.
 	 */
-	Result = pfDoForth( DicName, SourceName, IfInit);	
+	print_logo();
+	Result = pfDoForth( DicName, SrcName, IfInit);	
 
-	printf_fp("Unexpected exit from Forth kernal\n");
-	pthread_exit(NULL);
-	
-#ifdef OUTPUT_LOG
-	FILE* output_log;
-	time_t ltime;
-
-	output_log = fopen(OUTPUT_LOG_NAME, "a+");
-	if( output_log == NULL ) {
-		pthread_exit(NULL);
+	printf("Exit from Forth kernal, condition %d\n", Result);
+	if( Result == 0 ) {
+		exit(0);
+	} else {
+		exit(-1);
 	}
-
-	ltime = time(NULL);
-	fprintf(output_log, "\n\nNew Entry: %s\n", asctime(localtime(&ltime)));
-#endif
-
-	fclose(output_log);
-	pthread_exit(NULL);
+	return NULL;
 }
 #endif
 
-static void print_logo( )
+static void print_logo( void )
 {
 	printf( "               ,        ,			\n" );
 	printf( "              /(        )`			\n" );

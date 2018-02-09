@@ -25,8 +25,6 @@
 #include <termios.h>
 #include <time.h>
 
-#include <IOHook.h>
-IOHook_Printf_FP pfp = NULL;
 
 static struct termios old_stdin, new_stdin;
 static struct termios old_stdout, new_stdout;
@@ -42,6 +40,8 @@ static struct termios old_stdout, new_stdout;
 #include <util/hexdump.h>
 #include <util/log.h>
 #include <command/command.h>
+
+#include <CCThreadedQueue.h>
 
 #define CONTROL(X)  ((X) - '@')
 
@@ -81,6 +81,15 @@ static const char backspace_char = '\b';
 static const char space_char 	= ' ';
 static const char cr_char 		= '\r';
 static const char nl_char 		= '\n';
+
+extern struct CCThreadedQueue gomshell_input;
+
+static char getForthChar( )
+{
+	char character;
+	CCThreadedQueue_Remove(&gomshell_input, &character, COS_BLOCK_FOREVER);
+	return character;
+}
 
 const char* console_get_prompt_identifier( )
 {
@@ -397,7 +406,7 @@ void *debug_console(void *pvParameters) {
 	console_reset();
 	
 	while (1) {
-		c = getchar();
+		c = getForthChar();
 
 		switch (c) {
 		case CONTROL('A'):
@@ -468,7 +477,7 @@ void *debug_console(void *pvParameters) {
 		default:
 			if (escape == CONSOLE_ESCAPE) {
 				if ((c == '[') || (c == 'O')) {
-					c = getchar();
+					c = getForthChar();
 					if (c == 'F')
 						console_end_of_line();
 					if (c == 'H')
@@ -482,10 +491,10 @@ void *debug_console(void *pvParameters) {
 					if (c == 'D')
 						console_backward_char();
 					if (c == '1')
-						if (getchar() == '~')
+						if (getForthChar() == '~')
 							console_beginning_of_line();
 					if (c == '3')
-						if (getchar() == '~')
+						if (getForthChar() == '~')
 							console_delete();
 				}
 				escape = CONSOLE_NORMAL;

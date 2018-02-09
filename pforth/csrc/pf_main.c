@@ -55,6 +55,8 @@ int main( void )
 }
 #else
 
+extern int pforth_dic_build;
+
 int main( int argc, char **argv )
 {
 #ifdef PF_STATIC_DIC
@@ -136,8 +138,6 @@ int main( int argc, char **argv )
         goto on_error;
     }
 #endif
-    extern int pforth_dic_build;
-
     /* See the pf_io source file for the reason this is used. 
      */
     pforth_dic_build = 1;
