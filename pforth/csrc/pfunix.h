@@ -31,6 +31,14 @@ void programExit( void );
 /**
  * FORTH
  * Same as forth word TYPE but with a color parameter
+ * color =
+ * 1: red
+ * 2: yellow
+ * 3: green
+ * 4: blue
+ * 5: magenta
+ * 6: grey
+ * 7: default
  */
 void colorType( cell_t addr, cell_t len, cell_t color );
 
