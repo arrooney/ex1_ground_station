@@ -54,4 +54,50 @@ void programExit( void )
 	exit(EXIT_SUCCESS);
 }
 
-
+#define RED     "\x1b[31m"
+#define GREEN   "\x1b[32m"
+#define LGREEN   "\x1b[32;1m"
+#define YELLOW  "\x1b[33m"
+#define BLUE    "\x1b[34m"
+#define MAGENTA "\x1b[35m"
+#define CYAN    "\x1b[36m"
+#define C_RESET   "\x1b[0m"
+#define GREY	   "\x1b[30;1m"
+void colorType( cell_t addr_, cell_t len_, cell_t color_ )
+{
+	char* str = (char*) addr_;
+	size_t len = (size_t) len_;
+	int color = (int) color_;
+	
+	switch( color ) {
+	case 1:
+		/* Red */
+		sdTerminalPrint(RED "%.*s" C_RESET, len, str);
+		break;
+	case 2:
+		/* Yellow */
+		sdTerminalPrint(YELLOW "%.*s" C_RESET, len, str);
+		break;
+	case 3:
+		/* Green */
+		sdTerminalPrint(GREEN "%.*s" C_RESET, len, str);
+		break;
+	case 4:
+		/* Blue */
+		sdTerminalPrint(CYAN "%.*s" C_RESET, len, str);
+		break;
+	case 5:
+		/* Magenta */
+		sdTerminalPrint(MAGENTA "%.*s" C_RESET, len, str);
+		break;
+	case 6:
+		/* Grey */
+		sdTerminalPrint(GREY "%.*s" C_RESET, len, str);
+		break;
+	case 7:
+	default:
+		/* Reset */
+		sdTerminalPrint(C_RESET "%.*s", len, str);
+		break;
+	}
+}

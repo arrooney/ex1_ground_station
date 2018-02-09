@@ -96,7 +96,8 @@ CFunc0 CustomFunctionTable[] =
 	(CFunc0) incrementRingName,		/* NEXT-RING */
 	(CFunc0) dfgm_mock_use_ring,		/* DFGM-MOCK.READ-RING */
 	(CFunc0) dfgm_mock_min_max_toggle,	/* DFGM-MOCK.MIN-MAX */
-	(CFunc0) gomshellPing			/* PING */
+	(CFunc0) gomshellPing,			/* PING */
+	(CFunc0) colorType			/* TYPE.COLOR */
 };
 #endif
 
@@ -177,6 +178,8 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "DFGM-MOCK.MIN-MAX", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.PING", i++, C_RETURNS_VOID, 3 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "TYPE.COLOR", i++, C_RETURNS_VOID, 3 );
     if( err < 0 ) return err;
     return 0;
 }
