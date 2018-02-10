@@ -24,7 +24,7 @@ LIBPFORTH := pforth
 LIBTEST := libtest
 LIBTEST_MAIN := main_libtest.c
 
-EXT_INC_PATH := ../../../CObject/liba/Class ../../../CObject/liba/util ../../../lib/libutil/include ../../csrc ../../../lib/libcsp/include ../../../lib/libutil/include
+EXT_INC_PATH := ../../../CObject/liba/Class ../../../CObject/liba/util ../../../lib/libutil/include ../../csrc ../../../lib/libcsp/include ../../../lib/libutil/include ../../../include
 EXT_LIB_PATH := $(addsuffix /debug,$(EXT_INC_PATH))
 EXT_LIBS := m cutil cclass pthread
 

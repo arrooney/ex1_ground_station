@@ -9,6 +9,14 @@
     S" WARNING" 2 TYPE.COLOR
 ;
 
+: MC.ERROR ( -- , Prings the string ERROR in magenta )
+    S" ERROR" 5 TYPE.COLOR
+;
+
+: MC.CRITICAL ( -- , Prings the string CRITICAL ERROR in red )
+    S" CRITICAL ERROR" 1 TYPE.COLOR
+;
+
 \ ******************************************************************************\
 \ AOS 										\
 \ ******************************************************************************\

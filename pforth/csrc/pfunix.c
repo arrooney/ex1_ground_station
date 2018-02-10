@@ -101,3 +101,10 @@ void colorType( cell_t addr_, cell_t len_, cell_t color_ )
 		break;
 	}
 }
+
+void timeStamp( void )
+{
+	char time_string[32];
+	snprintf(time_string, 32, "%d ", time(NULL));
+	sdTerminalPrint(time_string, strlen(time_string));
+}

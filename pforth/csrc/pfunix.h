@@ -42,4 +42,10 @@ void programExit( void );
  */
 void colorType( cell_t addr, cell_t len, cell_t color );
 
+/** 
+ * FORTH
+ * Output timestamp to terminal
+ */
+void timeStamp( void );
+
 #endif

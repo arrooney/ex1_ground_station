@@ -110,12 +110,14 @@ static void console_write(const char *str, int length) {
 }
 
 static void console_prompt(void) {
-	console_write(col_start, strlen(col_start));
+//	console_write(col_start, strlen(col_start));
+	console_write(hostname, strlen(hostname));
 	sprintf(time_string, "%d ", time(NULL));
 	console_write(time_string, strlen(time_string));
-	console_write(hostname, strlen(hostname));
-	console_write(prompt, strlen(prompt));
-	console_write(col_end, strlen(col_end));
+//	console_write(prompt, strlen(prompt));
+//	console_write(col_end, strlen(col_end));
+	console_write("\n", 1);
+	fflush(stdout);
 }
 
 void console_set_hostname(char *host) {

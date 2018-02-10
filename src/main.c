@@ -54,8 +54,6 @@ static char SrcName_[100];
 static char IfInit = 0;
 #endif
 
-static void print_logo( void );
-
 static void print_help(void) {
 	printf(" usage: csp-term <-d|-c|-z> [optargs]\r\n");
 	printf("  -d DEVICE,\tSet device (default: /dev/ttyUSB0)\r\n");
@@ -153,9 +151,7 @@ int main(int argc, char * argv[])
 		}
 	}
 
-	/**
-	 * CSP / Network
-	 */
+	 /* CSP / Network */
 	csp_set_hostname("csp-term");
 	csp_set_model("CSP Term");
 	//csp_buffer_init(400, 512);
@@ -190,17 +186,13 @@ int main(int argc, char * argv[])
 
 	}
 
-	/**
-	 * ZMQ interface
-	 */
+	/* ZMQ interface */
 	if (use_zmq == 1) {
 		csp_zmqhub_init(addr, zmqhost);
 		csp_route_set(CSP_DEFAULT_ROUTE, &csp_if_zmqhub, CSP_NODE_MAC);
 	}
 
-	/**
-	 * CAN Interface
-	 */
+	 /* CAN Interface */
 	if (use_can == 1) {
 		struct csp_can_config conf = {.ifc = ifc};
 		csp_can_init(CSP_CAN_MASKED, &conf);
@@ -212,21 +204,13 @@ int main(int argc, char * argv[])
 	adcs_node_set(1);
 #endif
 
-	/**
-	 * liblog setup
-	 */
+	 /* liblog setup */
 	#define LOG_STORE_SIZE 0x200
 	static uint8_t buf[LOG_STORE_SIZE] = {};
 	log_store_init((vmemptr_t) buf, LOG_STORE_SIZE);
 
-	/**
-	 * Parameter system
-	 */
+	/* Parameter system */
 	param_index_set(0, (param_index_t) {.table = param_test, .count = PARAM_TEST_COUNT, .physaddr = malloc(PARAM_TEST_SIZE), .size = PARAM_TEST_SIZE});
-
-	/**
-	 * Tasks
-	 */
 
 	/* Router */
 	csp_route_start_task(1000, 0);
@@ -246,12 +230,13 @@ int main(int argc, char * argv[])
 
 	/* Console */
 	command_init();
-	console_set_hostname("csp-term");
+	console_set_hostname("Current time: ");
 	static pthread_t handle_console;
 	pthread_create(&handle_console, NULL, debug_console, NULL);
 	pthread_setname_np(handle_console, "gomshell");
 	
 #ifdef AUTOMATION
+	sleep(1);
 	printf("Initializing Forth kernal thread\n");
 	pthread_create(&forth_thread_handle, NULL, forth_thread, NULL);
 	pthread_setname_np(forth_thread_handle, "forth");
@@ -280,7 +265,7 @@ static void* forth_thread( void* arg )
 
 	struct CCThreadedQueue* output_buffer;
 	CCTQueueError err;
-	
+
 	printf("Welcome to Ex-Alta 1's interactive Forth shell.\n");
 
 	/* Disable verbose output of forth interpreter. Set to 0 if you
@@ -290,7 +275,6 @@ static void* forth_thread( void* arg )
 
 	/* Start the Forth Kernal. This will never return.
 	 */
-	print_logo();
 	Result = pfDoForth( DicName, SrcName, IfInit);	
 
 	printf("Exit from Forth kernal, condition %d\n", Result);
@@ -302,27 +286,3 @@ static void* forth_thread( void* arg )
 	return NULL;
 }
 #endif
-
-static void print_logo( void )
-{
-	printf( "               ,        ,			\n" );
-	printf( "              /(        )`			\n" );
-	printf( "              \\ \\___   / |		\n" );
-	printf( "              /- _  `-/  '			\n" );
-	printf( "             (/\\/ \\ \\   /\\		\n" );
-	printf( "             / \\/   | `    \\		\n" );
-	printf( "            O O   ) /    |			\n" );
-	printf( "            `-^--'`<     '			\n" );
-	printf( "           (_.)  _  )   /			\n" );
-	printf( "            `.___/`    /			\n" );
-	printf( "              `-----' /			\n" );
-	printf( "<----.     __ / __   \\			\n" );
-	printf( "<----|====O)))==) \\) /====		\n" );
-	printf( "<----'    `--' `.__,' \\			\n" );
-	printf( "             |        |			\n" );
-	printf( "              \\       /			\n" );
-	printf( "        ______( (_  / \\______		\n" );
-	printf( "       ,'  ,-----'   |        \\	\n" );
-	printf( "       `--{__________)        \\/ 	\n" );
-}
-

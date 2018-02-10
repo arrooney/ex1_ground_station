@@ -48,10 +48,7 @@ def configure(ctx):
 	ctx.env.append_unique('CFLAGS_CSPTERM', ['-O0'])
 	
 	# Check WAF can find the required libraries.
-	ctx.check_cc(lib = 'sayhi', use = 'CSPTERM')
-	ctx.check_cc(lib = 'cclass', use = 'CSPTERM')
-	ctx.check_cc(lib = 'cutil', use = 'CSPTERM')
-        ctx.check_cc(lib = 'pforth', use = 'CSPTERM')
+
 
 	# Options for CSP
 	ctx.options.with_os = 'posix'
