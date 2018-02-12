@@ -32,6 +32,14 @@ unsigned int pf_powerof( unsigned int base, unsigned int exp );
 void gomshellRingAdd( struct CIList* tail_list, char* tail_file_name);
 CBool gomshellExtractRingTails( struct CIList* ring_string, struct CIList* ring_name );
 
+
+/** 
+ * FORTH
+ * Determines if the OBC is running
+ * firmware, or in boot safe mode. 
+ */
+void obcBootState( void );
+
 /**
  * FORTH
  * Puts ID for WOD ring on stack

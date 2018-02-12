@@ -17,6 +17,7 @@
 ***************************************************************/
 
 #include "pf_all.h"
+#include <time.h>
 
 extern CFunc0 CustomFunctionTable[];
 
@@ -26,6 +27,7 @@ cell_t CallUserFunction( cell_t Index, int32_t ReturnMode, int32_t NumParams )
     cell_t P1, P2, P3, P4, P5;
     cell_t Result = 0;
     CFunc0 CF;
+    char time_string[32];
 
 DBUG(("CallUserFunction: Index = %d, ReturnMode = %d, NumParams = %d\n",
     Index, ReturnMode, NumParams ));

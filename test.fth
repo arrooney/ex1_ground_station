@@ -1,1 +1,187 @@
-S" hi" TYPE
+: TEST.EPS-COMP
+    ROT
+    = NOT IF
+	." Index " . ." Failed" CR
+    ELSE
+	DROP
+    THEN
+;
+
+: TEST.EPS-HK
+    \ Assume eps hk hasn't been updated yet
+    \ with GOM.EPS.GET-HK
+
+    CR ." This quick test assumes GOM.EPS.GET-HK has never"
+    ."  been called"
+    
+    \ vboost[3]
+    1 0 GOM.EPS.INDEX-HK
+    1 0 TEST.EPS-COMP
+    1 1 GOM.EPS.INDEX-HK
+    1 1 TEST.EPS-COMP
+    1 2 GOM.EPS.INDEX-HK
+    1 2 TEST.EPS-COMP
+
+    \ vbatt
+    2 0 GOM.EPS.INDEX-HK
+    2 3 TEST.EPS-COMP
+
+    \ curin[3]
+    3 0 GOM.EPS.INDEX-HK
+    3 4 TEST.EPS-COMP
+    3 1 GOM.EPS.INDEX-HK
+    3 5 TEST.EPS-COMP
+    3 2 GOM.EPS.INDEX-HK
+    3 6 TEST.EPS-COMP
+
+    \ cursun
+    4 0 GOM.EPS.INDEX-HK
+    4 7 TEST.EPS-COMP
+    
+    \ cursys
+    5 0 GOM.EPS.INDEX-HK
+    5 8 TEST.EPS-COMP
+
+    \ curout[6]
+    7 0 GOM.EPS.INDEX-HK
+    7 10 TEST.EPS-COMP
+    7 1 GOM.EPS.INDEX-HK
+    7 11 TEST.EPS-COMP
+    7 2 GOM.EPS.INDEX-HK
+    7 12 TEST.EPS-COMP
+    7 3 GOM.EPS.INDEX-HK
+    7 13 TEST.EPS-COMP
+    7 4 GOM.EPS.INDEX-HK
+    7 14 TEST.EPS-COMP
+    7 5 GOM.EPS.INDEX-HK
+    7 15 TEST.EPS-COMP
+
+    \ output[8]
+    8 0 GOM.EPS.INDEX-HK
+    8 16 TEST.EPS-COMP
+    8 1 GOM.EPS.INDEX-HK
+    8 17 TEST.EPS-COMP
+    8 2 GOM.EPS.INDEX-HK
+    8 18 TEST.EPS-COMP
+    8 3 GOM.EPS.INDEX-HK
+    8 19 TEST.EPS-COMP
+    8 4 GOM.EPS.INDEX-HK
+    8 20 TEST.EPS-COMP
+    8 5 GOM.EPS.INDEX-HK
+    8 21 TEST.EPS-COMP
+    8 6 GOM.EPS.INDEX-HK
+    8 22 TEST.EPS-COMP
+    8 7 GOM.EPS.INDEX-HK
+    8 23 TEST.EPS-COMP
+
+    \ output_on_dleta[8]
+    9 0 GOM.EPS.INDEX-HK
+    9 24 TEST.EPS-COMP
+    9 1 GOM.EPS.INDEX-HK
+    9 25 TEST.EPS-COMP
+    9 2 GOM.EPS.INDEX-HK
+    9 26 TEST.EPS-COMP
+    9 3 GOM.EPS.INDEX-HK
+    9 27 TEST.EPS-COMP
+    9 4 GOM.EPS.INDEX-HK
+    9 28 TEST.EPS-COMP
+    9 5 GOM.EPS.INDEX-HK
+    9 29 TEST.EPS-COMP
+    9 6 GOM.EPS.INDEX-HK
+    9 30 TEST.EPS-COMP
+    9 7 GOM.EPS.INDEX-HK
+    9 31 TEST.EPS-COMP
+
+
+    \ output_off_delta[8]
+    10 0 GOM.EPS.INDEX-HK
+    10 32 TEST.EPS-COMP
+    10 1 GOM.EPS.INDEX-HK
+    10 33 TEST.EPS-COMP
+    10 2 GOM.EPS.INDEX-HK
+    10 34 TEST.EPS-COMP
+    10 3 GOM.EPS.INDEX-HK
+    10 35 TEST.EPS-COMP
+    10 4 GOM.EPS.INDEX-HK
+    10 36 TEST.EPS-COMP
+    10 5 GOM.EPS.INDEX-HK
+    10 37 TEST.EPS-COMP
+    10 6 GOM.EPS.INDEX-HK
+    10 38 TEST.EPS-COMP
+    10 7 GOM.EPS.INDEX-HK
+    10 39 TEST.EPS-COMP
+
+    \ latchup[6]
+    11 0 GOM.EPS.INDEX-HK
+    11 40 TEST.EPS-COMP
+    11 1 GOM.EPS.INDEX-HK
+    11 41 TEST.EPS-COMP
+    11 2 GOM.EPS.INDEX-HK
+    11 42 TEST.EPS-COMP
+    11 3 GOM.EPS.INDEX-HK
+    11 43 TEST.EPS-COMP
+    11 4 GOM.EPS.INDEX-HK
+    11 44 TEST.EPS-COMP
+    11 5 GOM.EPS.INDEX-HK
+    11 45 TEST.EPS-COMP
+
+    \ wdt_i2c_time_left
+    12 0 GOM.EPS.INDEX-HK
+    12 46 TEST.EPS-COMP
+
+    \ wdt_gnd_time_left
+    13 0 GOM.EPS.INDEX-HK
+    13 47 TEST.EPS-COMP
+
+    \ wdt_csp_pings_left[2]
+    14 0 GOM.EPS.INDEX-HK
+    14 48 TEST.EPS-COMP
+    14 1 GOM.EPS.INDEX-HK
+    14 49 TEST.EPS-COMP
+
+    \ counter_wdt_i2c
+    15 0 GOM.EPS.INDEX-HK
+    15 50 TEST.EPS-COMP
+
+    \ counter_wdt_gnd
+    16 0 GOM.EPS.INDEX-HK
+    16 51 TEST.EPS-COMP
+
+    \ counter_wdt_csp[2]
+    17 0 GOM.EPS.INDEX-HK
+    17 52 TEST.EPS-COMP
+    17 1 GOM.EPS.INDEX-HK
+    17 53 TEST.EPS-COMP
+
+    \ counter_boot
+    18 0 GOM.EPS.INDEX-HK
+    18 54 TEST.EPS-COMP
+
+    \ temp[6]
+    19 0 GOM.EPS.INDEX-HK
+    19 55 TEST.EPS-COMP
+    19 1 GOM.EPS.INDEX-HK
+    19 56 TEST.EPS-COMP
+    19 2 GOM.EPS.INDEX-HK
+    19 57 TEST.EPS-COMP
+    19 3 GOM.EPS.INDEX-HK
+    19 58 TEST.EPS-COMP
+    19 4 GOM.EPS.INDEX-HK
+    19 59 TEST.EPS-COMP
+    19 5 GOM.EPS.INDEX-HK
+    19 60 TEST.EPS-COMP
+
+    \ bootcause
+    20 0 GOM.EPS.INDEX-HK
+    20 61 TEST.EPS-COMP
+
+    \ battmode
+    21 0 GOM.EPS.INDEX-HK
+    21 62 TEST.EPS-COMP
+
+    \ pptmode
+    22 0 GOM.EPS.INDEX-HK
+    22 63 TEST.EPS-COMP
+
+    CR ." Test complete"
+;

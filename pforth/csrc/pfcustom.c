@@ -30,6 +30,7 @@
 #include "pfdfgm.h"
 #include "pfrings.h"
 #include "pfgomshell.h"
+#include "pfeps.h"
 
 /****************************************************************
 ** Step 1: Put your own special glue routines here
@@ -98,7 +99,10 @@ CFunc0 CustomFunctionTable[] =
 	(CFunc0) dfgm_mock_min_max_toggle,	/* DFGM-MOCK.MIN-MAX */
 	(CFunc0) gomshellPing,			/* PING */
 	(CFunc0) colorType,			/* TYPE.COLOR */
-	(CFunc0) timeStamp			/* TYPE.TIME */
+	(CFunc0) timeStamp,			/* TYPE.TIME */
+	(CFunc0) epsUpdateHK,			/* GOM.EPS.GET-HK */
+	(CFunc0) epsIndexHK,			/* GOM.EPS.INDEX-HK */
+	(CFunc0) obcBootState			/* GOM.OBC.BOOT-STATE */
 };
 #endif
 
@@ -183,6 +187,12 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "TYPE.COLOR", i++, C_RETURNS_VOID, 3 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "TYPE.TIME", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.EPS.GET-HK", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.EPS.INDEX-HK", i++, C_RETURNS_VOID, 2 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "GOM.OBC.BOOT-STATE", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     return 0;
 }

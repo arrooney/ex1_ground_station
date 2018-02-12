@@ -3,12 +3,61 @@
 #include "pfrings.h"
 #include "pf_all.h"
 #include "pfgomshell.h"
+#include <stdio.h>
 
 static struct CCArrayList ring_tails_backend[GOMSHELL_TOTAL_RINGS];
 static struct CCArrayList ring_tails;
 
 static struct CCArrayList ring_heads_backend[GOMSHELL_TOTAL_RINGS];
 static struct CCArrayList ring_heads;
+
+typedef struct
+{
+	uint32_t time; // time boot attempted
+	uint8_t cause; // MCU logged boot cause
+	uint8_t application_boot_count; // number of boot attemps by application code after last clean boot.
+	uint8_t fat_boot_count;			// number of boot attempts to resolve FAT_MOUNT_FAIL since last clean mount.
+	uint8_t soft; // software error flags
+	uint8_t hard; // hardware error flags
+} __attribute__ ((packed)) bootcause_t;
+
+void obcBootState( void )
+{
+	char* boot_file_remote = "/boot/bootcause.bin";
+	char* boot_file_local = "bootcause.bin";
+	size_t len = strlen(boot_file_remote);
+	cell_t forth_err;
+	FILE* fh_boot;
+	bootcause_t telem;
+
+	/* Download telemetry.
+	 */	
+	gomshellFtpDownload((cell_t) boot_file_remote, (cell_t) len);
+	forth_err = POP_DATA_STACK;
+	if( forth_err != GOMSHELL_OK ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_FTP);
+		return;
+	}
+
+	/* Open telemetry file.
+	 */
+	fh_boot = fopen(boot_file_local, "r");
+	if( fh_boot == NULL ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_FTP);
+		return;
+	}
+
+	/* Infer state
+	 */
+	len = fread(&telem, 1, sizeof(telem), fh_boot);
+	fclose(fh_boot);
+	if( len != sizeof(telem) ) {
+		PUSH_DATA_STACK(GOMSHELL_ERR_FTP);
+	}
+	else {
+		PUSH_DATA_STACK((cell_t) telem.application_boot_count);
+	}
+}
 
 void gomshellRingWod( void )
 {
