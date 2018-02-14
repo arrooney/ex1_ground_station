@@ -48,4 +48,10 @@ void colorType( cell_t addr, cell_t len, cell_t color );
  */
 void timeStamp( void );
 
+/**
+ * FORTH
+ * Puts current unix time on Forth stack
+ */
+void pushUnixTime( void );
+
 #endif

@@ -17,14 +17,20 @@
     S" CRITICAL ERROR" 1 TYPE.COLOR
 ;
 
+: TIME+ ( n -- q, q = current_unix_time + n )
+    TIME +
+;
+
 \ ******************************************************************************\
 \ AOS 										\
 \ ******************************************************************************\
 : AOS.PING ( addr, n1, n2 -- n3, Input is short description of system being pinged
-    				n2 is node being pinged
-    			Output is GOM.ERR code from the ping )
+    				 n2 is node being pinged
+    				 Output is GOM.ERR code from the ping
+    				 NOTE: this word shouldn't be called from the command line )
     1000 10 GOM.PING
     DUP GOM.ERR.OK = NOT IF
+	\ Ping failed
 	MC.WARNING CR
 	2 PICK 2 PICK TYPE
 	S" : Did not respond to ping" TYPE
@@ -60,16 +66,103 @@
     S" node 1 - nanomind" 1 AOS.PING
 ;
 
+: AOS.VERIFY ( n, xt -- q
+    n = unix time of expected LOS
+    xt = execution token for AOS.XXX word above
+    q = error code:
+    	-1 TRUE => AOS was verified healthy
+    	0 FALSE => Could not get AOS before expected LOS
+    Waits until AOS of system or expected LOS, which ever comes first. )
+    BEGIN
+	DUP EXECUTE
+	."  - timestamp: " TYPE.TIME CR
+	GOM.ERR.OK = IF
+	    \ Got AOS
+	    DROP DROP TRUE LEAVE
+	THEN
+
+	\ Did not get AOS, check if we're at expected LOS
+	OVER TIME < IF
+	    \ Past expected LOS, failed to get AOS
+	    CR MC.CRITICAL
+	    CR ." Failed to get Nanocom's AOS before expected LOS"
+	    DROP DROP FALSE LEAVE
+	THEN
+
+	\ Wait 2 seconds before next attempt
+	2 SLEEP
+    FALSE UNTIL
+;
+
+\ ******************************************************************************\
+\ Nanocom Health Check								\
+\ ******************************************************************************\
+: COM.VERIFY ( n -- q,
+    n = unix time of expected LOS
+    q = error code.
+	TRUE => COM is health and AOS complete
+	FALSE => Could not get AOS before expected LOS
+    Verify the data link with the nanocom )
+    
+    ['] AOS.NANOCOM
+    AOS.VERIFY
+;
+
+: COM.VERIFY+ ( n -- q,
+    n = number of seconds to perform COM.VERIFY for
+    q = same error code as COM.VERIFY )
+
+    TIME+ COM.VERIFY
+;
+
+\ ******************************************************************************\
+\ OBC Health Check								\
+\ ******************************************************************************\
+: OBC.BOOTCOUNT ( -- q, Caches obc bootcause. q is the current boot number )
+    GOM.OBC.BOOT-STATE
+    DUP 0 < IF
+	CR MC.WARNING
+	CR ." Failed to cache nanomind's boot cause"
+    THEN
+;
+
+: OBC.VERIFY ( n -- q,
+    n = unix time of expected LOW
+    q = error code, same meaning as COM.VERIFY
+    Verify data link with OBC )
+
+    ['] AOS.NANOMIND
+    AOS.VERIFY
+;
+
+: OBC.VERIFY+ ( n -- q,
+    n = number of seconds to perform OBC.VERIFY for
+    q = error code. Same as OBC.VERIFY )
+    TIME+ OBC.VERIFY
+;
+
 \ ******************************************************************************\
 \ EPS Health Check								\
 \ ******************************************************************************\
-: EPS.HK ( -- , Caches real time eps hk )
+: EPS.CACHE ( -- q, Caches real time eps hk. q is GOM.ERR error code )
     GOM.EPS.GET-HK
     DUP GOM.ERR.OK = NOT IF
 	CR MC.WARNING
 	CR ." Failed to cache nanopower's real-time HK with error: "
 	DUP .
     THEN
+;
+
+: EPS.VERIFY ( n -- q,
+    Same as OBC.VERIFY and COM.VERIFY, but for the EPS system )
+
+    ['] AOS.NANOPOWER
+    AOS.VERIFY
+;
+
+: EPS.VERIFY+ ( n -- q,
+    Same as OBC.VERIFY+ and COM.VERIFY+, but for the EPS system )
+    TIME+ EPS.VERIFY
 ;
 
 : EPS.VBOOST[n] ( n -- q, q = vboost[n] )
@@ -163,3 +256,4 @@
 : EPS.PPTMODE ( -- q, q = pptmode )
     22 0 GOM.EPS.INDEX-HK
 ;
+

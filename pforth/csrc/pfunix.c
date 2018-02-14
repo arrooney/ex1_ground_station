@@ -108,3 +108,8 @@ void timeStamp( void )
 	snprintf(time_string, 32, "%d ", time(NULL));
 	sdTerminalPrint(time_string, strlen(time_string));
 }
+
+void pushUnixTime( void )
+{
+	PUSH_DATA_STACK((cell_t) time(NULL));
+}

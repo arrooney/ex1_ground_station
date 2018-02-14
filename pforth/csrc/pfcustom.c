@@ -102,7 +102,8 @@ CFunc0 CustomFunctionTable[] =
 	(CFunc0) timeStamp,			/* TYPE.TIME */
 	(CFunc0) epsUpdateHK,			/* GOM.EPS.GET-HK */
 	(CFunc0) epsIndexHK,			/* GOM.EPS.INDEX-HK */
-	(CFunc0) obcBootState			/* GOM.OBC.BOOT-STATE */
+	(CFunc0) obcBootState,			/* GOM.OBC.BOOT-STATE */
+	(CFunc0) pushUnixTime			/* TIME */
 };
 #endif
 
@@ -193,6 +194,8 @@ Err CompileCustomFunctions( void )
     err = CreateGlueToC( "GOM.EPS.INDEX-HK", i++, C_RETURNS_VOID, 2 );
     if( err < 0 ) return err;
     err = CreateGlueToC( "GOM.OBC.BOOT-STATE", i++, C_RETURNS_VOID, 0 );
+    if( err < 0 ) return err;
+    err = CreateGlueToC( "TIME", i++, C_RETURNS_VOID, 0 );
     if( err < 0 ) return err;
     return 0;
 }
