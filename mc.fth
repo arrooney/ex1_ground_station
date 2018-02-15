@@ -393,7 +393,7 @@
 	-2 EXIT
     THEN
 
-    ." Current bootcount of nanomind: " . CR
+    SWAP ." Current bootcount of nanomind: " . CR
     -2 = IF
 	MC.CRITICAL ."  Nanomind is safemode. S/C safety may be in jeopardy." CR
 	MC.CRITICAL ."  time: " TYPE.TIME
