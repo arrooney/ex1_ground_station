@@ -5,5 +5,6 @@
 
 void epsUpdateHK( );
 void epsIndexHK( cell_t struct_index, cell_t array_index );
+void epsPrint( );
 
 #endif

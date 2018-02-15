@@ -165,3 +165,8 @@ void epsIndexHK( cell_t struct_index, cell_t array_index )
 	}
 	PUSH_DATA_STACK(((cell_t) hk_value));
 }
+
+void epsPrint( void )
+{
+	eps_hk_print(&eps_hk);
+}

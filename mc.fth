@@ -56,8 +56,6 @@
 	    \ Did not get succesful execution, check if we're at expected LOS
 	    OVER TIME < IF
 		\ Past expected LOS, failed to execute xt 
-		CR MC.ERROR
-		CR ." Failed to verify before expected LOS"
 		DROP DROP FALSE TRUE
 	    ELSE
 		\ Wait 2 seconds before next attempt
@@ -145,10 +143,6 @@
 \ ******************************************************************************\
 : OBC.BOOTCOUNT ( -- q, q = current boot count )
     GOM.OBC.BOOT-STATE
-    DUP 0 < IF
-	CR MC.WARNING
-	CR ." Failed to cache nanomind's boot cause"
-    THEN
 ;
 
 : OBC.VERIFY ( n -- q,
@@ -166,20 +160,21 @@
     TIME+ OBC.VERIFY
 ;
 
-: OBC.HEALTH-CHECK ( n -- q,
+: OBC.HEALTH-CHECK ( n -- q1, q2,
     n = unix time of expected LOS
-    q = error code
-	    -1 = health check passed. OBC is happy.
-	    -2 = AOS, but health check failed. EPS is unhappy.
-	    -3 = Could not get AOS before LOS
+    q1 = current OBC boot count. Only valid if q2 = {-1, -2}
+    q2 = error code
+	-1 = health check passed. OBC is happy.
+    	-2 = AOS, but health check failed. OBC is unhappy.
+    	-3 = AOS, but could not get HK to perform health check
+    	-4 = Could not get AOS before LOS
     Perform a health check on the OBC using it's real-time telemetry )
     DUP 
     OBC.VERIFY FALSE = IF
 	\ Coult not get AOS
-	DROP -3 EXIT
+	DROP -4 EXIT
     THEN
 
-    ." OBC AOS successful, attempting to read real-time HK" CR
     BEGIN
 	OBC.BOOTCOUNT
 	."  - timestamp: " TYPE.TIME CR	
@@ -188,9 +183,7 @@
 	    \ Did not get succesful execution, check if we're at expected LOS
 	    DROP DUP TIME < IF
 		\ Past expected LOS, failed to execute xt 
-		CR MC.ERROR
-		CR ." Failed to verify before expected LOS"
-		DROP DROP -2 EXIT
+		DROP -1 -3 EXIT
 	    ELSE
 		\ reattempt 
 		FALSE
@@ -202,14 +195,11 @@
 	THEN
     UNTIL
 
-    ." OBC real-time HK cached. Performing health check" CR
     DUP OBC-MAX-BOOTCOUNT > IF
-	." bootcount indicates safe mode CR
-	." bootcount = " . CR
-	MC.CRITICAL
-	-2 \ Change return code
+	-2
+    ELSE
+	-1
     THEN
-    DROP -1
 ;
 
 \ ******************************************************************************\
@@ -217,11 +207,6 @@
 \ ******************************************************************************\
 : EPS.CACHE ( -- q, Caches real time eps hk. q is a GOM.ERR code )
     GOM.EPS.GET-HK
-    DUP GOM.ERR.OK = NOT IF
-	MC.WARNING
-	CR ." Failed to cache nanopower's real-time HK with gom error: "
-	DUP .
-    THEN
 ;
 
 : EPS.VERIFY ( n -- q,
@@ -341,33 +326,77 @@
 	DROP -3 EXIT
     THEN
 
-    ." EPS AOS successful, attempting to read real-time HK" CR
     DUP ['] EPS.CACHE
     MC.VERIFY FALSE = IF
 	\ Could not cache real-time hk before LOS
 	DROP -3 EXIT
     THEN
 
-    ." EPS real-time HK cached. Performing health check" CR
     -1 \ return code. Will get change if threshold testing fails.
     EPS.VBATT EPS-MIN-VBATT <
     EPS.VBATT EPS-MAX-VBATT >
     OR IF
-	." VBATT at critical levels" CR
-	." VBATT = " EPS.VBATT . CR
-	MC.CRITICAL
 	DROP -2 \ Change return code
     THEN
 
     4 EPS.TEMP[N] EPS-MIN-BATT-TEMP <
     5 EPS.TEMP[N] EPS-MIN-BATT-TEMP <
     OR IF
-	." Battery temperature below freezing" CR
-	." temp[4] = " 4 EPS.TEMP[N] . CR
-	." temp[5] = " 5 EPS.TEMP[N] . CR
-	MC.CRITICAL
 	-1 = IF \ Change return code if VBATT test hasn't failed and changed it.
 	    DROP -2
 	THEN
+    THEN
+;
+
+
+\ ******************************************************************************\
+\ Thresholds Words								\
+\ ******************************************************************************\
+: MC.SYSTEM-CHECK ( n -- q, Perform S/C wide health check
+    n = LOS unix time
+    q = Error code
+	    -1 => all systems go
+	    -2 => error encountered
+	    -3 => anomoly encountered )
+    \ Nanocom link verification
+    DUP COM.VERIFY
+    FALSE = IF
+	MC.ERROR ."  Could not establish link with nanocom. time: " TYPE.TIME CR
+	-2 EXIT
+    THEN
+
+    \ EPS link verification and health check
+    DUP EPS.HEALTH-CHECK
+    DUP -3 = IF
+	MC.ERROR ."  Could not establish link with nanopower. time: " TYPE.TIME CR
+	-2 EXIT
+    THEN
+
+    ." Current EPS.HK: " CR
+    GOM.EPS.PRINT
+    
+    -2 = IF
+	MC.CRITICAL ."  Nanopower's telemetry indicates S/C safety is in jeopardy."
+	MC.CRITICAL ."  time: " TYPE.TIME
+	-3 EXIT
+    THEN
+
+    \ OBC link  verification and health check
+    OBC.HEALTH-CHECK
+    DUP -4 = IF
+	MC.ERROR ."  Could not establish link with nanomind. time: " TYPE.TIME CR
+	-2 EXIT
+    THEN
+
+    DUP -3 = IF
+	MC.ERROR ."  Failed to retrieve nanomind's housekeeping. time: " TYPE.TIME CR
+	-2 EXIT
+    THEN
+
+    ." Current bootcount of nanomind: " . CR
+    -2 = IF
+	MC.CRITICAL ."  Nanomind is safemode. S/C safety may be in jeopardy." CR
+	MC.CRITICAL ."  time: " TYPE.TIME
+	-3 EXIT
     THEN
 ;

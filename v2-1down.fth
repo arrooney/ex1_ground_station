@@ -5,29 +5,17 @@ INCLUDE gom.fth
 10 60 * TIME+ CONSTANT LOS
 
 : v2-1down
-    LOS COM.VERIFY
-    FALSE = IF
-	EXIT
-    THEN
-
-    LOS EPS.HEALTH-CHECK
+    \ Perform health check on all systems
+    LOS MC.SYSTEM-CHECK
     -1 = NOT IF
 	EXIT
     THEN
-    ." EPS Health check passed " MC.ALL-CLEAR CR
-    ." VBATT = " EPS.VBATT . CR
-    ." EPS.HK for your viewing pleasure" CR EPS.HK
-
-    LOS OBC.HEALTH-CHECK
-    -1 = NOT IF
-	EXIT
-    THEN
-    ." OBC Health check passed " MC.ALL-CLEAR CR
-
+    
     \ All systems healthy, download the file
+    ." All systems are clear for operation" CR
     BEGIN
 	." Download telecommand sent at: " TYPE.TIME CR	
-	S" /boot/nanominddec12.lzo" GOM.FTP.DOWNLOAD
+	S" /boot/nanominddec12.bin" GOM.FTP.DOWNLOAD
 	GOM.ERR.OK = NOT IF
 	    \ Did not get succesful execution, check if we're at expected LOS
 	    LOS TIME < IF
@@ -48,7 +36,7 @@ INCLUDE gom.fth
     CR ." v2-1 down complete"
 ;
 
-v2-1down
+
 
 
     
