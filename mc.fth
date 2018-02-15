@@ -29,6 +29,18 @@
     TIME +
 ;
 
+: MC.AUTO ( a0, a1, ..., a[b-1], xt, b, n -- q,
+    n = unix time of expected LOS
+    xt = execution token for any word the pushes a GOM.ERR code on the stack
+    a0, ... a[b-1] = arguments for the execution token xt
+    b = number of arguments
+    q = error code:
+    	-1 TRUE => xt word was succesful, ie, pushed GOM.ERR.OK, before expected LOS
+    	0 FALSE => Could not get successful execution before expected LOS
+    Executes xt with all it's arguments every 2 seconds until it pushes
+    TRUE on the stack or expected LOS is reached. )
+;
+
 : MC.VERIFY ( n, xt -- q
     n = unix time of expected LOS
     xt = execution token for any word the pushes a GOM.ERR code on the stack
@@ -157,7 +169,7 @@
 : OBC.HEALTH-CHECK ( n -- q,
     n = unix time of expected LOS
     q = error code
-	    -1 = health check passed. EPS is happy.
+	    -1 = health check passed. OBC is happy.
 	    -2 = AOS, but health check failed. EPS is unhappy.
 	    -3 = Could not get AOS before LOS
     Perform a health check on the OBC using it's real-time telemetry )
@@ -197,7 +209,7 @@
 	MC.CRITICAL
 	-2 \ Change return code
     THEN
-    DROP
+    DROP -1
 ;
 
 \ ******************************************************************************\
