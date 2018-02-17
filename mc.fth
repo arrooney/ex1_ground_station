@@ -50,7 +50,7 @@
     Executes xt every 2 seconds until it pushes TRUE on the stack or expected LOS is reached. )
     BEGIN
 	DUP EXECUTE
-	."  - timestamp: " TYPE.TIME CR	
+	."  telecommand sent - timestamp: " TYPE.TIME CR	
 	GOM.ERR.OK = NOT IF
 
 	    \ Did not get succesful execution, check if we're at expected LOS
@@ -126,7 +126,8 @@
 	TRUE => COM is healthy and AOS complete
 	FALSE => Could not get AOS before expected LOS
     Verify the data link with the nanocom )
-    
+
+    ." Nanocom AOS..."
     ['] AOS.NANOCOM
     MC.VERIFY
 ;
@@ -170,11 +171,14 @@
     	-4 = Could not get AOS before LOS
     Perform a health check on the OBC using it's real-time telemetry )
     DUP 
+
+    ." Nanomind AOS... "
     OBC.VERIFY FALSE = IF
 	\ Coult not get AOS
 	DROP -4 EXIT
     THEN
 
+    ." Nanomind health check... "
     BEGIN
 	OBC.BOOTCOUNT
 	."  - timestamp: " TYPE.TIME CR	
@@ -321,11 +325,14 @@
 	    -3 = Could not get AOS before LOS
     Perform a health check on the EPS using it's real-time telemetry )
     DUP 
+
+    ." Nanopower AOS... "
     EPS.VERIFY FALSE = IF
 	\ Coult not get AOS
 	DROP -3 EXIT
     THEN
 
+    ." Nanopower health check... "
     DUP ['] EPS.CACHE
     MC.VERIFY FALSE = IF
 	\ Could not cache real-time hk before LOS
@@ -399,4 +406,6 @@
 	MC.CRITICAL ."  time: " TYPE.TIME
 	-3 EXIT
     THEN
+
+    -1
 ;
