@@ -17,3 +17,5 @@ build/*
 *.a
 **/#*
 **/.#*
+pforth.dic
+CObject/main/main

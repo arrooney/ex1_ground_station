@@ -231,7 +231,17 @@ if(ctx->argc!=4){
         return CMD_ERROR_SYNTAX;
     }
 
-    csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_ADCS, 0, buf, length+1, reply, 2); // Not network endian.
+    int err = csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_ADCS, 1200, buf, length+1, reply, 1); // Not network endian.
+    if( err < 0 ) {
+   		printf("Timeout sending ADCS command\n");
+   	}
+   	if( err == 0 ) {
+   		printf("ADCS command response too large - %d\n", err);
+   	}
+   	if( err > 0 ) {
+   		printf("ADCS command received with status %d - execution status pending\n", reply[0]);
+   	}
+
     //printf("Reply ID: %d\n",reply[0]);
     //printf("Reply Error: %d\n",reply[1]);
 

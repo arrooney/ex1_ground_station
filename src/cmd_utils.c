@@ -91,6 +91,7 @@ int cmd_script(struct command_context *ctx) {
 int cmd_send_string(struct command_context *ctx) {
 
 #define MAX_STRING 100
+	char resp[1];
 
 	if(ctx->argc!=2){
 		return CMD_ERROR_SYNTAX;
@@ -104,7 +105,16 @@ int cmd_send_string(struct command_context *ctx) {
     memcpy(out_string, ctx->argv[1], string_length);
     //printf("Sending %s \n", out_string);
 	//printf("Size: %d \n", string_length);
-	csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_TELECOMMAND, 0, out_string, string_length, NULL, 0); // Not converted to network endian
+	int err = csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_TELECOMMAND, 1200, out_string, string_length, resp, 1); // Not converted to network endian
+	if( err < 0 ) {
+		printf("Timeout sending OCP command\n");
+	}
+	if( err == 0 ) {
+		printf("OCP command response too large\n");
+	}
+	if( err > 0 ) {
+		printf("OCP command received - execution status pending\n");
+	}
 
 	return CMD_ERROR_NONE;
 }
