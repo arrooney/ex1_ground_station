@@ -19,3 +19,4 @@ build/*
 **/.#*
 pforth.dic
 CObject/main/main
+flight-scheduler/create-flight-schedule

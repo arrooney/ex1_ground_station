@@ -6,4 +6,4 @@ all:
 	gcc $(GCC_OPT) $(SOURCE) -o $(EXEC)
 
 clean:
-	rm $(EXEC)
+	rm -f $(EXEC) *~
