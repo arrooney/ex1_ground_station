@@ -357,7 +357,7 @@
 
 
 \ ******************************************************************************\
-\ Thresholds Words								\
+\ Full system check								\
 \ ******************************************************************************\
 : MC.SYSTEM-CHECK ( n -- q, Perform S/C wide health check
     n = LOS unix time
@@ -376,7 +376,7 @@
     DUP EPS.HEALTH-CHECK
     DUP -3 = IF
 	MC.ERROR ."  Could not establish link with nanopower. time: " TYPE.TIME CR
-	-2 EXIT
+	DROP -2 EXIT
     THEN
 
     ." Current EPS.HK: " CR
@@ -392,12 +392,12 @@
     OBC.HEALTH-CHECK
     DUP -4 = IF
 	MC.ERROR ."  Could not establish link with nanomind. time: " TYPE.TIME CR
-	-2 EXIT
+	DROP -2 EXIT
     THEN
 
     DUP -3 = IF
 	MC.ERROR ."  Failed to retrieve nanomind's housekeeping. time: " TYPE.TIME CR
-	-2 EXIT
+	DROP -2 EXIT
     THEN
 
     SWAP ." Current bootcount of nanomind: " . CR
@@ -409,3 +409,95 @@
 
     -1
 ;
+
+\ ******************************************************************************\
+\ Pass plan words								\
+\ ******************************************************************************\
+VARIABLE PASS-AOS
+VARIABLE PASS-LOS
+
+: PASS.SET-TIME ( n1, n2 -- ,
+    n1 = AOS in unix time
+    n2 = LOS in unix time )
+    PASS-LOS !
+    PASS-AOS !
+;
+
+: PASS.WAIT-FOR-AOS ( -- , Wait until the AOS set in PASS.SET-TIME )
+    PASS-AOS @ BLOCK
+;
+
+: PASS.SYSTEM-CHECK ( -- q,
+    q = Error code
+    	-1 => all systems go
+    	-2 => error encountered
+    	-3 => anomoly encountered )
+    PASS-LOS @ MC.SYSTEM-CHECK
+;
+
+: PASS.WOD ( n -- q,
+    n = number of WOD to download.
+    q = number of WOD downloaded. If q < n
+    then LOS was hit before all WOD got downloaded )
+
+    \ Attemp to synchronize meta data
+    S" downlink" GOM.COMMAND DROP
+
+    \ Block and give 30 seconds for downlink command
+    \ to finish. Once command verification is implemented
+    \ this can be replaced with a block for successful
+    \ command execution
+    30 TIME+ BLOCK
+    
+    \ Fetch ring pointers.
+    BEGIN
+	." WOD tail fetch sent at: " TYPE.TIME CR	
+	GOM.RING.WOD GOM.RING.FETCH
+	GOM.ERR.OK = NOT IF
+	    \ Did not get succesful fetch ring pointers
+	    PASS-LOS @ TIME < IF
+		\ Past expected LOS, failed to get ring pointers
+		CR MC.WARNING
+		CR ." Failed to fetch ring pointers"
+		DROP 0 EXIT
+	    ELSE
+		\ Failure of some sort. Not past LOS, try again.
+		FALSE
+	    THEN
+	ELSE
+	    \ Got successful execution
+	    TRUE
+	THEN
+    UNTIL
+
+    \ Download WOD
+    DUP 0 DO
+	BEGIN
+	    ." Download telecommand sent at: " TYPE.TIME CR	
+	    GOM.RING.WOD GOM.RING.DOWNLOAD
+	    GOM.ERR.OK = NOT IF
+		\ Did not get succesful download
+		PASS-LOS @ TIME < IF
+		    \ Past expected LOS, failed to download
+		    CR MC.WARNING
+		    CR ." Failed to finish download before LOS"
+		    DUP I - DUP
+		    CR ." Download " . ." WOD"
+		    LEAVE
+		ELSE
+		    \ Not past LOS, try again.
+		    FALSE
+		THEN
+	    ELSE
+		\ Got successful execution
+		TRUE
+	    THEN
+	UNTIL
+    LOOP
+;
+    
+\ 5 5 0 DO 3 BEGIN DUP 0 = IF DROP TRUE ELSE 1 - DUP CR ."     Inner = " . FALSE THEN UNTIL ."   Outer = " DUP I - . LOOP DROP CR .s
+
+\ 5 5 0 DO 3 BEGIN DUP 0 = IF LEAVE ELSE 1 - DUP CR ."     Inner = " . FALSE THEN UNTIL ."   Outer = " DUP I - . LOOP DROP CR .s
+
+\ 3 BEGIN DUP 1 = IF EXIT ELSE 1 - DUP CR ."     Inner = " . FALSE THEN UNTIL
