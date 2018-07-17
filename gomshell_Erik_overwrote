@@ -1,0 +1,3 @@
+#!/bin/bash
+#LD_PRELOAD="IOController/IOHook/debug/libIOHook.so" ./build/csp-term -a 10 -d /dev/ttyUSB1 -b 500000
+echo "Don't use this gomshell"
