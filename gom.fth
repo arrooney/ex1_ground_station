@@ -2,6 +2,7 @@
 include gom2.fth
 include dispatch.fth
 
+
 \ ******************************************************************************\
 \ Helper words									\
 \ ******************************************************************************\
@@ -48,7 +49,7 @@ include dispatch.fth
 ;
 
 : NEWRAM ( -- , uploads the new image to a new file. Has to be updated manually. )
-	S" ftp upload_file nanomind_Dec12.lzo /boot/nanominddec12.bin" GOM
+	S" ftp upload_file nanomindV3b-0.lzo boot/nanomindV3b-0.lzo" GOM
 ;
 
 : RAM.OLD ( -- , uploads boot.conf to allow use of the RAM image )
@@ -56,7 +57,7 @@ include dispatch.fth
 ;
 
 : RAM ( -- , uploads boot.conf to allow use of the RAM image )
-	S" ftp upload_file boot_Dec12.conf /boot/boot.conf" GOM
+	S" ftp upload_file boot_v3-0.conf /boot/boot.conf" GOM
 ;
 
 : NORAM ( -- , removes boot.conf in case of shit )
@@ -254,10 +255,21 @@ include dispatch.fth
 	WAIT
 ;
 
-: ADCS.FIND ( -- , Finds the files in the SD card )
+: ADCS.FIND.0 ( -- , Finds the files in the SD card )
 	s" obc adcs 128 8 null.txt" GOM
 	WAIT
 	s" obc adcs 114 0 null.txt" GOM
+	WAIT
+	s" obc adcs 240 22 null.txt" GOM
+	WAIT
+;
+
+: ADCS.FIND.1 ( -- , Finds the files in the SD card )
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	s" obc adcs 114 0 null.txt" GOM
+	WAIT
+	s" obc adcs 115 0 null.txt" GOM
 	WAIT
 	s" obc adcs 240 22 null.txt" GOM
 	WAIT
@@ -277,6 +289,24 @@ include dispatch.fth
 	s" obc adcs 242 0 null.txt" GOM
 	WAIT
 ;
+
+: ADCS.DOWNLOAD.1 ( -- , Downloads 2nd telem file to Nanomind )
+	s" obc adcs 128 8 null.txt" GOM	
+	WAIT
+	s" obc adcs 114 0 null.txt" GOM
+	WAIT
+	s" obc adcs 115 0 null.txt" GOM
+	WAIT
+	s" obc adcs 240 22 null.txt" GOM
+	WAIT
+	s" obc adcs 116 13 download_telem_01.txt" GOM
+	WAIT
+	s" obc adcs 241 6 null.txt" GOM
+	WAIT
+	s" obc adcs 242 0 null.txt" GOM
+	WAIT
+;
+
 
 \ ******************************************************************************\
 \ ADCS sensor telemetry words								\
@@ -378,6 +408,10 @@ include dispatch.fth
 	S" obc adcs 32 6 wheel_speed_4140.txt" GOM
 ;
 
+: ADCS.WHEEL.ON2 ( -- , turns the wheel on to -4000 rpm. )
+	S" obc adcs 32 6 callies_cat.txt" GOM
+;
+
 : ADCS.WHEEL.OFF ( -- , turns wheel off with speed set to 0. )
 	S" obc adcs 32 6 wheel_speed_0.txt" GOM
 ;
@@ -402,6 +436,21 @@ include dispatch.fth
 
 : ADCS.DETUMBLE ( -- , puts ADCS into the detumble control mode. )
 	S" obc adcs 18 4 detumble_forever.txt" GOM
+	WAIT
+;
+
+: ADCS.DETUMBLE.HIGHRATE600 ( -- , puts ADCS into the high rate detumble control mode for 600 seconds. )
+	S" obc adcs 18 4 detumble_highrate600.txt" GOM
+	WAIT
+;
+
+: ADCS.DETUMBLE.HIGHRATE1200 ( -- , puts ADCS into the high rate detumble control mode for 1200 seconds. )
+	S" obc adcs 18 4 detumble_highrate1200.txt" GOM
+	WAIT
+;
+
+: ADCS.DETUMBLE300 ( -- , puts ADCS into the detumble control mode for 300 seconds. )
+	S" obc adcs 18 4 detumble_300sec.txt" GOM
 	WAIT
 ;
 
@@ -446,7 +495,7 @@ include dispatch.fth
 ;
 
 : ADCS.START ( -- , Enables power and starts control loop )
-	s" obc adcs 128 8 null.txt" GOM
+	s" obc adcs 128 null.txt" GOM
 	WAIT
 	s" obc adcs 5 5 power_all.txt" GOM
 	WAIT
@@ -475,7 +524,7 @@ include dispatch.fth
 \ ******************************************************************************\
 \ ADCS config words								\
 \ ******************************************************************************\
-: ADCS.SET.CONFIG ( -- , updates configs that change or get deleted)
+: ADCS.SET.CONFIG.OLD ( -- , updates configs with inverted y torquer)
 	s" obc adcs 128 8 null.txt" GOM
 	WAIT
 	S" obc adcs 91 26 est_param_config_v2.txt" GOM
@@ -487,9 +536,7 @@ include dispatch.fth
 	S" obc adcs 83 14 css_config_v2.txt" GOM
 	WAIT
 	S" obc adcs 84 17 sun_config_v1.txt" GOM
-	WAIT
-	S" obc adcs 87 6 rot_sens_config.txt" GOM
-	WAIT
+	WAIT	WAIT
 	S" obc adcs 82 13 wheel_config.txt" GOM
 	WAIT
 	S" obc adcs 88 10 detumble_cont_config.txt" GOM
@@ -504,6 +551,60 @@ include dispatch.fth
 	WAIT
 ;
 
+: ADCS.SET.CONFIG.HI ( -- , updates configs without inverting y torq)
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	S" obc adcs 91 26 est_param_config_v2.txt" GOM
+	WAIT
+	S" obc adcs 90 24 inertia_config.txt" GOM
+	WAIT
+	S" obc adcs 86 30 mag_config_v4.txt" GOM
+	WAIT
+	S" obc adcs 83 14 css_config_v2.txt" GOM
+	WAIT
+	S" obc adcs 84 17 sun_config_v1.txt" GOM
+	WAIT
+	S" obc adcs 82 13 wheel_config.txt" GOM
+	WAIT
+	S" obc adcs 88 10 detumble_cont_config.txt" GOM
+	WAIT
+	S" obc adcs 81 13 torq_config_v2.1_highrate.txt" GOM
+	WAIT
+	S" obc adcs 64 64 tle_adcs_oct18.txt" GOM
+	WAIT
+	S" obc adcs 2 6 null.txt" GOM
+	WAIT
+	S" obc adcs 136 48 null.txt" GOM
+	WAIT
+;
+
+: ADCS.SET.CONFIG.MOT ( -- , updates configs and uses motor MCU only)
+	s" obc adcs 128 8 null.txt" GOM
+	WAIT
+	S" obc adcs 91 26 est_param_config_v2.txt" GOM
+	WAIT
+	S" obc adcs 90 24 inertia_config.txt" GOM
+	WAIT
+	S" obc adcs 86 30 mag_config_v4.txt" GOM
+	WAIT
+	S" obc adcs 83 14 css_config_v2.txt" GOM
+	WAIT
+	S" obc adcs 84 17 sun_config_v1.txt" GOM
+	WAIT	WAIT
+	S" obc adcs 82 13 wheel_config.txt" GOM
+	WAIT
+	S" obc adcs 88 10 detumble_cont_config.txt" GOM
+	WAIT
+	S" obc adcs 81 13 torq_config_v2.1_nosignal.txt" GOM
+	WAIT
+	S" obc adcs 64 64 tle_adcs_oct18.txt" GOM
+	WAIT
+	S" obc adcs 2 6 null.txt" GOM
+	WAIT
+	S" obc adcs 136 48 null.txt" GOM
+	WAIT
+
+;
 
 : ADCS.SET.RTC ( -- , updates the clock with computer time)
 	S" obc adcs 2 6 null.txt" GOM
@@ -694,6 +795,7 @@ include dispatch.fth
 	s" rparam init 5 0" GOM
 	s" rparam set reboot_in 600" GOM
 	WAIT
+
 	s" rparam init 15 0" GOM
 	s" rparam set rx_baud 9600" GOM
 	WAIT
@@ -1058,6 +1160,8 @@ include dispatch.fth
 
 : DUSTIN.4 ( --, downloads specific DFGM file )
 	S" ftp download_file /sd/005R0005.bin" GOM
+
+
 ;			
 
 \ ******************************************************************************\
@@ -1106,4 +1210,350 @@ include dispatch.fth
 \ ******************************************************************************\
 : ATHENA.DOWNLOAD ( n -- , Download n Athena files )
   	GOM.RING.ATHENA RING.DOWNLOAD
+;
+
+: ATHENA.ON ( Turns power on to Athena )
+	S" eps|110" GOM.COMMAND 
+;
+
+: ATHENA.OFF ( Turns power off to Athena )
+	S" eps|100" GOM.COMMAND
+;
+
+: ATHENA.START
+	S" athena|start" GOM.COMMAND 
+;
+
+: ATHENA.STOP 
+	S" athena|stop" GOM.COMMAND
+;
+
+: ATHENA.TEST
+	S" athena|51" GOM.COMMAND 
+;
+
+
+\ ******************************************************************************\
+\ Erik's really gross way of getting rid of the wod
+\ ******************************************************************************\
+: WOD.DEATH ( -- , deletes the dangling wod from apr28)
+	S" ftp rm /sd/00DW2143.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00DW2143.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00EW2144.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00EW2144.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00FW2145.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00FW2145.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00AW2140.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/00AW2140.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00BW2141.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/00BW2141.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00CW2142.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/00CW2142.BIN" GOM
+	WAIT
+	S" ftp rm /sd/000W2130.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/000W2130.BIN" GOM
+	WAIT
+	S" ftp rm /sd/001W2131.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/001W2131.BIN" GOM
+	WAIT
+	S" ftp rm /sd/002W2132.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/002W2132.BIN" GOM
+	WAIT
+	S" ftp rm /sd/003W2133.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/003W2133.BIN" GOM
+	WAIT
+	S" ftp rm /sd/004W2134.BIN" GOM
+	WAIT
+	S" ftp rm /sd/004W2134.BIN" GOM
+	WAIT
+	S" ftp rm /sd/005W2135.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/005W2135.BIN" GOM
+	WAIT
+	S" ftp rm /sd/006W2136.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/006W2136.BIN" GOM
+	WAIT
+	S" ftp rm /sd/007W2137.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/007W2137.BIN" GOM
+	WAIT
+	S" ftp rm /sd/008W2138.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/008W2138.BIN" GOM
+	WAIT
+	S" ftp rm /sd/009W2139.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/009W2139.BIN" GOM
+	WAIT
+	S" ftp rm /sd/02DW2175.BIN" GOM
+	WAIT
+	S" ftp rm /sd/02DW2175.BIN" GOM
+	WAIT
+	S" ftp rm /sd/016W2272.BIN" GOM
+	WAIT
+	S" ftp rm /sd/016W2272.BIN" GOM
+	WAIT
+	S" ftp rm /sd/017W2273.BIN" GOM
+	WAIT
+	S" ftp rm /sd/017W2273.BIN" GOM
+	WAIT
+	S" ftp rm /sd/018W2274.BIN" GOM
+	WAIT
+	S" ftp rm /sd/018W2274.BIN" GOM
+	WAIT
+	S" ftp rm /sd/019W2275.BIN" GOM
+	WAIT
+	S" ftp rm /sd/019W2275.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01AW2276.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01AW2276.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01BW2277.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01BW2277.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01CW2278.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01CW2278.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01DW2279.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01DW2279.BIN" GOM
+	WAIT
+	S" ftp rm /sd/000W2280.BIN" GOM
+	WAIT
+	S" ftp rm /sd/000W2280.BIN" GOM
+	WAIT
+	S" ftp rm /sd/001W2281.BIN" GOM
+	WAIT
+	S" ftp rm /sd/001W2281.BIN" GOM
+	WAIT
+	S" ftp rm /sd/002W2282.BIN" GOM
+	WAIT
+	S" ftp rm /sd/002W2282.BIN" GOM
+	WAIT
+	S" ftp rm /sd/003W2283.BIN" GOM
+	WAIT
+	S" ftp rm /sd/003W2283.BIN" GOM
+	WAIT
+	S" ftp rm /sd/004W2284.BIN" GOM
+	WAIT
+	S" ftp rm /sd/004W2284.BIN" GOM
+	WAIT
+	S" ftp rm /sd/005W2285.BIN" GOM
+	WAIT
+	S" ftp rm /sd/005W2285.BIN" GOM
+	WAIT
+	S" ftp rm /sd/006W2286.BIN" GOM
+	WAIT
+	S" ftp rm /sd/006W2286.BIN" GOM
+	WAIT
+	S" ftp rm /sd/007W2287.BIN" GOM
+	WAIT
+	S" ftp rm /sd/007W2287.BIN" GOM
+	WAIT
+	S" ftp rm /sd/008W2288.BIN" GOM
+	WAIT
+	S" ftp rm /sd/008W2288.BIN" GOM
+	WAIT
+	S" ftp rm /sd/009W2289.BIN" GOM
+	WAIT
+	S" ftp rm /sd/009W2289.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00AW2290.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00AW2290.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00BW2291.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00BW2291.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00CW2292.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00CW2292.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00DW2293.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00DW2293.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00EW2294.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00EW2294.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00FW2295.BIN" GOM
+	WAIT
+	S" ftp rm /sd/00FW2295.BIN" GOM
+	WAIT
+	S" ftp rm /sd/010W2296.BIN" GOM
+	WAIT
+	S" ftp rm /sd/010W2296.BIN" GOM
+	WAIT
+	S" ftp rm /sd/011W2297.BIN" GOM
+	WAIT
+	S" ftp rm /sd/011W2297.BIN" GOM
+	WAIT
+	S" ftp rm /sd/012W2298.BIN" GOM
+	WAIT
+	S" ftp rm /sd/012W2298.BIN" GOM
+	WAIT
+	S" ftp rm /sd/013W2299.BIN" GOM
+	WAIT
+	S" ftp rm /sd/013W2299.BIN" GOM
+	WAIT
+	S" ftp rm /sd/014W2300.BIN" GOM
+	WAIT
+	S" ftp rm /sd/014W2300.BIN" GOM
+	WAIT
+	S" ftp rm /sd/015W2301.BIN" GOM
+	WAIT
+	S" ftp rm /sd/015W2301.BIN" GOM
+	WAIT
+	S" ftp rm /sd/016W2302.BIN" GOM
+	WAIT
+	S" ftp rm /sd/016W2302.BIN" GOM
+	WAIT
+	S" ftp rm /sd/017W2303.BIN" GOM
+	WAIT
+	S" ftp rm /sd/017W2303.BIN" GOM
+	WAIT
+	S" ftp rm /sd/018W2304.BIN" GOM
+	WAIT
+	S" ftp rm /sd/018W2304.BIN" GOM
+	WAIT
+	S" ftp rm /sd/019W2305.BIN" GOM
+	WAIT
+	S" ftp rm /sd/019W2305.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01AW2306.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01AW2306.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01BW2307.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01BW2307.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01CW2308.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01CW2308.BIN" GOM
+	WAIT	
+	S" ftp rm /sd/01DW2309.BIN" GOM
+	WAIT
+	S" ftp rm /sd/01DW2309.BIN" GOM
+	WAIT
+	S" ftp rm /sd/000W2310.BIN" GOM
+	WAIT
+	S" ftp rm /sd/000W2310.BIN" GOM
+	WAIT
+	S" ftp rm /sd/001W2311.BIN" GOM
+	WAIT
+	S" ftp rm /sd/001W2311.BIN" GOM
+	WAIT
+	S" ftp rm /sd/002W2312.BIN" GOM
+	WAIT
+	S" ftp rm /sd/002W2312.BIN" GOM
+	WAIT
+	S" ftp rm /sd/003W2313.BIN" GOM
+	WAIT
+	S" ftp rm /sd/003W2313.BIN" GOM
+	WAIT
+	S" ftp rm /sd/004W2314.BIN" GOM
+	WAIT
+	S" ftp rm /sd/004W2314.BIN" GOM
+	WAIT
+	S" ftp rm /sd/005W2315.BIN" GOM
+	WAIT
+	S" ftp rm /sd/005W2315.BIN" GOM
+	WAIT
+	S" ftp rm /sd/006W2316.BIN" GOM
+	WAIT
+	S" ftp rm /sd/006W2316.BIN" GOM
+;
+
+: WOD.EXTERMINATE ( --, gets rid of the second batch of wod danglers) 
+	S" ftp rm /sd/000W0360.bin" GOM
+	WAIT
+	S" ftp rm /sd/001W0361.bin" GOM
+	WAIT
+	S" ftp rm /sd/002W0362.bin" GOM
+	WAIT
+	S" ftp rm /sd/003W0363.bin" GOM
+	WAIT
+	S" ftp rm /sd/004W0364.bin" GOM
+	WAIT
+	S" ftp rm /sd/005W0365.bin" GOM
+	WAIT
+	S" ftp rm /sd/006W0366.bin" GOM
+	WAIT
+	S" ftp rm /sd/007W0367.bin" GOM
+	WAIT
+	S" ftp rm /sd/008W0368.bin" GOM
+	WAIT
+	S" ftp rm /sd/009W0369.bin" GOM
+	WAIT
+	S" ftp rm /sd/00AW0370.bin" GOM
+	WAIT
+	S" ftp rm /sd/00BW0371.bin" GOM
+	WAIT
+	S" ftp rm /sd/00CW0372.bin" GOM
+	WAIT
+	S" ftp rm /sd/00DW0373.bin" GOM
+	WAIT
+	S" ftp rm /sd/00EW0374.bin" GOM
+	WAIT
+	S" ftp rm /sd/00FW0375.bin" GOM
+	WAIT
+	S" ftp rm /sd/010W0376.bin" GOM
+	WAIT
+	S" ftp rm /sd/011W0377.bin" GOM
+	WAIT
+	S" ftp rm /sd/012W0378.bin" GOM
+	WAIT
+	S" ftp rm /sd/013W0379.bin" GOM
+	WAIT
+	S" ftp rm /sd/014W0380.bin" GOM
+	WAIT
+	S" ftp rm /sd/015W0381.bin" GOM
+	WAIT
+	S" ftp rm /sd/016W0382.bin" GOM
+	WAIT
+	S" ftp rm /sd/017W0383.bin" GOM
+	WAIT
+	S" ftp rm /sd/018W0384.bin" GOM
+	WAIT
+	S" ftp rm /sd/019W0385.bin" GOM
+	WAIT
+	S" ftp rm /sd/01AW0386.bin" GOM
+	WAIT
+	S" ftp rm /sd/01BW0387.bin" GOM
+	WAIT
+	S" ftp rm /sd/01CW0388.bin" GOM
+	WAIT
+	S" ftp rm /sd/01DW0389.bin" GOM
+	WAIT
+	S" ftp rm /sd/01EW0390.bin" GOM
+	WAIT
+	S" ftp rm /sd/01FW0391.bin" GOM
+	WAIT
+	S" ftp rm /sd/020W0392.bin" GOM
+	WAIT
+	S" ftp rm /sd/021W0393.bin" GOM
+	WAIT
+	S" ftp rm /sd/022W0394.bin" GOM
 ;
