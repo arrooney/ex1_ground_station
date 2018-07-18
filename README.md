@@ -3,41 +3,6 @@
 
 Contains the source code to interface with the ExAlta-1 satellite. The submodules within here include the nanomind repository and AlbertaSat's OCP 
 
-## Setting up a Newly Cloned Repository
-
-* git submodule init
-* git submodule update
-* cd albertasat-gomspace
-* git submodule init
-* git submodule update
-* cd albertasat-on-board-computer
-* git fetch
-* git checkout origin/nanomind-master-2
-* cd ../..
-
-## Folder Structure
-
-```
-project
-|   README.md
-|
-|___build (compiled binary is put here)
-|
-|___src (source code for gomshell)
-|
-|___lib (gomspace libraries the gomshell requires)
-|
-|___IOController
-|   |
-|   |___IOHook (shared library which redfines standard IO functions)
-|
-|___pforth (Forth kernal used to read scripts. Gomshell front end)
-|
-|___CObject (Libraries required for data structures like queues)
-```
-
-Everything else may be garbage we haven't deleted yet.
-
 ## Building an Running
 
 The gomshell requires the following libraries are installed on your computer:
@@ -46,13 +11,10 @@ The gomshell requires the following libraries are installed on your computer:
 sudo apt-get install libzmq3-dev libelf-dev libncurses-dev
 ```
 
-Several third party libraries need to be compiled from source too. The entire build process is automated
-with two bash lines:
+To build you must configure the build system first:
 
 ```bash
-make clean
-./waf configure
-make all
+make configure
 ```
 
 The configure option will prime waf for building the gomshell. It needs to be done one time. Extra configurations will have no effect. However, if the waf script is changed, the configuration will need to be run again.
@@ -62,13 +24,13 @@ Additionally, I haven't done a very good job with the .gitignore, so several obj
 Afterwords, if you're only interested in building the gomshell source code, run:
 
 ```bash
-./waf build
+make all
 ```
 
 To clean the code, run:
 
 ```bash
-./waf clean
+make clean
 ```
 
 To run the code, run:
