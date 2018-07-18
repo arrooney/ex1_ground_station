@@ -108,9 +108,11 @@ int cmd_send_string(struct command_context *ctx) {
 	int err = csp_transaction(CSP_PRIO_NORM, NODE_OBC, OBC_PORT_TELECOMMAND, 1200, out_string, string_length, resp, 1); // Not converted to network endian
 	if( err < 0 ) {
 		printf("Timeout sending OCP command\n");
+		return CMD_ERROR_FAIL;
 	}
 	if( err == 0 ) {
-		printf("OCP command response too large\n");
+		printf("OCP CSP error\n");
+		return CMD_ERROR_FAIL;
 	}
 	if( err > 0 ) {
 		printf("OCP command received - execution status pending\n");

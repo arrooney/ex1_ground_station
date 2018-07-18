@@ -146,11 +146,12 @@ void * task_server(void * parameters) {
 					csp_close(conn);
 					break;
 				case CMD_RSP_PORT: {
-					int rsp = packet->data[0] << 24
-						+ packet->data[1] << 16
-						+ packet->data[2] << 8
-						+ packet->data[3];
-					printf("cmd resp: %d\n", rsp);
+					unsigned char* resp_bin = packet->data;
+					uint32_t rsp = (packet->data[3] << 24)
+						+ (packet->data[2] << 16)
+						+ (packet->data[1] << 8)
+						+ (packet->data[0]);
+					printf("cmd resp: %d\n", (int) rsp);
 					fflush(stdout);
 					csp_close(conn);
 					break;
