@@ -319,7 +319,7 @@ void gomshellFetchRingByID( cell_t id )
 					     "/sd/MT-RLog.txt", /* DFGM raw stream */
 					     "/sd/MT-HLog.txt", /* DFGM HK stream */
 					     "/sd/MT-WLog.txt", /* WOD stream */
-					     "/sd/MT-TLog.txt" };  /* Athena stream */
+					     "/sd/MT_KLog.txt" };  /* Athena stream */
 
 	/* Initialize ring lists.
 	 */
